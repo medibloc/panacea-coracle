@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"panacea-data-market-validator/types"
 	"panacea-data-market-validator/utils"
-	"panacea-data-market-validator/validation"
 	"time"
 )
 
@@ -18,7 +17,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	resp.Certificate.DealId = dealId
 
 	// file format check
-	data, err := validation.FileReader(r)
+	data, err := utils.FileReader(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
