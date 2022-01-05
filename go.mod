@@ -1,4 +1,4 @@
-module panacea-data-market-validator
+module github.com/medibloc/panacea-data-market-validator
 
 go 1.17
 
