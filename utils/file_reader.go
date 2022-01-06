@@ -2,20 +2,21 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/medibloc/panacea-data-market-validator/types"
 	"io"
 	"net/http"
-	"panacea-data-market-validator/types"
 	"path/filepath"
 )
 
-// FileReader reads json file from multipart/form-data request
-func FileReader(r *http.Request) (string, error) {
-	// TODO limit file size
+// ReadFormFile reads json file from multipart/form-data request
+func ReadFormFile(r *http.Request) (string, error) {
+	// TODO: limit file size
 	//r.ParseMultipartForm(10 << 20)
 
 	file, header, err := r.FormFile(types.FileKey)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("read formfile from request failed: %w", err)
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
@@ -23,6 +24,7 @@ func FileReader(r *http.Request) (string, error) {
 		}
 	}()
 
+	// TODO: handle when filename does not exist.
 	fileExtension := filepath.Ext(header.Filename)
 	if fileExtension != types.DataFileFormat {
 		return "", types.ErrInvalidFileFormat
@@ -32,7 +34,7 @@ func FileReader(r *http.Request) (string, error) {
 
 	_, err = io.Copy(&buf, file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("io copy failed: %w", err)
 	}
 	data := buf.String()
 	buf.Reset()

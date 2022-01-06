@@ -5,7 +5,7 @@ type DataValidationCertificate struct {
 	DataHash             string
 	EncryptedDataURL     string
 	DataValidatorAddress string
-	// TODO sharedECCKey (for ECIES)가 포함될 수 있음
+	// TODO sharedECCKey could be added for encryption (ECIES)
 }
 
 type CertificateResponse struct {

@@ -1,7 +1,8 @@
 package main
 
-import "panacea-data-market-validator/server"
+import "github.com/medibloc/panacea-data-market-validator/server"
 
 func main() {
+	// TODO: graceful shutdown
 	server.Run()
 }
