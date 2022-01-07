@@ -7,8 +7,10 @@ import (
 	"net/http"
 )
 
-// ReadData reads data from request
+// ReadData reads data from request body
 func ReadData(r *http.Request) (interface{}, error) {
+
+	// content type check from header
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
 		return nil, types.ErrUnsupportedMediaType

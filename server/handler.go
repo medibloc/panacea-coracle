@@ -21,9 +21,9 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		if _, e := w.Write([]byte(err.Error())); e != nil {
-			log.Error("Response write failed: ", e)
+			log.Error("response write failed: ", e)
 		}
-		log.Error(err)
+		log.Error("read data failed: ", err)
 		return
 	}
 
@@ -39,18 +39,18 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// sign certificate
 
-	marshaledData, err := json.Marshal(resp)
+	marshaledResp, err := json.Marshal(resp)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		if _, e := w.Write([]byte(err.Error())); e != nil {
-			log.Error("Response write failed: ", e)
+			log.Error("response write failed: ", e)
 		}
-		log.Error(err)
+		log.Error("response marshal failed: ", err)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	if _, e := w.Write(marshaledData); e != nil {
-		log.Error("Response write failed: ", e)
+	if _, e := w.Write(marshaledResp); e != nil {
+		log.Error("response write failed: ", e)
 	}
 }
