@@ -16,8 +16,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	dealId := mux.Vars(r)[types.DealIdKey]
 	resp.Certificate.DealId = dealId
 
-	// file format check
-	data, err := utils.ReadFormFile(r)
+	// read data from request
+	data, err := utils.ReadData(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		if _, e := w.Write([]byte(err.Error())); e != nil {

@@ -3,5 +3,5 @@ package types
 import "errors"
 
 var (
-	ErrInvalidFileFormat = errors.New("invalid file format")
+	ErrUnsupportedMediaType = errors.New("unsupported media type")
 )
