@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/utils"
+	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -29,15 +30,24 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(data)
 
-	// get deal information from panacea
+	// TODO: get deal information from panacea
+	desiredSchemaURI := "https://json.schemastore.org/github-issue-forms.json"
 
-	// check if data validator is trusted or not
+	// TODO: check if data validator is trusted or not
 
 	// validate data (schema check)
+	if err := validation.ValidateJSONSchema(data, desiredSchemaURI); err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusForbidden)
+		if _, e := w.Write([]byte(err.Error())); e != nil {
+			log.Error("response write failed: ", e)
+		}
+		return
+	}
 
-	// encrypt and store data
+	// TODO: encrypt and store data
 
-	// sign certificate
+	// TODO: sign certificate
 
 	marshaledResp, err := json.Marshal(resp)
 	if err != nil {
