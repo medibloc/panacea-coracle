@@ -6,7 +6,7 @@ import (
 )
 
 // EncryptData encrypts data using recipient public key (ECIES)
-// Secp256k1 is the only supported elliptic curve.
+// Secp256k1 is the only supported elliptic curve for encryption.
 func EncryptData(pubKeyByte []byte, data []byte) ([]byte, error) {
 	// parse public key
 	pubKey, err := btcec.ParsePubKey(pubKeyByte, btcec.S256())
