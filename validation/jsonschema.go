@@ -9,6 +9,8 @@ import (
 // ValidateJSONSchema performs the JSON Schema validation: https://json-schema.org/
 // This fetches the schema definition via http(s) or local filesystem.
 // If jsonInput is not a valid JSON or if jsonInput doesn't conform to the desired JSON schema, an error is returned.
+//
+// TODO: accept io.Reader instead of []byte
 func ValidateJSONSchema(jsonInput []byte, desiredSchemaURI string) error {
 	schemaLoader := gojsonschema.NewReferenceLoader(desiredSchemaURI)
 	docLoader := gojsonschema.NewBytesLoader(jsonInput)
