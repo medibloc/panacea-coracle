@@ -1,14 +1,14 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/medibloc/panacea-data-market-validator/types"
+	"io/ioutil"
 	"net/http"
 )
 
 // ReadData reads data from request body
-func ReadData(r *http.Request) (interface{}, error) {
+func ReadData(r *http.Request) ([]byte, error) {
 
 	// content type check from header
 	contentType := r.Header.Get("Content-Type")
@@ -16,12 +16,10 @@ func ReadData(r *http.Request) (interface{}, error) {
 		return nil, types.ErrUnsupportedMediaType
 	}
 
-	var data interface{}
-
-	err := json.NewDecoder(r.Body).Decode(&data)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("request body decode failed: %w", err)
+		return nil, fmt.Errorf("failed to read HTTP request body: %w", err)
 	}
 
-	return data, nil
+	return body, nil
 }
