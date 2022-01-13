@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
@@ -38,7 +40,14 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: encrypt and store data
+	// encrypt and store data
+	// TODO: get recipient pub key info from blockchain
+	tempPrivKey, _ := btcec.NewPrivateKey(btcec.S256())
+	encryptedData, err := crypto.EncryptData(tempPrivKey.PubKey().SerializeCompressed(), jsonInput)
+	if err != nil {
+		log.Error("failed to encrypt data: ", err)
+	}
+	log.Debug(encryptedData)
 
 	// TODO: sign certificate
 
