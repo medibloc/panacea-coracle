@@ -18,6 +18,7 @@ make install
 ## Running
 
 ```bash
-LOG_LEVEL=info \
-
+DATAVAL_LOG_LEVEL=info \
+DATAVAL_HTTP_LADDR=0.0.0.0:8080 \
+datavald
 ```
