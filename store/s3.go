@@ -21,6 +21,9 @@ func createSvc() *s3.S3 {
 	sess := session.Must(session.NewSession(
 		&aws.Config{
 			Region:      aws.String(S3Region),
+			// There are several ways to set credit.
+			// Here, set it in the ~/.aws/credentials file
+			// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 			Credentials: credentials.NewSharedCredentials("", "default"),
 		}))
 
