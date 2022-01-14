@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO: Use a better name
 const envVarPrefix = "DATAVAL"
 
 type Config struct {
