@@ -16,8 +16,9 @@ const (
 	S3Region = endpoints.ApNortheast2RegionID
 )
 
-// createSvc create default S3 service.
-func createSvc() *s3.S3 {
+// UploadFile path is directory, name is the file name.
+// It is stored in the 'data-market' bucket
+func UploadFile(path string, name string, data []byte) error {
 	sess := session.Must(session.NewSession(
 		&aws.Config{
 			Region:      aws.String(S3Region),
@@ -26,14 +27,7 @@ func createSvc() *s3.S3 {
 			// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 			Credentials: credentials.NewSharedCredentials("", "default"),
 		}))
-
-	return s3.New(sess)
-}
-
-// UploadFile path is directory, name is the file name.
-// It is stored in the 'data-market' bucket
-func UploadFile(path string, name string, data []byte) error {
-	svc := createSvc()
+	svc := s3.New(sess)
 
 	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(S3Bucket),
