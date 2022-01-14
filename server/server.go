@@ -1,27 +1,28 @@
 package server
 
 import (
-	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
-	"os"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-data-market-validator/config"
+	log "github.com/sirupsen/logrus"
 )
 
-func Run() {
+func Run(conf *config.Config) {
 	router := mux.NewRouter()
 	router.HandleFunc("/validate-data/{dealId}", handleRequest).Methods(http.MethodPost)
 
 	server := &http.Server{
 		Handler:      router,
-		Addr:         os.Getenv("HTTP_LADDR"), // listener address: <IPaddr>:<port>
+		Addr:         conf.HTTPListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	fmt.Println("👻 Data Validator Server Started 🎃")
+	log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
 	err := server.ListenAndServe()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }

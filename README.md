@@ -14,3 +14,10 @@ make build
 make test
 make install
 ```
+
+## Running
+
+```bash
+LOG_LEVEL=info \
+
+```
