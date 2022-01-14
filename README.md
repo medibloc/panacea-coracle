@@ -18,7 +18,7 @@ make install
 ## Running
 
 ```bash
-DATAVAL_LOG_LEVEL=info \
+DATAVAL_LOG_LEVEL=info \  # panic, fatal, error, warn, info, debug, trace
 DATAVAL_HTTP_LADDR=0.0.0.0:8080 \
 datavald
 ```
