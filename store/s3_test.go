@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/medibloc/panacea-data-market-validator/store"
@@ -13,6 +14,10 @@ import (
 
 // TestS3UploadAndDownload Upload file to S3 and download generated url link and verify after download
 func TestS3UploadAndDownload(t *testing.T) {
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping testing in CI environment")
+	}
+
 	path := "temp_path"
 	data := []byte("original file data")
 	name := hex.EncodeToString(crypto.Hash(data))
