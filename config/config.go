@@ -29,7 +29,7 @@ func (d *LogLevel) Decode(value string) error {
 func MustLoad() Config {
 	var conf Config
 	if err := envconfig.Process(envVarPrefix, &conf); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return conf
 }
