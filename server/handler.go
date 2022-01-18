@@ -54,15 +54,22 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debug(encryptedData)
 
-	// make dataHash and upload to S3
+	// make dataHash and upload to s3Store
 	dataHash := hex.EncodeToString(crypto.Hash(jsonInput))
-	err = store.UploadFile(dealId, dataHash, encryptedData)
+
+	s3Store, err := store.NewDefaultS3Store()
+	if err != nil {
+		log.Error("failed to create s3Store: ", err)
+	}
+
+	fileName := s3Store.MakeRandomFilename()
+	err = s3Store.UploadFile(dealId, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 	}
 
 	// make downloadURL
-	dataURL := store.MakeDownloadURL(dealId, dataHash)
+	dataURL := s3Store.MakeDownloadURL(dealId, fileName)
 	encryptedDataURL, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
