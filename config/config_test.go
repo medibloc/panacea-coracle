@@ -11,14 +11,26 @@ import (
 func TestMustLoad(t *testing.T) {
 	t.Setenv("DATAVAL_LOG_LEVEL", "debug")
 	t.Setenv("DATAVAL_HTTP_LADDR", "0.0.0.0:8181")
+	t.Setenv("DATAVAL_GRPC_ADDR", "0.0.0.0:9191")
 
 	c := config.MustLoad()
 	require.Equal(t, log.DebugLevel, log.Level(c.LogLevel))
 	require.Equal(t, "0.0.0.0:8181", c.HTTPListenAddr)
+	require.Equal(t, "0.0.0.0:9191", c.GrpcAddress)
 }
 
-func TestMustLoad_MissingRequiredEnv(t *testing.T) {
+func TestMustLoad_MissingRequiredEnv_HttpAddr(t *testing.T) {
 	t.Setenv("DATAVAL_LOG_LEVEL", "debug")
+	t.Setenv("DATAVAL_GRPC_ADDR", "0.0.0.0:9191")
+
+	require.Panics(t, func() {
+		config.MustLoad()
+	})
+}
+
+func TestMustLoad_MissingRequiredEnv_GrpcAddr(t *testing.T) {
+	t.Setenv("DATAVAL_LOG_LEVEL", "debug")
+	t.Setenv("DATAVAL_HTTP_LADDR", "0.0.0.0:8181")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -28,6 +40,7 @@ func TestMustLoad_MissingRequiredEnv(t *testing.T) {
 func TestMustLoad_InvalidLogLevel(t *testing.T) {
 	t.Setenv("DATAVAL_LOG_LEVEL", "hello")
 	t.Setenv("DATAVAL_HTTP_LADDR", "0.0.0.0:8181")
+	t.Setenv("DATAVAL_GRPC_ADDR", "0.0.0.0:9191")
 
 	require.Panics(t, func() {
 		config.MustLoad()

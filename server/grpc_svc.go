@@ -1,0 +1,54 @@
+package server
+
+import (
+	"context"
+	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/medibloc/panacea-core/v2/app/params"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"time"
+)
+
+type GrpcService struct {
+	addr           string
+	encodingConfig params.EncodingConfig
+}
+
+func NewGrpcService(grpcAddr string, encodingConfig params.EncodingConfig) *GrpcService {
+	return &GrpcService{
+		addr:           grpcAddr,
+		encodingConfig: encodingConfig,
+	}
+}
+
+// GetPubKey gets the public key from blockchain.
+func (svc GrpcService) GetPubKey(panaceaAddr string) ([]byte, error) {
+	log.Infof("Dial to %s", svc.addr)
+	conn, err := grpc.Dial(svc.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial grpc: %w", err)
+	}
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Errorf("failed to close grpc connection %v", err)
+		}
+	}()
+
+	client := authtypes.NewQueryClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: panaceaAddr})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account info via grpc: %w", err)
+	}
+
+	var acc authtypes.AccountI
+	if err := svc.encodingConfig.InterfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
+		return nil, fmt.Errorf("failed to unpack account info: %w", err)
+	}
+	return acc.GetPubKey().Bytes(), nil
+}

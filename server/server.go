@@ -1,6 +1,7 @@
 package server
 
 import (
+	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"net/http"
 	"time"
 
@@ -10,8 +11,11 @@ import (
 )
 
 func Run(conf *config.Config) {
+	// encodingConfig for decoding google.protobuf.Any type in grpc response
+	encodingConfig := panaceaapp.MakeEncodingConfig()
+
 	router := mux.NewRouter()
-	router.HandleFunc("/validate-data/{dealId}", handleRequest).Methods(http.MethodPost)
+	router.HandleFunc("/validate-data/{dealId}", handleRequest(conf.GrpcAddress, encodingConfig)).Methods(http.MethodPost)
 
 	server := &http.Server{
 		Handler:      router,
