@@ -15,7 +15,7 @@ func Run(conf *config.Config) {
 	encodingConfig := panaceaapp.MakeEncodingConfig()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/validate-data/{dealId}", handleRequest(conf.GrpcAddress, encodingConfig)).Methods(http.MethodPost)
+	router.HandleFunc("/validate-data/{dealId}", handleRequest(conf.PanaceaGrpcAddress, encodingConfig)).Methods(http.MethodPost)
 
 	server := &http.Server{
 		Handler:      router,

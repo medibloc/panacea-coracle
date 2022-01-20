@@ -80,7 +80,7 @@ func handleRequest(grpcAddr string, encodingConfig params.EncodingConfig) handle
 
 		// make downloadURL
 		dataURL := s3Store.MakeDownloadURL(dealId, fileName)
-		encryptedDataURL, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), []byte(dataURL))
+		encryptedDataURL, err := crypto.EncryptData(pubKeyBytes, []byte(dataURL))
 		if err != nil {
 			log.Error("failed to make encryptedDataURL: ", err)
 		}
