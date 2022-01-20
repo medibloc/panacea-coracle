@@ -69,10 +69,11 @@ func TestHash(t *testing.T) {
 	origData := []byte("encrypt origData please")
 	hashData := Hash(origData)
 	hashDataStr := base64.StdEncoding.EncodeToString(hashData)
+
 	require.NotNil(t, hashData)
 	require.Equal(t, 32, len(hashData))
-	require.Equal(t, 64, len(hashDataStr))
+	require.Equal(t, 44, len(hashDataStr))
 
-	expectedHashDataStr := "d0b6d2dd9790d430785d8a8cf1cb86dfe9a247664a08c49619267960a9f3a46d"
+	expectedHashDataStr := "0LbS3ZeQ1DB4XYqM8cuG3+miR2ZKCMSWGSZ5YKnzpG0="
 	require.Equal(t, expectedHashDataStr, hashDataStr)
 }
