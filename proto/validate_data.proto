@@ -1,0 +1,23 @@
+// TODO This proto file will be deleted when added to the panacea-core
+syntax = "proto3";
+package validate;
+
+option java_multiple_files = true;
+option go_package = "/types";
+
+import "gogoproto/gogo.proto";
+
+// DataValidationCertificate defines data validation certificate.
+message DataValidationCertificate {
+  UnsignedDataValidationCertificate unsigned_cert = 1;
+  bytes signature = 2;
+}
+
+// UnsignedDataValidationCertificate defines unsigned data validation certificate.
+message UnsignedDataValidationCertificate {
+  uint64 deal_id = 1;
+  string data_hash = 2;
+  string encrypted_data_url = 3;
+  string data_validator_address = 4;
+  string requester_address = 5;
+}

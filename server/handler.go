@@ -1,10 +1,15 @@
 package server
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	"os"
+
 	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/types"
@@ -14,10 +19,33 @@ import (
 	"net/http"
 )
 
-func handleRequest(w http.ResponseWriter, r *http.Request) {
+var (
+	_ http.Handler = ValidateDataHandler{}
+)
+
+type ValidateDataHandler struct {
+	validatorAccount account.ValidatorAccount
+}
+
+// NewValidateDataHandler Create a ValidateData handler.
+// Validator_MNEMONIC should be received as an environmental variable.
+func NewValidateDataHandler() (http.Handler, error) {
+	mnemonic := os.Getenv("VALIDATOR_MNEMONIC")
+	validatorAccount, err := account.NewValidatorAccount(mnemonic)
+	if err != nil {
+		return ValidateDataHandler{}, errors.Wrap(err, "failed to make ValidateDataHandler")
+	}
+
+	return ValidateDataHandler{
+		validatorAccount: validatorAccount,
+	}, nil
+}
+
+func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// content type check from header
-	if r.Header.Get("Content-Type") != "application/json" {
-		http.Error(w, "Only application/json is supported", http.StatusUnsupportedMediaType)
+	if err, errCode := v.validate(r); err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), errCode)
 		return
 	}
 
@@ -51,21 +79,26 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	encryptedData, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), jsonInput)
 	if err != nil {
 		log.Error("failed to encrypt data: ", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 	log.Debug(encryptedData)
 
 	// make dataHash and upload to s3Store
-	dataHash := hex.EncodeToString(crypto.Hash(jsonInput))
+	dataHash := base64.StdEncoding.EncodeToString(crypto.Hash(jsonInput))
 
 	s3Store, err := store.NewDefaultS3Store()
 	if err != nil {
 		log.Error("failed to create s3Store: ", err)
+		http.Error(w, "failed to create s3Store", http.StatusInternalServerError)
+		return
 	}
-
 	fileName := s3Store.MakeRandomFilename()
 	err = s3Store.UploadFile(dealId, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
+		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
+		return
 	}
 
 	// make downloadURL
@@ -73,13 +106,37 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	encryptedDataURL, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
+		http.Error(w, "failed to make encryptedDataURL", http.StatusInternalServerError)
+		return
 	}
 
-	resp := &types.CertificateResponse{}
+	unsignedCertificate, err := types.NewUnsignedDataValidationCertificate(
+		dealId,
+		dataHash,
+		base64.StdEncoding.EncodeToString(encryptedDataURL),
+		r.FormValue("requester_address"),
+		v.validatorAccount.GetAddress())
+	if err != nil {
+		log.Error("failed to make unsignedDataValidationCertificate: ", err)
+		http.Error(w, "failed to make unsignedDataValidationCertificate", http.StatusInternalServerError)
+		return
+	}
 
-	resp.Certificate.DealId = dealId
-	resp.Certificate.DataHash = dataHash
-	resp.Certificate.EncryptedDataURL = hex.EncodeToString(encryptedDataURL)
+	serializedCertificate, err := unsignedCertificate.Marshal()
+	if err != nil {
+		log.Error("failed to make marshal unsignedDataValidationCertificate: ", err)
+		http.Error(w, "failed to make marshal unsignedDataValidationCertificate", http.StatusInternalServerError)
+		return
+	}
+
+	signature, err := crypto.SignData(tempPrivKey.Serialize(), serializedCertificate)
+	if err != nil {
+		log.Error("failed to make signature: ", err)
+		http.Error(w, "failed to make signature", http.StatusInternalServerError)
+		return
+	}
+
+	resp := types.NewDataValidationCertificate(unsignedCertificate, signature)
 
 	// sign certificate
 	marshaledResp, err := json.Marshal(resp)
@@ -91,3 +148,16 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	writeJSONResponse(w, http.StatusCreated, marshaledResp)
 }
+
+// validate Verification of parameter
+func (v ValidateDataHandler) validate(r *http.Request) (error, int) {
+	if r.Header.Get("Content-Type") != "application/json" {
+		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
+	}
+
+	if r.FormValue("requester_address") == "" {
+		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
+	}
+	return nil, 0
+}
+

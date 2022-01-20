@@ -9,8 +9,15 @@ import (
 )
 
 func Run() {
+	SetConfig()
+
+	validateDataHandler, err := NewValidateDataHandler()
+	if err != nil {
+		panic(err)
+	}
+
 	router := mux.NewRouter()
-	router.HandleFunc("/validate-data/{dealId}", handleRequest).Methods(http.MethodPost)
+	router.Handle("/validate-data/{dealId}", validateDataHandler)
 
 	server := &http.Server{
 		Handler:      router,
@@ -20,7 +27,7 @@ func Run() {
 	}
 
 	fmt.Println("👻 Data Validator Server Started 🎃")
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}
