@@ -1,10 +1,12 @@
 package server
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
+	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
@@ -40,22 +42,46 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dealId := mux.Vars(r)[types.DealIdKey]
+
 	// encrypt and store data
 	// TODO: get recipient pub key info from blockchain
 	tempPrivKey, _ := btcec.NewPrivateKey(btcec.S256())
-	encryptedData, err := crypto.EncryptData(tempPrivKey.PubKey().SerializeCompressed(), jsonInput)
+	tempPubKey := tempPrivKey.PubKey()
+	encryptedData, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), jsonInput)
 	if err != nil {
 		log.Error("failed to encrypt data: ", err)
 	}
 	log.Debug(encryptedData)
 
-	// TODO: sign certificate
+	// make dataHash and upload to s3Store
+	dataHash := hex.EncodeToString(crypto.Hash(jsonInput))
+
+	s3Store, err := store.NewDefaultS3Store()
+	if err != nil {
+		log.Error("failed to create s3Store: ", err)
+	}
+
+	fileName := s3Store.MakeRandomFilename()
+	err = s3Store.UploadFile(dealId, fileName, encryptedData)
+	if err != nil {
+		log.Error("failed to store data: ", err)
+	}
+
+	// make downloadURL
+	dataURL := s3Store.MakeDownloadURL(dealId, fileName)
+	encryptedDataURL, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), []byte(dataURL))
+	if err != nil {
+		log.Error("failed to make encryptedDataURL: ", err)
+	}
 
 	resp := &types.CertificateResponse{}
 
-	dealId := mux.Vars(r)[types.DealIdKey]
 	resp.Certificate.DealId = dealId
+	resp.Certificate.DataHash = dataHash
+	resp.Certificate.EncryptedDataURL = hex.EncodeToString(encryptedDataURL)
 
+	// sign certificate
 	marshaledResp, err := json.Marshal(resp)
 	if err != nil {
 		log.Error(err)
