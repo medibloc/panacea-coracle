@@ -30,7 +30,7 @@ type ValidateDataHandler struct {
 // NewValidateDataHandler Create a ValidateData handler.
 // Validator_MNEMONIC should be received as an environmental variable.
 func NewValidateDataHandler() (http.Handler, error) {
-	mnemonic := os.Getenv("VALIDATOR_MNEMONIC")
+	mnemonic := os.Getenv(types.VALIDATOR_MNEMONIC)
 	validatorAccount, err := account.NewValidatorAccount(mnemonic)
 	if err != nil {
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to make ValidateDataHandler")
