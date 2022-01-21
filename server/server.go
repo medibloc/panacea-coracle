@@ -10,14 +10,15 @@ import (
 )
 
 func Run(conf *config.Config) {
-		SetConfig()
+	SetConfig()
 
-		validateDataHandler, err := NewValidateDataHandler()
-		if err != nil {
-			panic(err)
-		}
+	validateDataHandler, err := NewValidateDataHandler(conf)
+
+	if err != nil {
+		panic(err)
+	}
 	router := mux.NewRouter()
-	router.Handle("/validate-data/{dealId}", validateDataHandler)
+	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
 
 	server := &http.Server{
 		Handler:      router,

@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"os"
+	"github.com/medibloc/panacea-data-market-validator/config"
 
 	"github.com/gorilla/mux"
+	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/store"
@@ -25,19 +25,22 @@ var (
 
 type ValidateDataHandler struct {
 	validatorAccount account.ValidatorAccount
+	grpcService      GrpcService
 }
 
 // NewValidateDataHandler Create a ValidateData handler.
 // Validator_MNEMONIC should be received as an environmental variable.
-func NewValidateDataHandler() (http.Handler, error) {
-	mnemonic := os.Getenv(types.VALIDATOR_MNEMONIC)
-	validatorAccount, err := account.NewValidatorAccount(mnemonic)
+func NewValidateDataHandler(conf *config.Config) (http.Handler, error) {
+	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to make ValidateDataHandler")
 	}
 
+	grpcService := NewGrpcService(conf.PanaceaGrpcAddress, panaceaapp.MakeEncodingConfig())
+
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
+		grpcService:      *grpcService,
 	}, nil
 }
 
@@ -70,13 +73,18 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pubKeyBytes, err := v.grpcService.GetPubKey(types.SampleAddress)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, "failed to get public key", http.StatusInternalServerError)
+		return
+	}
+
 	dealId := mux.Vars(r)[types.DealIdKey]
 
 	// encrypt and store data
 	// TODO: get recipient pub key info from blockchain
-	tempPrivKey, _ := btcec.NewPrivateKey(btcec.S256())
-	tempPubKey := tempPrivKey.PubKey()
-	encryptedData, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), jsonInput)
+	encryptedData, err := crypto.EncryptData(pubKeyBytes, jsonInput)
 	if err != nil {
 		log.Error("failed to encrypt data: ", err)
 		http.Error(w, "", http.StatusInternalServerError)
@@ -103,19 +111,20 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// make downloadURL
 	dataURL := s3Store.MakeDownloadURL(dealId, fileName)
-	encryptedDataURL, err := crypto.EncryptData(tempPubKey.SerializeCompressed(), []byte(dataURL))
+	encryptedDataURL, err := crypto.EncryptData(pubKeyBytes, []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
 		http.Error(w, "failed to make encryptedDataURL", http.StatusInternalServerError)
 		return
 	}
 
+	validatorAccount := v.validatorAccount
 	unsignedCertificate, err := types.NewUnsignedDataValidationCertificate(
 		dealId,
 		dataHash,
 		base64.StdEncoding.EncodeToString(encryptedDataURL),
 		r.FormValue("requester_address"),
-		v.validatorAccount.GetAddress())
+		validatorAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataValidationCertificate: ", err)
 		http.Error(w, "failed to make unsignedDataValidationCertificate", http.StatusInternalServerError)
@@ -129,7 +138,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signature, err := crypto.SignData(tempPrivKey.Serialize(), serializedCertificate)
+	signature, err := crypto.SignData(validatorAccount.GetPrivKey().Bytes(), serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
 		http.Error(w, "failed to make signature", http.StatusInternalServerError)
@@ -160,4 +169,3 @@ func (v ValidateDataHandler) validate(r *http.Request) (error, int) {
 	}
 	return nil, 0
 }
-

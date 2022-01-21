@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/account"
-	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -14,7 +13,7 @@ import (
 func TestAccount(t *testing.T) {
 	panaceaapp.SetConfig()
 
-	mnemonic := os.Getenv(types.VALIDATOR_MNEMONIC)
+	mnemonic := os.Getenv("VALIDATOR_MNEMONIC")
 
 	acc, err := account.NewValidatorAccount(mnemonic)
 	require.NoError(t, err)
