@@ -5,7 +5,6 @@ type DataValidationCertificate struct {
 	DataHash             string
 	EncryptedDataURL     string
 	DataValidatorAddress string
-	// TODO sharedECCKey could be added for encryption (ECIES)
 }
 
 type CertificateResponse struct {
