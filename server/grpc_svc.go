@@ -5,9 +5,11 @@ import (
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/medibloc/panacea-core/v2/app/params"
+	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"strconv"
 	"time"
 )
 
@@ -51,4 +53,34 @@ func (svc GrpcService) GetPubKey(panaceaAddr string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
 	return acc.GetPubKey().Bytes(), nil
+}
+
+func (svc GrpcService) GetDeal(id string) (markettypes.Deal, error) {
+	dealId, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return markettypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)
+	}
+
+	log.Infof("Dial to %s", svc.addr)
+	conn, err := grpc.Dial(svc.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return markettypes.Deal{}, fmt.Errorf("failed to dial grpc: %w", err)
+	}
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Errorf("failed to close grpc connection %v", err)
+		}
+	}()
+
+	client := markettypes.NewQueryClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.Deal(ctx, &markettypes.QueryDealRequest{DealId: dealId})
+	if err != nil {
+		return markettypes.Deal{}, fmt.Errorf("failed to get deal info: %w", err)
+	}
+
+	return *response.GetDeal(), nil
 }

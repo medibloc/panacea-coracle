@@ -32,28 +32,42 @@ func handleRequest(grpcAddr string, encodingConfig params.EncodingConfig) handle
 			return
 		}
 
-		// TODO: get deal information from panacea
-		desiredSchemaURI := "https://json.schemastore.org/github-issue-forms.json"
+		dealId := mux.Vars(r)[types.DealIdKey]
 
-		// TODO: check if data validator is trusted or not
+		// New grpc service connected to blockchain
+		grpcSvc := NewGrpcService(grpcAddr, encodingConfig)
 
-		// validate data (schema check)
-		if err := validation.ValidateJSONSchema(jsonInput, desiredSchemaURI); err != nil {
+		// get deal info by Id from blockchain
+		deal, err := grpcSvc.GetDeal(dealId)
+		if err != nil {
 			log.Error(err)
-			http.Error(w, "JSON schema validation failed", http.StatusForbidden)
+			http.Error(w, "failed to get deal information", http.StatusInternalServerError)
 			return
 		}
 
-		grpcSvc := NewGrpcService(grpcAddr, encodingConfig)
+		// trusted validator check
+		if !validation.Contains(deal.TrustedDataValidators, types.DataValidatorAddress) {
+			log.Error("not a trusted data-validator")
+			http.Error(w, "invalid data validator", http.StatusBadRequest)
+			return
+		}
 
-		pubKeyBytes, err := grpcSvc.GetPubKey(types.SampleAddress)
+		// data schema validation
+		for _, uri := range deal.DataSchema {
+			if err := validation.ValidateJSONSchema(jsonInput, uri); err != nil {
+				log.Error(err)
+				http.Error(w, "JSON schema validation failed", http.StatusForbidden)
+				return
+			}
+		}
+
+		// get public key of deal owner from blockchain
+		pubKeyBytes, err := grpcSvc.GetPubKey(deal.Owner)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "failed to get public key", http.StatusInternalServerError)
 			return
 		}
-
-		dealId := mux.Vars(r)[types.DealIdKey]
 
 		// encrypt and store data
 		// TODO: get recipient pub key info from blockchain
