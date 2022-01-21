@@ -35,10 +35,10 @@ func handleRequest(grpcAddr string, encodingConfig params.EncodingConfig) handle
 		dealId := mux.Vars(r)[types.DealIdKey]
 
 		// New grpc service connected to blockchain
-		grpcSvc := NewGrpcService(grpcAddr, encodingConfig)
+		grpcCli := NewGrpcClient(grpcAddr, encodingConfig)
 
 		// get deal info by Id from blockchain
-		deal, err := grpcSvc.GetDeal(dealId)
+		deal, err := grpcCli.GetDeal(dealId)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "failed to get deal information", http.StatusInternalServerError)
@@ -62,7 +62,7 @@ func handleRequest(grpcAddr string, encodingConfig params.EncodingConfig) handle
 		}
 
 		// get public key of deal owner from blockchain
-		pubKeyBytes, err := grpcSvc.GetPubKey(deal.Owner)
+		pubKeyBytes, err := grpcCli.GetPubKey(deal.Owner)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "failed to get public key", http.StatusInternalServerError)

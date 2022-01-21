@@ -13,22 +13,22 @@ import (
 	"time"
 )
 
-type GrpcService struct {
+type GrpcClient struct {
 	addr           string
 	encodingConfig params.EncodingConfig
 }
 
-func NewGrpcService(grpcAddr string, encodingConfig params.EncodingConfig) *GrpcService {
-	return &GrpcService{
+func NewGrpcClient(grpcAddr string, encodingConfig params.EncodingConfig) *GrpcClient {
+	return &GrpcClient{
 		addr:           grpcAddr,
 		encodingConfig: encodingConfig,
 	}
 }
 
 // GetPubKey gets the public key from blockchain.
-func (svc GrpcService) GetPubKey(panaceaAddr string) ([]byte, error) {
-	log.Infof("Dial to %s", svc.addr)
-	conn, err := grpc.Dial(svc.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func (cli GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
+	log.Infof("Dial to %s", cli.addr)
+	conn, err := grpc.Dial(cli.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial grpc: %w", err)
 	}
@@ -49,20 +49,20 @@ func (svc GrpcService) GetPubKey(panaceaAddr string) ([]byte, error) {
 	}
 
 	var acc authtypes.AccountI
-	if err := svc.encodingConfig.InterfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
+	if err := cli.encodingConfig.InterfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
 		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
 	return acc.GetPubKey().Bytes(), nil
 }
 
-func (svc GrpcService) GetDeal(id string) (markettypes.Deal, error) {
+func (cli GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
 	dealId, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return markettypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)
 	}
 
-	log.Infof("Dial to %s", svc.addr)
-	conn, err := grpc.Dial(svc.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	log.Infof("Dial to %s", cli.addr)
+	conn, err := grpc.Dial(cli.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return markettypes.Deal{}, fmt.Errorf("failed to dial grpc: %w", err)
 	}
