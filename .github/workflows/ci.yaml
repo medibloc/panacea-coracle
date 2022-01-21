@@ -26,4 +26,6 @@ jobs:
         run: make build
 
       - name: Test
+        env:
+          VALIDATOR_MNEMONIC: ${{ secrets.VALIDATOR_MNEMONIC }}
         run: make test
