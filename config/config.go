@@ -9,8 +9,10 @@ import (
 const envVarPrefix = "DATAVAL"
 
 type Config struct {
-	LogLevel       LogLevel `envconfig:"DATAVAL_LOG_LEVEL" default:"info"`
-	HTTPListenAddr string   `envconfig:"DATAVAL_HTTP_LADDR" required:"true"`
+	LogLevel           LogLevel `envconfig:"DATAVAL_LOG_LEVEL" default:"info"`
+	HTTPListenAddr     string   `envconfig:"DATAVAL_HTTP_LADDR" required:"true"`
+	PanaceaGrpcAddress string   `envconfig:"DATAVAL_PANACEA_GRPC_ADDR" required:"true"`
+	ValidatorMnemonic  string   `envconfig:"VALIDATOR_MNEMONIC" required:"true"`
 }
 
 // LogLevel is a type aliasing for the envconfig custom decoder.
