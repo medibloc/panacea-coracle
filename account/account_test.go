@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// In order for this test to be successful, a valid MNEMONIC must be added to the environmental variable(VALIDATOR_MNEMONIC)
 func TestAccount(t *testing.T) {
 	panaceaapp.SetConfig()
 
