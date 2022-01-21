@@ -28,4 +28,6 @@ jobs:
       - name: Test
         env:
           VALIDATOR_MNEMONIC: ${{ secrets.VALIDATOR_MNEMONIC }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: make test
