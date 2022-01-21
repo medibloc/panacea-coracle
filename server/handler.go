@@ -69,8 +69,6 @@ func handleRequest(grpcAddr string, encodingConfig params.EncodingConfig) handle
 			return
 		}
 
-		dealId := mux.Vars(r)[types.DealIdKey]
-
 		// encrypt and store data
 		// TODO: get recipient pub key info from blockchain
 		encryptedData, err := crypto.EncryptData(pubKeyBytes, jsonInput)
