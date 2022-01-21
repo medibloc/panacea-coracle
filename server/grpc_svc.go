@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/medibloc/panacea-core/v2/app/params"
 	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
@@ -27,7 +26,7 @@ func NewGrpcClient(grpcAddr string, encodingConfig params.EncodingConfig) *GrpcC
 }
 
 // GetPubKey gets the public key from blockchain.
-func (cli GrpcClient) GetPubKey(panaceaAddr string) (cryptotypes.PubKey, error) {
+func (cli GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
 	log.Infof("Dial to %s", cli.addr)
 	conn, err := grpc.Dial(cli.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -53,7 +52,7 @@ func (cli GrpcClient) GetPubKey(panaceaAddr string) (cryptotypes.PubKey, error) 
 	if err := cli.encodingConfig.InterfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
 		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
-	return acc.GetPubKey(), nil
+	return acc.GetPubKey().Bytes(), nil
 }
 
 func (cli GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
