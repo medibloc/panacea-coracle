@@ -18,7 +18,7 @@ func newContext(conf *config.Config) (*Context, error) {
 	log.Infof("dial to blockchain: %s", conf.PanaceaGrpcAddress)
 	conn, err := grpc.Dial(conf.PanaceaGrpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to gRPC connection : %w", err)
+		return nil, fmt.Errorf("failed to connect to blockchain : %w", err)
 	}
 
 	return &Context{
