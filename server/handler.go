@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	panaceaapp "github.com/medibloc/panacea-core/v2/app"
+	"github.com/medibloc/panacea-core/v2/app/params"
 	"github.com/medibloc/panacea-data-market-validator/config"
+	"google.golang.org/grpc"
 
 	"github.com/gorilla/mux"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/store"
@@ -25,22 +27,22 @@ var (
 
 type ValidateDataHandler struct {
 	validatorAccount account.ValidatorAccount
-	grpcClient       GrpcClient
+	encodingConfig   params.EncodingConfig
+	conn             *grpc.ClientConn
 }
 
 // NewValidateDataHandler Create a ValidateData handler.
 // Validator_MNEMONIC should be received as an environmental variable.
-func NewValidateDataHandler(conf *config.Config) (http.Handler, error) {
+func NewValidateDataHandler(conf *config.Config, conn *grpc.ClientConn) (http.Handler, error) {
 	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to make ValidateDataHandler")
 	}
 
-	grpcClient := NewGrpcClient(conf.PanaceaGrpcAddress, panaceaapp.MakeEncodingConfig())
-
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
-		grpcClient:       *grpcClient,
+		conn:             conn,
+		encodingConfig:   panaceaapp.MakeEncodingConfig(),
 	}, nil
 }
 
@@ -62,13 +64,10 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	dealId := mux.Vars(r)[types.DealIdKey]
 
-	// New grpc service connected to blockchain
-	grpcCli := v.grpcClient
-
 	// get deal info by Id from blockchain
-	deal, err := grpcCli.GetDeal(dealId)
+	deal, err := GetDeal(v.conn, dealId)
 	if err != nil {
-		log.Error(err)
+		log.Error("failed to get deal information: ", err)
 		http.Error(w, "failed to get deal information", http.StatusInternalServerError)
 		return
 	}
@@ -93,9 +92,9 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// encrypt and store data
-	ownerPubKey, err := v.grpcClient.GetPubKey(deal.Owner)
+	ownerPubKey, err := GetPubKey(v.conn, deal.Owner, v.encodingConfig)
 	if err != nil {
-		log.Error(err)
+		log.Error("failed to get public key: ", err)
 		http.Error(w, "failed to get public key", http.StatusInternalServerError)
 		return
 	}
