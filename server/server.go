@@ -1,8 +1,6 @@
 package server
 
 import (
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
 	"time"
 
@@ -14,15 +12,17 @@ import (
 func Run(conf *config.Config) {
 	SetConfig()
 
-	log.Infof("dial to blockchain: %s", conf.PanaceaGrpcAddress)
-	conn, err := grpc.Dial(conf.PanaceaGrpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	ctx, err := newContext(conf)
+	if err != nil {
+		log.Panic(err)
+	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err := ctx.Close(); err != nil {
 			log.Panic(err)
 		}
 	}()
 
-	validateDataHandler, err := NewValidateDataHandler(conf, conn)
+	validateDataHandler, err := NewValidateDataHandler(conf, ctx)
 	if err != nil {
 		panic(err)
 	}

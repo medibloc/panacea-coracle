@@ -33,7 +33,7 @@ type ValidateDataHandler struct {
 
 // NewValidateDataHandler Create a ValidateData handler.
 // Validator_MNEMONIC should be received as an environmental variable.
-func NewValidateDataHandler(conf *config.Config, conn *grpc.ClientConn) (http.Handler, error) {
+func NewValidateDataHandler(conf *config.Config, ctx *Context) (http.Handler, error) {
 	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to make ValidateDataHandler")
@@ -41,7 +41,7 @@ func NewValidateDataHandler(conf *config.Config, conn *grpc.ClientConn) (http.Ha
 
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
-		conn:             conn,
+		conn:             ctx.conn,
 		encodingConfig:   panaceaapp.MakeEncodingConfig(),
 	}, nil
 }
