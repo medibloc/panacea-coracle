@@ -12,7 +12,17 @@ import (
 func Run(conf *config.Config) {
 	SetConfig()
 
-	validateDataHandler, err := NewValidateDataHandler(conf)
+	ctx, err := newContext(conf)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer func() {
+		if err := ctx.Close(); err != nil {
+			log.Panic(err)
+		}
+	}()
+
+	validateDataHandler, err := NewValidateDataHandler(ctx, conf)
 	if err != nil {
 		panic(err)
 	}
