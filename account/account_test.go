@@ -5,24 +5,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/account"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/stretchr/testify/require"
-	"os"
+	"strings"
 	"testing"
 )
 
-// In order for this test to be successful, a valid MNEMONIC must be added to the environmental variable(VALIDATOR_MNEMONIC)
+// This test creates MNEMONIC and checks whether address and publicKey are created normally
 func TestAccount(t *testing.T) {
 	panaceaapp.SetConfig()
 
-	mnemonic := os.Getenv("VALIDATOR_MNEMONIC")
+	mnemonic, err := crypto.GenerateMnemonic()
+	require.NoError(t, err)
 
 	acc, err := account.NewValidatorAccount(mnemonic)
 	require.NoError(t, err)
-	require.Equal(t, "panacea1gtx6lmnjg6ykvv07ruyxamth6yuhgcvmhg3pqz", acc.GetAddress())
+	require.Equal(t, 46, len(acc.GetAddress()))
+	require.True(t, strings.HasPrefix(acc.GetAddress(), "panacea1"))
 
-	priv2 := secp256k1.PrivKey{Key: acc.GetPrivKey().Bytes()}
+	priv := secp256k1.PrivKey{Key: acc.GetPrivKey().Bytes()}
 
-	pub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv2.PubKey())
+	pub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
-	require.Equal(t, "panaceapub1addwnpepqwa9p79deddu9u3khl728ntfnyj6j37aguaxfht4u68hchvt048kw407c0q", pub)
+	require.Equal(t, 78, len(pub))
+	require.True(t, strings.HasPrefix(pub, "panaceapub1"))
 }
+

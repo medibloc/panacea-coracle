@@ -31,12 +31,11 @@ type ValidateDataHandler struct {
 	conn             *grpc.ClientConn
 }
 
-// NewValidateDataHandler Create a ValidateData handler.
-// Validator_MNEMONIC should be received as an environmental variable.
+// NewValidateDataHandler creates a ValidateData handler.
 func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, error) {
 	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
-		return ValidateDataHandler{}, errors.Wrap(err, "failed to make ValidateDataHandler")
+		return ValidateDataHandler{}, errors.Wrap(err, "failed to NewValidatorAccount")
 	}
 
 	return ValidateDataHandler{
@@ -152,7 +151,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signature, err := crypto.SignData(valAccount.GetPrivKey().Bytes(), serializedCertificate)
+	signature, err := valAccount.GetPrivKey().Sign(serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
 		http.Error(w, "failed to make signature", http.StatusInternalServerError)
