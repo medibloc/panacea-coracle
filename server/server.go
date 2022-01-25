@@ -22,7 +22,7 @@ func Run(conf *config.Config) {
 		}
 	}()
 
-	validateDataHandler, err := NewValidateDataHandler(conf, ctx)
+	validateDataHandler, err := NewValidateDataHandler(ctx, conf)
 	if err != nil {
 		panic(err)
 	}
