@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
 )
@@ -22,23 +21,4 @@ func EncryptData(pubKeyByte []byte, data []byte) ([]byte, error) {
 	}
 
 	return encryptedData, nil
-}
-
-func SignData(privateKey []byte, data []byte) ([]byte, error) {
-	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKey)
-
-	sign, err := privKey.Sign(data)
-	if err != nil {
-		return nil, err
-	}
-	return sign.Serialize(), nil
-}
-
-// Hash with SHA256.
-func Hash(data []byte) []byte {
-	hash := sha256.New()
-
-	hash.Write(data)
-
-	return hash.Sum(nil)
 }

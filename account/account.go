@@ -1,41 +1,37 @@
 package account
 
 import (
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/types"
-	panaceacrypto "github.com/medibloc/panacea-core/v2/x/did/client/crypto"
-	"github.com/tendermint/tendermint/crypto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 
 type ValidatorAccount struct {
-	privKey crypto.PrivKey
-	pubKey  crypto.PubKey
+	privKey tmcrypto.PrivKey
+	pubKey  tmcrypto.PubKey
 }
 
 func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
-	if mnemonic == "" {
-		return ValidatorAccount{}, fmt.Errorf("failed to get MNEMONIC ")
-	}
+	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic)
 
-	privKey, err := panaceacrypto.GenSecp256k1PrivKey(mnemonic, "")
 	if err != nil {
 		return ValidatorAccount{}, err
 	}
 
 	return ValidatorAccount{
 		privKey: privKey,
-		pubKey: privKey.PubKey(),
+		pubKey:  privKey.PubKey(),
 	}, nil
 }
 
 func (v ValidatorAccount) GetAddress() string {
-	return types.AccAddress(v.pubKey.Address().Bytes()).String()
+	return sdk.AccAddress(v.pubKey.Address().Bytes()).String()
 }
 
-func (v ValidatorAccount) GetPrivKey() crypto.PrivKey {
+func (v ValidatorAccount) GetPrivKey() tmcrypto.PrivKey {
 	return v.privKey
 }
 
-func (v ValidatorAccount) GetPubKey() crypto.PubKey {
+func (v ValidatorAccount) GetPubKey() tmcrypto.PubKey {
 	return v.pubKey
 }
