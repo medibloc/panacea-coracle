@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"bytes"
-	"encoding/hex"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -43,17 +42,4 @@ func TestEncryptData_FailDecryption(t *testing.T) {
 	// try to decrypt using privKey2
 	_, err = btcec.Decrypt(privKey2, cipherText)
 	require.Error(t, err)
-}
-
-// TestHash sha256 and hex conversion test.
-func TestHash(t *testing.T) {
-	origData := []byte("encrypt origData please")
-	hashData := Hash(origData)
-	hashDataStr := hex.EncodeToString(hashData)
-	require.NotNil(t, hashData)
-	require.Equal(t, 32, len(hashData))
-	require.Equal(t, 64, len(hashDataStr))
-
-	expectedHashDataStr := "d0b6d2dd9790d430785d8a8cf1cb86dfe9a247664a08c49619267960a9f3a46d"
-	require.Equal(t, expectedHashDataStr, hashDataStr)
 }
