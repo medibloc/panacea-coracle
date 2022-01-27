@@ -14,6 +14,8 @@ jobs:
 
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: Run Panacea
         run: |
           ls -la ${{ github.workspace }}
@@ -28,5 +30,3 @@ jobs:
             ghcr.io/medibloc/panacea-core:master \
             ls -la /e2e
 
-      - name: Checkout code into the Go module directory
-        uses: actions/checkout@v2
