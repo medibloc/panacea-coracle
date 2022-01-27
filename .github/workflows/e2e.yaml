@@ -19,6 +19,7 @@ jobs:
           docker run -d \
             -p 9090:9090 \
             -v ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh:z \
+            --privileged \
             --entrypoint "/e2e/init_panacea.sh" \
             --health-cmd "/usr/bin/panacead status" \
             --health-interval 5s \
