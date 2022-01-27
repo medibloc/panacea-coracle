@@ -17,7 +17,7 @@ jobs:
         ports:
           - 9090:9090
         options: >-
-          "panacead start"
+          --entry-point "panacead start"
           --health-cmd "panacead status"
           --health-interval 5s
           --health-timeout 5s
