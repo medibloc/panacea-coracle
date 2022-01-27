@@ -16,9 +16,8 @@ jobs:
         image: ghcr.io/medibloc/panacea-core:master
         ports:
           - 9090:9090
-        volumes:
-          - ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh:Z
         options: >-
+          -v ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh:Z
           --entrypoint "/e2e/init_panacea.sh"
           --health-cmd "/usr/bin/panacead status"
           --health-interval 5s
