@@ -11,20 +11,20 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
 
-    services:
-      panacea:
-        image: ghcr.io/medibloc/panacea-core:master
-        ports:
-          - 9090:9090
-        options: >-
-          --privileged
-          -v ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh:z
-          --entrypoint "/e2e/init_panacea.sh"
-          --health-cmd "/usr/bin/panacead status"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+
 
     steps:
+      - name: Run Panacea
+        run: |
+          docker run -d \
+            -p 9090:9090 \
+            -v ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh:z \
+            --entrypoint "/e2e/init_panacea.sh" \
+            --health-cmd "/usr/bin/panacead status" \
+            --health-interval 5s \
+            --health-timeout 5s \
+            --health-retries 10 \
+            ghcr.io/medibloc/panacea-core:master
+
       - name: Checkout code into the Go module directory
         uses: actions/checkout@v2
