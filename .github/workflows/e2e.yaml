@@ -17,6 +17,7 @@ jobs:
       - name: Run Panacea
         run: |
           ls -la ${{ github.workspace }}
+          ls -la $(pwd)
           docker run \
             -p 9090:9090 \
             -v ${{ github.workspace }}/e2e:/e2e:rw \
