@@ -16,12 +16,14 @@ jobs:
         image: ghcr.io/medibloc/panacea-core:master
         ports:
           - 9090:9090
+        volumes:
+          - e2e:/e2e
         options: >-
+          --entrypoint "/e2e/init_panacea.sh"
           --health-cmd "/usr/bin/panacead status"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-          /usr/bin/panacead start
 
     steps:
       - name: Checkout code into the Go module directory
