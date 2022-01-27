@@ -18,7 +18,7 @@ jobs:
         run: |
           docker run \
             -p 9090:9090 \
-            -v ${{ github.workspace }}/e2e:/e2e \
+            -v ${{ github.workspace }}/e2e:/e2e:z \
             --health-cmd "/usr/bin/panacead status" \
             --health-interval 5s \
             --health-timeout 5s \
