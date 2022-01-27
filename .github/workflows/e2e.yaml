@@ -17,7 +17,7 @@ jobs:
         ports:
           - 9090:9090
         volumes:
-          - ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh
+          - ${{ github.workspace }}/e2e/init_panacea.sh:/e2e/init_panacea.sh:Z
         options: >-
           --entrypoint "/e2e/init_panacea.sh"
           --health-cmd "/usr/bin/panacead status"
