@@ -1,0 +1,25 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:    # only for pushes on main
+      - main
+  pull_request:  # for all PRs regardless of its base branch
+
+jobs:
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      panacea:
+        image: ghcr.io/medibloc/panacea-core:master
+        ports:
+          - 9090:9090
+
+    steps:
+      - name: Checkout code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: make build
