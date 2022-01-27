@@ -17,11 +17,11 @@ jobs:
         ports:
           - 9090:9090
         options: >-
-          --entrypoint "/usr/bin/panacead start"
           --health-cmd "/usr/bin/panacead status"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+          /usr/bin/panacead start
 
     steps:
       - name: Checkout code into the Go module directory
