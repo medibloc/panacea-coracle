@@ -35,6 +35,7 @@ func Run(conf *config.Config) {
 	if err != nil {
 		log.Panic(err)
 	}
+
 	router := mux.NewRouter()
 	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
 
@@ -62,7 +63,14 @@ func Run(conf *config.Config) {
 
 		log.Info("grpc connection is closing")
 
-		if err := gCtx.Value(types.CtxGrpcConnKey).(*grpc.ClientConn).Close(); err != nil {
+		conn := gCtx.Value(types.CtxGrpcConnKey)
+		if conn == nil {
+			grpcClosed <- false
+			return types.ErrNoGrpcConnection
+		}
+
+		if err := conn.(*grpc.ClientConn).Close(); err != nil {
+			grpcClosed <- false
 			return err
 		}
 
@@ -84,6 +92,6 @@ func Run(conf *config.Config) {
 	})
 
 	if err := g.Wait(); err != nil {
-		log.Infof("exit reason : %s \n", err)
+		log.Errorf("exit reason : %s \n", err)
 	}
 }
