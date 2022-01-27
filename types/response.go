@@ -15,6 +15,8 @@ type DataValidationCertificateResponse struct {
 	SignatureBase64 string
 }
 
+// NewUnsignedDataValidationCertificateResponse parse UnsignedDataValidationCertificate
+// dataHash and encryptedDataUrl are automatically base64 encoded
 func NewUnsignedDataValidationCertificateResponse(certificate UnsignedDataValidationCertificate) UnsignedDataValidationCertificateResponse {
 	return UnsignedDataValidationCertificateResponse{
 		DealId: certificate.DealId,
@@ -25,6 +27,8 @@ func NewUnsignedDataValidationCertificateResponse(certificate UnsignedDataValida
 	}
 }
 
+// NewDataValidationCertificateResponse parse UnsignedDataValidationCertificate and signature
+// signature is automatically base64 encoded
 func NewDataValidationCertificateResponse(unsignedCert UnsignedDataValidationCertificate, signature []byte) DataValidationCertificateResponse {
 	return DataValidationCertificateResponse{
 		UnsignedCert: NewUnsignedDataValidationCertificateResponse(unsignedCert),
