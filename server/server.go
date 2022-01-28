@@ -29,8 +29,6 @@ func Run(conf *config.Config) {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	grpcClosed := make(chan bool, 1)
-
 	validateDataHandler, err := NewValidateDataHandler(conf)
 	if err != nil {
 		log.Panic(err)
@@ -38,6 +36,7 @@ func Run(conf *config.Config) {
 
 	router := mux.NewRouter()
 	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
+	router.Use(gracefulShutdown)
 
 	server := &http.Server{
 		Handler:      router,
@@ -65,29 +64,14 @@ func Run(conf *config.Config) {
 
 		conn := gCtx.Value(types.CtxGrpcConnKey)
 		if conn == nil {
-			grpcClosed <- false
 			return types.ErrNoGrpcConnection
 		}
 
 		if err := conn.(*grpc.ClientConn).Close(); err != nil {
-			grpcClosed <- false
 			return err
 		}
 
-		grpcClosed <- true
-		return nil
-	})
-
-	g.Go(func() error {
-		// After closing gRPC connection, server will be closed
-		<-grpcClosed
-
-		defer func() {
-			close(grpcClosed)
-		}()
-
 		log.Info("server is closing")
-
 		return server.Shutdown(context.Background())
 	})
 
