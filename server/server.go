@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,6 +22,8 @@ import (
 func Run(conf *config.Config) {
 	panaceaapp.SetConfig()
 
+	var handlerWaitGroup = &sync.WaitGroup{}
+
 	ctx, err := newContext(conf)
 	if err != nil {
 		log.Panic(err)
@@ -29,7 +32,7 @@ func Run(conf *config.Config) {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	validateDataHandler, err := NewValidateDataHandler(conf)
+	validateDataHandler, err := NewValidateDataHandler(conf, handlerWaitGroup)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -59,6 +62,7 @@ func Run(conf *config.Config) {
 		// When os signal is detected, graceful shutdown starts
 		// gRPC connection is closed first
 		<-gCtx.Done()
+		handlerWaitGroup.Wait()
 
 		log.Info("grpc connection is closing")
 

@@ -18,6 +18,8 @@ import (
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"net/http"
+	"sync"
+	"time"
 )
 
 var (
@@ -27,10 +29,11 @@ var (
 type ValidateDataHandler struct {
 	validatorAccount account.ValidatorAccount
 	encodingConfig   params.EncodingConfig
+	waitGroup        *sync.WaitGroup
 }
 
 // NewValidateDataHandler creates a ValidateData handler.
-func NewValidateDataHandler(conf *config.Config) (http.Handler, error) {
+func NewValidateDataHandler(conf *config.Config, waitGroup *sync.WaitGroup) (http.Handler, error) {
 	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to NewValidatorAccount")
@@ -39,10 +42,14 @@ func NewValidateDataHandler(conf *config.Config) (http.Handler, error) {
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
 		encodingConfig:   panaceaapp.MakeEncodingConfig(),
+		waitGroup:        waitGroup,
 	}, nil
 }
 
 func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	v.waitGroup.Add(1)
+	defer v.waitGroup.Done()
+
 	ctx := r.Context()
 
 	conn := ctx.Value(types.CtxGrpcConnKey).(*grpc.ClientConn)
@@ -77,6 +84,8 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info("sleeping..")
+	time.Sleep(time.Second * 5)
 	// get validator account from mnemonic
 	valAccount := v.validatorAccount
 
