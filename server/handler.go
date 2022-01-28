@@ -4,11 +4,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-core/v2/app/params"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"google.golang.org/grpc"
+
+	"io/ioutil"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/account"
@@ -17,8 +21,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
 )
 
 var (
