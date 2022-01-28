@@ -32,14 +32,14 @@ func Run(conf *config.Config) {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	validateDataHandler, err := NewValidateDataHandler(conf, handlerWaitGroup)
+	validateDataHandler, err := NewValidateDataHandler(conf)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	router := mux.NewRouter()
 	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
-	router.Use(gracefulShutdown)
+	router.Use(gracefulShutdown(handlerWaitGroup))
 
 	server := &http.Server{
 		Handler:      router,
