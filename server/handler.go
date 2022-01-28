@@ -19,7 +19,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync"
-	"time"
 )
 
 var (
@@ -84,8 +83,6 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("sleeping..")
-	time.Sleep(time.Second * 5)
 	// get validator account from mnemonic
 	valAccount := v.validatorAccount
 
