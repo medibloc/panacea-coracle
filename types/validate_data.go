@@ -2,7 +2,7 @@ package types
 
 import "strconv"
 
-func NewUnsignedDataValidationCertificate(dealIdStr, dataHash, encryptedDataUrl, requesterAddress, dataValidatorAddress string) (UnsignedDataValidationCertificate, error) {
+func NewUnsignedDataValidationCertificate(dealIdStr string, dataHash []byte, encryptedDataUrl []byte, requesterAddress, dataValidatorAddress string) (UnsignedDataValidationCertificate, error) {
 	dealId, err := strconv.ParseUint(dealIdStr, 10, 64)
 	if err != nil {
 		return UnsignedDataValidationCertificate{}, err
@@ -15,11 +15,4 @@ func NewUnsignedDataValidationCertificate(dealIdStr, dataHash, encryptedDataUrl,
 		RequesterAddress: requesterAddress,
 		DataValidatorAddress: dataValidatorAddress,
 	}, nil
-}
-
-func NewDataValidationCertificate(unsignedCert UnsignedDataValidationCertificate, signature []byte) DataValidationCertificate {
-	return DataValidationCertificate{
-		UnsignedCert: &unsignedCert,
-		Signature: signature,
-	}
 }

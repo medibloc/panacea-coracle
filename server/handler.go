@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -107,7 +106,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Debug(encryptedData)
 
 	// make dataHash and upload to s3Store
-	dataHash := base64.StdEncoding.EncodeToString(crypto.Hash(jsonInput))
+	dataHash := crypto.Hash(jsonInput)
 
 	s3Store, err := store.NewDefaultS3Store()
 	if err != nil {
@@ -135,8 +134,8 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	unsignedCertificate, err := types.NewUnsignedDataValidationCertificate(
 		dealId,
 		dataHash,
-		base64.StdEncoding.EncodeToString(encryptedDataURL),
-		r.FormValue("requester_address"),
+		encryptedDataURL,
+		r.URL.Query().Get("requester_address"),
 		v.validatorAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataValidationCertificate: ", err)
@@ -158,7 +157,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := types.NewDataValidationCertificate(unsignedCertificate, signature)
+	resp := types.NewDataValidationCertificateResponse(unsignedCertificate, signature)
 
 	// sign certificate
 	marshaledResp, err := json.Marshal(resp)
