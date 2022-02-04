@@ -1,6 +1,5 @@
 package types
 
 const (
-	DealIdKey      = "dealId"
-	CtxGrpcConnKey = "grpcConn"
+	DealIdKey = "dealId"
 )
