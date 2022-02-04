@@ -17,6 +17,5 @@ func main() {
 		TimestampFormat: time.RFC3339,
 	})
 
-	// TODO: graceful shutdown
 	server.Run(&conf)
 }

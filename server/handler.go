@@ -4,18 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gorilla/mux"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-core/v2/app/params"
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"google.golang.org/grpc"
-
-	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/account"
+	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 	"io/ioutil"
 	"net/http"
 )
@@ -39,12 +38,18 @@ func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, er
 
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
-		conn:             ctx.conn,
 		encodingConfig:   panaceaapp.MakeEncodingConfig(),
+		conn:             ctx.conn,
 	}, nil
 }
 
 func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if v.conn == nil {
+		log.Error(types.ErrNoGrpcConnection)
+		http.Error(w, types.ErrNoGrpcConnection.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	// content type check from header
 	if err, errCode := v.validate(r); err != nil {
 		log.Error(err)

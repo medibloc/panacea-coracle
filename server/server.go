@@ -1,7 +1,11 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -17,16 +21,12 @@ func Run(conf *config.Config) {
 	if err != nil {
 		log.Panic(err)
 	}
-	defer func() {
-		if err := ctx.Close(); err != nil {
-			log.Panic(err)
-		}
-	}()
 
 	validateDataHandler, err := NewValidateDataHandler(ctx, conf)
 	if err != nil {
 		log.Panic(err)
 	}
+
 	router := mux.NewRouter()
 	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
 
@@ -37,9 +37,40 @@ func Run(conf *config.Config) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
-	err = server.ListenAndServe()
-	if err != nil {
-		log.Panic(err)
+	httpServerErrCh := make(chan error, 1)
+	go func() {
+		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
+		if err := server.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				httpServerErrCh <- err
+			} else {
+				close(httpServerErrCh)
+			}
+		}
+	}()
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt)
+	select {
+	case err := <-httpServerErrCh:
+		if err != nil {
+			log.Errorf("http server was closed with an error: %v", err)
+		}
+	case <-signalCh:
+		log.Info("signal detected")
+	}
+	log.Info("starting the graceful shutdown")
+
+	log.Info("terminating HTTP server")
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	if err := server.Shutdown(ctxTimeout); err != nil {
+		log.Panicf("error occurs while server shutting down: %v", err)
+	}
+
+	log.Info("closing all other resources")
+	if err := ctx.Close(); err != nil {
+		log.Panicf("error occurs while closing other resources: %v", err)
 	}
 }
