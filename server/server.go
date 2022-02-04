@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -40,10 +41,11 @@ func Run(conf *config.Config) {
 	go func() {
 		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
 		if err := server.ListenAndServe(); err != nil {
-			log.Error(err)
-			httpServerErrCh <- err
-		} else {
-			close(httpServerErrCh)
+			if !errors.Is(err, http.ErrServerClosed) {
+				httpServerErrCh <- err
+			} else {
+				close(httpServerErrCh)
+			}
 		}
 	}()
 
@@ -64,11 +66,11 @@ func Run(conf *config.Config) {
 	defer cancel()
 
 	if err := server.Shutdown(ctxTimeout); err != nil {
-		log.Errorf("error occurs while server shutting down: %v", err)
+		log.Panicf("error occurs while server shutting down: %v", err)
 	}
 
 	log.Info("closing all other resources")
 	if err := ctx.Close(); err != nil {
-		log.Errorf("error occurs while closing other resources: %v", err)
+		log.Panicf("error occurs while closing other resources: %v", err)
 	}
 }
