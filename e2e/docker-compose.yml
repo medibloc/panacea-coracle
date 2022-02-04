@@ -41,4 +41,4 @@ services:
     depends_on:
       - dataval
     command: >
-      /e2e/wait-for dataval:8080 -- make e2e-test
+      /e2e/wait-for dataval:8080 -- go test -v -count=1 ./e2e
