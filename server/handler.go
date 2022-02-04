@@ -27,10 +27,11 @@ var (
 type ValidateDataHandler struct {
 	validatorAccount account.ValidatorAccount
 	encodingConfig   params.EncodingConfig
+	conn             *grpc.ClientConn
 }
 
 // NewValidateDataHandler creates a ValidateData handler.
-func NewValidateDataHandler(conf *config.Config) (http.Handler, error) {
+func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, error) {
 	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to NewValidatorAccount")
@@ -39,14 +40,12 @@ func NewValidateDataHandler(conf *config.Config) (http.Handler, error) {
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
 		encodingConfig:   panaceaapp.MakeEncodingConfig(),
+		conn:             ctx.conn,
 	}, nil
 }
 
 func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	conn := ctx.Value(types.CtxGrpcConnKey).(*grpc.ClientConn)
-	if conn == nil {
+	if v.conn == nil {
 		log.Error(types.ErrNoGrpcConnection)
 		http.Error(w, types.ErrNoGrpcConnection.Error(), http.StatusInternalServerError)
 		return
@@ -70,7 +69,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dealId := mux.Vars(r)[types.DealIdKey]
 
 	// get deal info by Id from blockchain
-	deal, err := GetDeal(conn, dealId)
+	deal, err := GetDeal(v.conn, dealId)
 	if err != nil {
 		log.Error("failed to get deal information: ", err)
 		http.Error(w, "failed to get deal information", http.StatusInternalServerError)
@@ -97,7 +96,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// encrypt and store data
-	ownerPubKey, err := GetPubKey(conn, deal.Owner, v.encodingConfig)
+	ownerPubKey, err := GetPubKey(v.conn, deal.Owner, v.encodingConfig)
 	if err != nil {
 		log.Error("failed to get public key: ", err)
 		http.Error(w, "failed to get public key", http.StatusInternalServerError)

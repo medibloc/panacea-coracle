@@ -2,15 +2,9 @@ package server
 
 import (
 	"context"
-	"github.com/medibloc/panacea-data-market-validator/types"
-	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
-	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -22,64 +16,59 @@ import (
 func Run(conf *config.Config) {
 	panaceaapp.SetConfig()
 
-	var handlerWaitGroup = &sync.WaitGroup{}
-
 	ctx, err := newContext(conf)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
-	defer cancel()
-
-	validateDataHandler, err := NewValidateDataHandler(conf)
+	validateDataHandler, err := NewValidateDataHandler(ctx, conf)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	router := mux.NewRouter()
 	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
-	router.Use(gracefulShutdown(handlerWaitGroup))
 
 	server := &http.Server{
 		Handler:      router,
 		Addr:         conf.HTTPListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
-		BaseContext: func(_ net.Listener) context.Context {
-			return ctx
-		},
 	}
 
-	g, gCtx := errgroup.WithContext(ctx)
-
-	g.Go(func() error {
+	httpServerErrCh := make(chan error, 1)
+	go func() {
 		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
-		return server.ListenAndServe()
-	})
-
-	g.Go(func() error {
-		// When os signal is detected, graceful shutdown starts
-		// gRPC connection is closed first
-		<-gCtx.Done()
-		handlerWaitGroup.Wait()
-
-		log.Info("grpc connection is closing")
-
-		conn := gCtx.Value(types.CtxGrpcConnKey)
-		if conn == nil {
-			return types.ErrNoGrpcConnection
+		if err := server.ListenAndServe(); err != nil {
+			log.Error(err)
+			httpServerErrCh <- err
+		} else {
+			close(httpServerErrCh)
 		}
+	}()
 
-		if err := conn.(*grpc.ClientConn).Close(); err != nil {
-			return err
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt)
+	select {
+	case err := <-httpServerErrCh:
+		if err != nil {
+			log.Errorf("http server was closed with an error: %v", err)
 		}
+	case <-signalCh:
+		log.Info("signal detected")
+	}
+	log.Info("starting the graceful shutdown")
 
-		log.Info("server is closing")
-		return server.Shutdown(context.Background())
-	})
+	log.Info("terminating HTTP server")
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 
-	if err := g.Wait(); err != nil {
-		log.Errorf("exit reason : %s \n", err)
+	if err := server.Shutdown(ctxTimeout); err != nil {
+		log.Errorf("error occurs while server shutting down: %v", err)
+	}
+
+	log.Info("closing all other resources")
+	if err := ctx.Close(); err != nil {
+		log.Errorf("error occurs while closing other resources: %v", err)
 	}
 }
