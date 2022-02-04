@@ -18,7 +18,8 @@ make install
 ## Running
 
 ```bash
-DATAVAL_LOG_LEVEL=info \  # panic, fatal, error, warn, info, debug, trace
+# Supported log levels: panic, fatal, error, warn, info, debug, trace
+DATAVAL_LOG_LEVEL=info \
 DATAVAL_HTTP_LADDR=0.0.0.0:8080 \
 DATAVAL_PANACEA_GRPC_ADDR=0.0.0.0:9090 \
 DATAVAL_VALIDATOR_MNEMONIC={Your mnemonic} \
