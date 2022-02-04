@@ -18,7 +18,7 @@ test:
 
 # Set env vars used by ./e2e/docker-compose.yml before running this target.
 e2e-test:
-	docker-compose -f ./e2e/docker-compose.yml up --force-recreate --abort-on-container-exit --exit-code-from e2e-test
+	docker-compose -f ./e2e/docker-compose.yml up --build --force-recreate --abort-on-container-exit --exit-code-from e2e-test
 
 install: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/datavald
