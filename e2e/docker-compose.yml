@@ -2,8 +2,6 @@ version: "3.9"
 services:
   panacea:
     image: ghcr.io/medibloc/panacea-core:master
-    ports:
-      - "9090:9090"
     environment:
       E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
       E2E_DATAVAL_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
@@ -14,8 +12,6 @@ services:
 
   dataval:
     build: ..
-    ports:
-      - "8080:8080"
     environment:
       DATAVAL_HTTP_LADDR: "0.0.0.0:8080"
       DATAVAL_PANACEA_GRPC_ADDR: "panacea:9090"
@@ -34,7 +30,8 @@ services:
       context: ..
       target: build-env
     environment:
-      E2E_DATAVAL_ADDR: "dataval:8080"
+      E2E_DATAVAL_HTTP_ADDR: "dataval:8080"
+      E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
     volumes:
       - .:/e2e
     depends_on:

@@ -16,7 +16,7 @@ UNIT_TESTS=$(shell go list ./... | grep -v /e2e)  # except e2e/*_test.go
 test:
 	go test -v $(UNIT_TESTS)
 
-# Set env vars used by ./e2e/docker-compose.yml before running this target.
+# Set env vars used by ./e2e/docker-compose.yml before running this target (recommended to use .env file).
 e2e-test:
 	docker-compose -f ./e2e/docker-compose.yml pull
 	docker-compose -f ./e2e/docker-compose.yml up --build --force-recreate --abort-on-container-exit --exit-code-from e2e-test
