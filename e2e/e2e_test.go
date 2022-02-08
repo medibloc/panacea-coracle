@@ -18,10 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMain(m *testing.M) {
-	m.Run()
-}
-
 func TestValidateData(t *testing.T) {
 	buyerMnemonic := os.Getenv("E2E_DATA_BUYER_MNEMONIC")
 	require.NotEmpty(t, buyerMnemonic)
