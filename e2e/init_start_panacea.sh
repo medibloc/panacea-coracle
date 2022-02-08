@@ -14,10 +14,10 @@ panacead init node1 --chain-id ${CHAIN_ID}
 panacead keys add validator
 panacead add-genesis-account $(panacead keys show validator -a) 100000000umed
 
-echo -e "${DATA_BUYER_MNEMONIC}\n\n" | panacead keys add buyer -i
+echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add buyer -i
 panacead add-genesis-account $(panacead keys show buyer -a) 100000000umed
 
-echo -e "${DATAVAL_VALIDATOR_MNEMONIC}\n\n" | panacead keys add dataval -i
+echo -e "${E2E_DATAVAL_MNEMONIC}\n\n" | panacead keys add dataval -i
 panacead add-genesis-account $(panacead keys show dataval -a) 100000000umed
 
 # Init validator
