@@ -4,14 +4,13 @@ services:
     image: ghcr.io/medibloc/panacea-core:master
     ports:
       - "9090:9090"
+    environment:
+      DATA_BUYER_MNEMONIC: "${DATA_BUYER_MNEMONIC}"
+      DATAVAL_VALIDATOR_MNEMONIC: "${DATAVAL_VALIDATOR_MNEMONIC}"
     volumes:
       - .:/e2e
-    entrypoint: ["sh", "-c"]
-    command:
-      - |
-        panacead init node1 --chain-id testing
-        cp /e2e/genesis.json ~/.panacea/config/genesis.json
-        panacead start
+    command: >
+      /e2e/init_start_panacea.sh
 
   dataval:
     build: ..
