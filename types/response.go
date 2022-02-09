@@ -1,6 +1,9 @@
 package types
 
-import "encoding/base64"
+import (
+	"encoding/base64"
+	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
+)
 
 type UnsignedDataValidationCertificateResponse struct {
 	DealId                 uint64 `json:"deal_id"`
@@ -17,7 +20,7 @@ type DataValidationCertificateResponse struct {
 
 // NewUnsignedDataValidationCertificateResponse parse UnsignedDataValidationCertificate
 // dataHash and encryptedDataUrl are automatically base64 encoded
-func NewUnsignedDataValidationCertificateResponse(certificate UnsignedDataValidationCertificate) UnsignedDataValidationCertificateResponse {
+func NewUnsignedDataValidationCertificateResponse(certificate panaceatypes.UnsignedDataValidationCertificate) UnsignedDataValidationCertificateResponse {
 	return UnsignedDataValidationCertificateResponse{
 		DealId:                 certificate.DealId,
 		DataHashBase64:         encodeBase64(certificate.DataHash),
@@ -29,7 +32,7 @@ func NewUnsignedDataValidationCertificateResponse(certificate UnsignedDataValida
 
 // NewDataValidationCertificateResponse parse UnsignedDataValidationCertificate and signature
 // signature is automatically base64 encoded
-func NewDataValidationCertificateResponse(unsignedCert UnsignedDataValidationCertificate, signature []byte) DataValidationCertificateResponse {
+func NewDataValidationCertificateResponse(unsignedCert panaceatypes.UnsignedDataValidationCertificate, signature []byte) DataValidationCertificateResponse {
 	return DataValidationCertificateResponse{
 		UnsignedCert:    NewUnsignedDataValidationCertificateResponse(unsignedCert),
 		SignatureBase64: encodeBase64(signature),
