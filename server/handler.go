@@ -1,13 +1,14 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-core/v2/app/params"
+	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/account"
+	"github.com/medibloc/panacea-data-market-validator/codec"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/store"
@@ -162,10 +163,13 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := types.NewDataValidationCertificateResponse(unsignedCertificate, signature)
+	resp := &panaceatypes.DataValidationCertificate{
+		UnsignedCert: &unsignedCertificate,
+		Signature:    signature,
+	}
 
 	// sign certificate
-	marshaledResp, err := json.Marshal(resp)
+	marshaledResp, err := codec.ProtoMarshalJSON(resp)
 	if err != nil {
 		log.Error(err)
 		http.Error(w, "failed to marshal HTTP JSON response", http.StatusInternalServerError)
