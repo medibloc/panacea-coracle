@@ -13,7 +13,7 @@ import (
 
 // TestS3UploadAndDownload Upload file to s3Store and download generated url link and verify after download
 func TestS3UploadAndDownload(t *testing.T) {
-	s3Store, err := store.NewS3Store("data-market", awsendpoints.ApNortheast2RegionID)
+	s3Store, err := store.NewS3Store("data-market-test", awsendpoints.ApNortheast2RegionID)
 	require.NoError(t, err)
 
 	path := "temp_path"
