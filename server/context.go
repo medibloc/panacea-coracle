@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	log "github.com/sirupsen/logrus"
@@ -11,7 +12,7 @@ import (
 
 // Context for data validator application
 type Context struct {
-	conn *grpc.ClientConn
+	panaceaConn *grpc.ClientConn
 }
 
 func newContext(conf *config.Config) (*Context, error) {
@@ -22,15 +23,15 @@ func newContext(conf *config.Config) (*Context, error) {
 	}
 
 	return &Context{
-		conn: conn,
+		panaceaConn: conn,
 	}, nil
 }
 
 func (c Context) Close() error {
-	if c.conn == nil {
+	if c.panaceaConn == nil {
 		return types.ErrNoGrpcConnection
 	}
 
 	log.Infof("blockchain connection closing")
-	return c.conn.Close()
+	return c.panaceaConn.Close()
 }
