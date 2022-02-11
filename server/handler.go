@@ -2,6 +2,9 @@ package server
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
@@ -16,8 +19,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"io/ioutil"
-	"net/http"
 )
 
 var (
@@ -27,6 +28,7 @@ var (
 type ValidateDataHandler struct {
 	validatorAccount account.ValidatorAccount
 	encodingConfig   params.EncodingConfig
+	store            store.S3Store
 	conn             *grpc.ClientConn
 }
 
@@ -37,9 +39,15 @@ func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, er
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to NewValidatorAccount")
 	}
 
+	store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
+	if err != nil {
+		return ValidateDataHandler{}, errors.Wrap(err, "failed to create S3Store")
+	}
+
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
 		encodingConfig:   panaceaapp.MakeEncodingConfig(),
+		store:            store,
 		conn:             ctx.conn,
 	}, nil
 }
@@ -114,14 +122,8 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// make dataHash and upload to s3Store
 	dataHash := crypto.Hash(jsonInput)
 
-	s3Store, err := store.NewDefaultS3Store()
-	if err != nil {
-		log.Error("failed to create s3Store: ", err)
-		http.Error(w, "failed to create s3Store", http.StatusInternalServerError)
-		return
-	}
-	fileName := s3Store.MakeRandomFilename()
-	err = s3Store.UploadFile(dealId, fileName, encryptedData)
+	fileName := v.store.MakeRandomFilename()
+	err = v.store.UploadFile(dealId, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
@@ -129,7 +131,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make downloadURL
-	dataURL := s3Store.MakeDownloadURL(dealId, fileName)
+	dataURL := v.store.MakeDownloadURL(dealId, fileName)
 	encryptedDataURL, err := crypto.EncryptData(ownerPubKey, []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
