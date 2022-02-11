@@ -40,7 +40,9 @@ func (s S3Store) UploadFile(path string, name string, data []byte) error {
 				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
 				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 				//Credentials: credentials.NewStaticCredentials("AKID", "SECRET_KEY", "TOKEN"),
-			}))
+			},
+		),
+	)
 	svc := s3.New(sess)
 
 	_, err := svc.PutObject(&s3.PutObjectInput{
