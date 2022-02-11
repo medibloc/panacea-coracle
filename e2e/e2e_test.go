@@ -1,8 +1,6 @@
 package e2e
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,10 +8,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/jsonpb"
+
+	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/go-bip39"
-	"github.com/medibloc/panacea-data-market-validator/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -44,19 +45,13 @@ func TestValidateData(t *testing.T) {
 	defer resp.Body.Close()
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-	body, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err)
-	t.Logf("cert: %v", string(body))
-
-	var cert types.DataValidationCertificateResponse
-	err = json.Unmarshal(body, &cert)
-	require.NoError(t, err)
-
-	encDataURL, err := base64.StdEncoding.DecodeString(cert.UnsignedCert.EncryptedDataUrlBase64)
+	var cert panaceatypes.DataValidationCertificate
+	unmarshaler := &jsonpb.Unmarshaler{}
+	err = unmarshaler.Unmarshal(resp.Body, &cert)
 	require.NoError(t, err)
 
 	privKey := getPrivateKey(t, buyerMnemonic)
-	dataURL := string(decrypt(t, privKey, encDataURL))
+	dataURL := string(decrypt(t, privKey, cert.UnsignedCert.EncryptedDataUrl))
 	t.Logf("dataURL: %v", dataURL)
 
 	downloadedData := downloadFile(t, dataURL)
