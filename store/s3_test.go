@@ -1,17 +1,19 @@
 package store_test
 
 import (
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	awsendpoints "github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/stretchr/testify/require"
 
 	"github.com/medibloc/panacea-data-market-validator/store"
 )
 
 // TestS3UploadAndDownload Upload file to s3Store and download generated url link and verify after download
 func TestS3UploadAndDownload(t *testing.T) {
-	s3Store, err := store.NewDefaultS3Store()
+	s3Store, err := store.NewS3Store("data-market-test", awsendpoints.ApNortheast2RegionID)
 	require.NoError(t, err)
 
 	path := "temp_path"

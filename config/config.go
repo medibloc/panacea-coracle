@@ -13,6 +13,8 @@ type Config struct {
 	HTTPListenAddr     string   `envconfig:"DATAVAL_HTTP_LADDR" required:"true"`
 	PanaceaGrpcAddress string   `envconfig:"DATAVAL_PANACEA_GRPC_ADDR" required:"true"`
 	ValidatorMnemonic  string   `envconfig:"DATAVAL_VALIDATOR_MNEMONIC" required:"true"`
+	AWSS3Bucket        string   `envconfig:"DATAVAL_AWS_S3_BUCKET" required:"true"`
+	AWSS3Region        string   `envconfig:"DATAVAL_AWS_S3_REGION" required:"true"`
 }
 
 // LogLevel is a type aliasing for the envconfig custom decoder.

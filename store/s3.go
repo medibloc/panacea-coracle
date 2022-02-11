@@ -3,27 +3,17 @@ package store
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
-	"strings"
-)
-
-const (
-	S3Bucket = "data-market"
-	S3Region = endpoints.ApNortheast2RegionID
 )
 
 type S3Store struct {
 	bucket string
 	region string
-}
-
-// NewDefaultS3Store Create default S3Store.
-func NewDefaultS3Store() (S3Store, error) {
-	return NewS3Store(S3Bucket, S3Region)
 }
 
 // NewS3Store Create S3Store with bucket and region.
@@ -43,14 +33,16 @@ func NewS3Store(bucket, region string) (S3Store, error) {
 func (s S3Store) UploadFile(path string, name string, data []byte) error {
 	sess := session.Must(
 		session.NewSession(
-		&aws.Config{
-			Region: aws.String(s.region),
-			// There are several ways to set credit.
-			// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
-			// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
-			// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-			//Credentials: credentials.NewStaticCredentials("AKID", "SECRET_KEY", "TOKEN"),
-		}))
+			&aws.Config{
+				Region: aws.String(s.region),
+				// There are several ways to set credit.
+				// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
+				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
+				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
+				//Credentials: credentials.NewStaticCredentials("AKID", "SECRET_KEY", "TOKEN"),
+			},
+		),
+	)
 	svc := s3.New(sess)
 
 	_, err := svc.PutObject(&s3.PutObjectInput{
