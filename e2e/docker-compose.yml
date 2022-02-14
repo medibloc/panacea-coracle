@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  panacea:
+    image: ghcr.io/medibloc/panacea-core:master
+    environment:
+      E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
+      E2E_DATAVAL_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
+    volumes:
+      - .:/e2e
+    command: >
+      /e2e/init_start_panacea.sh
+
+  dataval:
+    build: ..
+    environment:
+      DATAVAL_HTTP_LADDR: "0.0.0.0:8080"
+      DATAVAL_PANACEA_GRPC_ADDR: "panacea:9090"
+      DATAVAL_VALIDATOR_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
+      DATAVAL_AWS_S3_BUCKET: "data-market-test"
+      DATAVAL_AWS_S3_REGION: "ap-northeast-2"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+    volumes:
+      - .:/e2e
+    depends_on:
+      - panacea
+    command: >
+      /e2e/wait-for panacea:9090 --timeout=600 -- datavald
+
+  e2e-test:
+    build:
+      context: ..
+      target: build-env
+    environment:
+      E2E_DATAVAL_HTTP_ADDR: "dataval:8080"
+      E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
+    volumes:
+      - .:/e2e
+    depends_on:
+      - dataval
+    command: >
+      /e2e/wait-for dataval:8080 --timeout=600 -- go test -v -count=1 ./e2e

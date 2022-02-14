@@ -6,7 +6,6 @@ RUN apk add --no-cache ca-certificates build-base
 WORKDIR /src
 
 COPY . .
-RUN ls -l
 
 # Because dataval refers to panacea-core, 'libwasmvm_muslc.a' (or .so) is required.
 ADD https://github.com/CosmWasm/wasmvm/releases/download/v0.14.0/libwasmvm_muslc.a /lib/libwasmvm_muslc.a

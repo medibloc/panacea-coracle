@@ -1,0 +1,8 @@
+{
+  "data_schema": [
+    "https://json.schemastore.org/github-issue-forms.json"
+  ],
+  "budget": "100umed",
+  "trusted_data_validators": [],
+  "max_num_data": 10
+}
