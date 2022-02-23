@@ -10,7 +10,8 @@ func TestValidateJSONSchema(t *testing.T) {
 	schemaURI := "https://json.schemastore.org/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This is a name",
-		"description": "This is a description, man"
+		"description": "This is a description, man",
+		"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
 	}`)
 
 	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
@@ -21,7 +22,7 @@ func TestValidateJSONSchema_InvalidDoc(t *testing.T) {
 	schemaURI := "https://json.schemastore.org/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This is a name"
-	}`) // the required field `description` is missing
+	}`) // the required fields `description` and `body` are missing
 
 	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
 	require.Error(t, err)
@@ -41,7 +42,8 @@ func TestValidateJSONSchema_UnknownSchemaURI(t *testing.T) {
 	schemaURI := "https://MED_TO_THE_MOON/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This is a name",
-		"description": "This is a description, man"
+		"description": "This is a description, man",
+		"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
 	}`)
 
 	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
