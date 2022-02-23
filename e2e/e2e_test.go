@@ -29,7 +29,8 @@ func TestValidateData(t *testing.T) {
 	requesterAddr := "panacea1c7yh0ql0rhvyqm4vuwgaqu0jypafnwqdc6x60e"
 	data := `{
 		"name": "This is a name",
-		"description": "This is a description"
+		"description": "This is a description",
+		"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
 	}`
 
 	req, err := http.NewRequest(
