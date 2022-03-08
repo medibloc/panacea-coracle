@@ -1,24 +1,23 @@
-package server
+package datadeal
 
 import (
 	"fmt"
+
 	"io/ioutil"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
-	"github.com/medibloc/panacea-core/v2/app/params"
-	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
+	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/codec"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
+	"github.com/medibloc/panacea-data-market-validator/server/response"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -27,38 +26,30 @@ var (
 
 type ValidateDataHandler struct {
 	validatorAccount account.ValidatorAccount
-	encodingConfig   params.EncodingConfig
 	store            store.S3Store
-	panaceaConn      *grpc.ClientConn
+	grpcClient       grpcClient
 }
 
 // NewValidateDataHandler creates a ValidateData handler.
-func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, error) {
+func NewValidateDataHandler(grpcClient grpcClient, conf *config.Config) http.Handler {
 	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
 	if err != nil {
-		return ValidateDataHandler{}, errors.Wrap(err, "failed to NewValidatorAccount")
+		log.Panic(errors.Wrap(err, "failed to NewValidatorAccount"))
 	}
 
-	store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
+	s3Store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
 	if err != nil {
-		return ValidateDataHandler{}, errors.Wrap(err, "failed to create S3Store")
+		log.Panic(errors.Wrap(err, "failed to create S3Store"))
 	}
 
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
-		encodingConfig:   panaceaapp.MakeEncodingConfig(),
-		store:            store,
-		panaceaConn:      ctx.panaceaConn,
-	}, nil
+		store:            s3Store,
+		grpcClient:       grpcClient,
+	}
 }
 
 func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if v.panaceaConn == nil {
-		log.Error(types.ErrNoGrpcConnection)
-		http.Error(w, types.ErrNoGrpcConnection.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	// content type check from header
 	if err, errCode := v.validate(r); err != nil {
 		log.Error(err)
@@ -77,7 +68,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dealId := mux.Vars(r)[types.DealIdKey]
 
 	// get deal info by Id from blockchain
-	deal, err := GetDeal(v.panaceaConn, dealId)
+	deal, err := v.grpcClient.GetDeal(dealId)
 	if err != nil {
 		log.Error("failed to get deal information: ", err)
 		http.Error(w, "failed to get deal information", http.StatusInternalServerError)
@@ -104,7 +95,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// encrypt and store data
-	ownerPubKey, err := GetPubKey(v.panaceaConn, deal.Owner, v.encodingConfig)
+	ownerPubKey, err := v.grpcClient.GetPubKey(deal.Owner)
 	if err != nil {
 		log.Error("failed to get public key: ", err)
 		http.Error(w, "failed to get public key", http.StatusInternalServerError)
@@ -165,7 +156,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := &panaceatypes.DataValidationCertificate{
+	resp := &markettypes.DataValidationCertificate{
 		UnsignedCert: &unsignedCertificate,
 		Signature:    signature,
 	}
@@ -178,7 +169,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, http.StatusCreated, marshaledResp)
+	response.WriteJSONResponse(w, http.StatusCreated, marshaledResp)
 }
 
 // validate Verification of parameter

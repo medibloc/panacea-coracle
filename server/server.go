@@ -3,6 +3,9 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/medibloc/panacea-data-market-validator/server/attestation"
+	"github.com/medibloc/panacea-data-market-validator/server/datadeal"
+	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,13 +25,16 @@ func Run(conf *config.Config) {
 		log.Panic(err)
 	}
 
-	validateDataHandler, err := NewValidateDataHandler(ctx, conf)
+	grpcClient, err := NewGrpcClient(ctx.PanaceaConn)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	router := mux.NewRouter()
-	router.Handle("/validate-data/{dealId}", validateDataHandler).Methods(http.MethodPost)
+	router.Handle("/v0/data-deal/validate-data/{dealId}", datadeal.NewValidateDataHandler(grpcClient, conf)).Methods(http.MethodPost)
+	router.Handle("/v1/data-pool/pools/{poolId}/rounds/{round}/data", datapool.NewValidateDataHandler(grpcClient, conf)).Methods(http.MethodPost)
+	router.Handle("/v1/data-pool/pools/{poolId}/data", datapool.NewDownloadDataHandler(grpcClient)).Methods(http.MethodGet)
+	router.Handle("/v1/attestation-token", attestation.NewTokenHandler()).Methods(http.MethodGet)
 
 	server := &http.Server{
 		Handler:      router,

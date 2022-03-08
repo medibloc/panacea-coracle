@@ -12,7 +12,7 @@ import (
 
 // Context for data validator application
 type Context struct {
-	panaceaConn *grpc.ClientConn
+	PanaceaConn *grpc.ClientConn
 }
 
 func newContext(conf *config.Config) (*Context, error) {
@@ -23,15 +23,15 @@ func newContext(conf *config.Config) (*Context, error) {
 	}
 
 	return &Context{
-		panaceaConn: conn,
+		PanaceaConn: conn,
 	}, nil
 }
 
 func (c Context) Close() error {
-	if c.panaceaConn == nil {
+	if c.PanaceaConn == nil {
 		return types.ErrNoGrpcConnection
 	}
 
 	log.Infof("blockchain connection closing")
-	return c.panaceaConn.Close()
+	return c.PanaceaConn.Close()
 }
