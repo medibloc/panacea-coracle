@@ -1,6 +1,8 @@
 package account
 
 import (
+	"fmt"
+	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -34,4 +36,12 @@ func (v ValidatorAccount) GetPrivKey() tmcrypto.PrivKey {
 
 func (v ValidatorAccount) GetPubKey() tmcrypto.PubKey {
 	return v.pubKey
+}
+
+func (v ValidatorAccount) GetCurvePubKey() {
+	pubKey, err := btcec.ParsePubKey(v.GetPubKey().Bytes(), btcec.S256())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse public key bytes: %w", err)
+	}
+	return pubKey, nil
 }

@@ -1,5 +1,6 @@
 package types
 
 const (
-	DealIdKey = "dealId"
+	DealIdKey           = "dealId"
+	AttestationTokenKey = "attestationToken"
 )

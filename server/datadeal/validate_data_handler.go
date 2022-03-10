@@ -37,6 +37,8 @@ func NewValidateDataHandler(grpcClient grpcClient, conf *config.Config) http.Han
 		log.Panic(errors.Wrap(err, "failed to NewValidatorAccount"))
 	}
 
+	validatorAccount.GetPubKey().Bytes()
+
 	s3Store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
 	if err != nil {
 		log.Panic(errors.Wrap(err, "failed to create S3Store"))
