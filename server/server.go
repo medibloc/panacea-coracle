@@ -34,7 +34,7 @@ func Run(conf *config.Config) {
 	router.Handle("/v0/data-deal/validate-data/{dealId}", datadeal.NewValidateDataHandler(grpcClient, conf)).Methods(http.MethodPost)
 	router.Handle("/v1/data-pool/pools/{poolId}/rounds/{round}/data", datapool.NewValidateDataHandler(grpcClient, conf)).Methods(http.MethodPost)
 	router.Handle("/v1/data-pool/pools/{poolId}/data", datapool.NewDownloadDataHandler(grpcClient)).Methods(http.MethodGet)
-	router.Handle("/v1/attestation-token", attestation.NewTokenHandler()).Methods(http.MethodGet)
+	router.Handle("/v1/tee/attestation-token", attestation.NewTokenHandler()).Methods(http.MethodGet)
 
 	server := &http.Server{
 		Handler:      router,
