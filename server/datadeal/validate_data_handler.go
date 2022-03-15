@@ -31,14 +31,7 @@ type ValidateDataHandler struct {
 }
 
 // NewValidateDataHandler creates a ValidateData handler.
-func NewValidateDataHandler(grpcClient grpcClient, conf *config.Config) http.Handler {
-	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
-	if err != nil {
-		log.Panic(errors.Wrap(err, "failed to NewValidatorAccount"))
-	}
-
-	validatorAccount.GetPubKey().Bytes()
-
+func NewValidateDataHandler(validatorAccount account.ValidatorAccount, grpcClient grpcClient, conf *config.Config) http.Handler {
 	s3Store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
 	if err != nil {
 		log.Panic(errors.Wrap(err, "failed to create S3Store"))
@@ -151,7 +144,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signature, err := valAccount.GetPrivKey().Sign(serializedCertificate)
+	signature, err := valAccount.GetSecp256PrivKey().Sign(serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
 		http.Error(w, "failed to make signature", http.StatusInternalServerError)

@@ -1,33 +1,42 @@
 package attestation
 
 import (
+	"github.com/edgelesssys/ego/enclave"
 	"github.com/medibloc/panacea-data-market-validator/account"
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/muesli/cache2go"
-	"github.com/pkg/errors"
+	"github.com/medibloc/panacea-data-market-validator/server/response"
+	"github.com/medibloc/panacea-data-market-validator/types"
 	log "github.com/sirupsen/logrus"
+	"github.com/tendermint/tendermint/libs/json"
 	"net/http"
 )
 
 type TokenHandler struct {
 	validatorAccount account.ValidatorAccount
-	cache            *cache2go.CacheTable
+	cert             []byte
 }
 
-func NewTokenHandler(conf *config.Config) http.Handler {
-	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
-	if err != nil {
-		log.Panic(errors.Wrap(err, "failed to NewValidatorAccount"))
-	}
-
-	cache := cache2go.Cache("AttestationToken")
-
+func NewTokenHandler(validatorAccount account.ValidatorAccount, cert []byte) http.Handler {
 	return TokenHandler{
 		validatorAccount: validatorAccount,
-		cache:            cache,
+		cert:             cert,
 	}
 }
 
-func (t TokenHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (t TokenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	token, err := enclave.CreateAzureAttestationToken(t.cert, types.AttestationProviderURL)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, "failed to create azure attestation token.", http.StatusInternalServerError)
+	}
 
+	jsonData, err := json.Marshal(types.TokenResponse{
+		Token: token,
+	})
+
+	if err != nil {
+		log.Error(err)
+		http.Error(w, "failed to ", http.StatusInternalServerError)
+	}
+
+	response.WriteJSONResponse(w, http.StatusCreated, jsonData)
 }

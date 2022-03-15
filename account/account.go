@@ -1,7 +1,8 @@
 package account
 
 import (
-	"fmt"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
@@ -9,8 +10,10 @@ import (
 )
 
 type ValidatorAccount struct {
-	privKey tmcrypto.PrivKey
-	pubKey  tmcrypto.PubKey
+	privKey      tmcrypto.PrivKey
+	pubKey       tmcrypto.PubKey
+	ecdsaPrivKey *ecdsa.PrivateKey
+	ecdsaPubKey  *ecdsa.PublicKey
 }
 
 func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
@@ -20,9 +23,13 @@ func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
 		return ValidatorAccount{}, err
 	}
 
+	ecdsaPrivKey, ecdsaPubKey := btcec.PrivKeyFromBytes(elliptic.P256(), privKey.Bytes())
+
 	return ValidatorAccount{
-		privKey: privKey,
-		pubKey:  privKey.PubKey(),
+		privKey:      privKey,
+		pubKey:       privKey.PubKey(),
+		ecdsaPrivKey: (*ecdsa.PrivateKey)(ecdsaPrivKey),
+		ecdsaPubKey:  (*ecdsa.PublicKey)(ecdsaPubKey),
 	}, nil
 }
 
@@ -30,18 +37,18 @@ func (v ValidatorAccount) GetAddress() string {
 	return sdk.AccAddress(v.pubKey.Address().Bytes()).String()
 }
 
-func (v ValidatorAccount) GetPrivKey() tmcrypto.PrivKey {
+func (v ValidatorAccount) GetSecp256PrivKey() tmcrypto.PrivKey {
 	return v.privKey
 }
 
-func (v ValidatorAccount) GetPubKey() tmcrypto.PubKey {
+func (v ValidatorAccount) GetSecp256PubKey() tmcrypto.PubKey {
 	return v.pubKey
 }
 
-func (v ValidatorAccount) GetCurvePubKey() {
-	pubKey, err := btcec.ParsePubKey(v.GetPubKey().Bytes(), btcec.S256())
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse public key bytes: %w", err)
-	}
-	return pubKey, nil
+func (v ValidatorAccount) GetEcdsaPrivKey() *ecdsa.PrivateKey {
+	return v.ecdsaPrivKey
+}
+
+func (v ValidatorAccount) GetEcdsaPubKey() *ecdsa.PublicKey {
+	return v.ecdsaPubKey
 }

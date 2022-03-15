@@ -5,6 +5,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -20,12 +21,7 @@ type ValidateDataHandler struct {
 	grpcClient       grpcClient
 }
 
-func NewValidateDataHandler(grpcClient grpcClient, conf *config.Config) ValidateDataHandler {
-	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
-	if err != nil {
-		log.Panic(errors.Wrap(err, "failed to NewValidatorAccount"))
-	}
-
+func NewValidateDataHandler(validatorAccount account.ValidatorAccount, grpcClient grpcClient, conf *config.Config) ValidateDataHandler {
 	s3Store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
 	if err != nil {
 		log.Panic(errors.Wrap(err, "failed to create S3Store"))
@@ -38,7 +34,17 @@ func NewValidateDataHandler(grpcClient grpcClient, conf *config.Config) Validate
 	}
 }
 
-func (v ValidateDataHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//TODO implement me
-	panic("implement me")
+	requestBody, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		log.Error(err)
+		http.Error(w, "failed to read HTTP request body", http.StatusBadRequest)
+		return
+	}
+
+	log.Info(string(requestBody))
+	w.Write([]byte("Called validate data"))
+
 }

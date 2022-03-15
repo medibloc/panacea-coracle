@@ -23,7 +23,7 @@ func TestAccount(t *testing.T) {
 	require.Equal(t, 46, len(acc.GetAddress()))
 	require.True(t, strings.HasPrefix(acc.GetAddress(), "panacea1"))
 
-	priv := secp256k1.PrivKey{Key: acc.GetPrivKey().Bytes()}
+	priv := secp256k1.PrivKey{Key: acc.GetSecp256PrivKey().Bytes()}
 
 	pub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
