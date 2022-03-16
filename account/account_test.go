@@ -3,7 +3,6 @@ package account_test
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/stretchr/testify/require"
@@ -13,7 +12,7 @@ import (
 
 // This test creates MNEMONIC and checks whether address and publicKey are created normally
 func TestAccount(t *testing.T) {
-	panaceaapp.SetConfig()
+	//panaceaapp.SetConfig()
 
 	mnemonic, err := crypto.GenerateMnemonic()
 	require.NoError(t, err)
