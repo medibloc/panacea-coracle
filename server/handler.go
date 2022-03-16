@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
+	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-core/v2/app/params"
 	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/account"
@@ -45,9 +46,9 @@ func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, er
 
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
-		//encodingConfig:   panaceaapp.MakeEncodingConfig(),
-		store:       store,
-		panaceaConn: ctx.panaceaConn,
+		encodingConfig:   panaceaapp.MakeEncodingConfig(),
+		store:            store,
+		panaceaConn:      ctx.panaceaConn,
 	}, nil
 }
 
