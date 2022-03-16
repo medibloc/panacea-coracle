@@ -1,16 +1,19 @@
-package server
+package panacea
 
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-core/v2/app/params"
 	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
-	"github.com/medibloc/panacea-data-market-validator/types"
+	"github.com/medibloc/panacea-data-market-validator/config"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"strconv"
-	"time"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GrpcClient struct {
@@ -18,20 +21,26 @@ type GrpcClient struct {
 	encodingConfig params.EncodingConfig
 }
 
-func NewGrpcClient(conn *grpc.ClientConn) (GrpcClient, error) {
-	if conn == nil {
-		return GrpcClient{}, types.ErrNoGrpcConnection
+func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
+	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.PanaceaGrpcAddress)
+	conn, err := grpc.Dial(conf.PanaceaGrpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
 	}
 
-	return GrpcClient{
-			conn:           conn,
-			encodingConfig: panaceaapp.MakeEncodingConfig(),
-		},
-		nil
+	return &GrpcClient{
+		conn:           conn,
+		encodingConfig: panaceaapp.MakeEncodingConfig(),
+	}, nil
+}
+
+func (c *GrpcClient) Close() {
+	log.Info("closing Panacea gRPC connection")
+	c.conn.Close()
 }
 
 // GetPubKey gets the public key from blockchain.
-func (c GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
+func (c *GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
 	client := authtypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -49,7 +58,7 @@ func (c GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
 }
 
 // GetDeal gets deal info from blockchain
-func (c GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
+func (c *GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
 	dealId, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return markettypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)

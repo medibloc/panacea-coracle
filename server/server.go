@@ -3,13 +3,15 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/medibloc/panacea-data-market-validator/server/attestation"
-	"github.com/medibloc/panacea-data-market-validator/server/datadeal"
-	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/medibloc/panacea-data-market-validator/server/datadeal"
+	"github.com/medibloc/panacea-data-market-validator/server/datapool"
+	"github.com/medibloc/panacea-data-market-validator/server/service"
+	"github.com/medibloc/panacea-data-market-validator/server/tee"
 
 	"github.com/gorilla/mux"
 	panaceaapp "github.com/medibloc/panacea-core/v2/app"
@@ -20,21 +22,16 @@ import (
 func Run(conf *config.Config) {
 	panaceaapp.SetConfig()
 
-	ctx, err := newContext(conf)
+	svc, err := service.New(conf)
 	if err != nil {
-		log.Panic(err)
+		log.Panicf("failed to create service: %w", err)
 	}
-
-	grpcClient, err := NewGrpcClient(ctx.PanaceaConn)
-	if err != nil {
-		log.Panic(err)
-	}
+	defer svc.Close()
 
 	router := mux.NewRouter()
-	router.Handle("/v0/data-deal/deals/{dealId}/data", datadeal.NewValidateDataHandler(grpcClient, conf)).Methods(http.MethodPost)
-	router.Handle("/v1/data-pool/pools/{poolId}/rounds/{round}/data", datapool.NewValidateDataHandler(grpcClient, conf)).Methods(http.MethodPost)
-	router.Handle("/v1/data-pool/pools/{poolId}/data", datapool.NewDownloadDataHandler(grpcClient)).Methods(http.MethodGet)
-	router.Handle("/v1/tee/attestation-token", attestation.NewTokenHandler()).Methods(http.MethodGet)
+	datadeal.RegisterHandlers(svc, router)
+	datapool.RegisterHandlers(svc, router)
+	tee.RegisterHandlers(svc, router)
 
 	server := &http.Server{
 		Handler:      router,
@@ -72,11 +69,6 @@ func Run(conf *config.Config) {
 	defer cancel()
 
 	if err := server.Shutdown(ctxTimeout); err != nil {
-		log.Panicf("error occurs while server shutting down: %v", err)
-	}
-
-	log.Info("closing all other resources")
-	if err := ctx.Close(); err != nil {
-		log.Panicf("error occurs while closing other resources: %v", err)
+		log.Errorf("error occurs while server shutting down: %v", err)
 	}
 }
