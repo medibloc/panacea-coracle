@@ -5,8 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
+	panaceaapps "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-core/v2/app/params"
 	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/account"
@@ -43,9 +45,13 @@ func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, er
 		return ValidateDataHandler{}, errors.Wrap(err, "failed to create S3Store")
 	}
 
+	encodingConfig := params.MakeEncodingConfig()
+	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	panaceaapps.ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+
 	return ValidateDataHandler{
 		validatorAccount: validatorAccount,
-		encodingConfig:   params.MakeEncodingConfig(),
+		encodingConfig:   encodingConfig,
 		store:            store,
 		panaceaConn:      ctx.panaceaConn,
 	}, nil
