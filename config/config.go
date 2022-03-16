@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 // TODO: Use a better name
@@ -32,6 +34,9 @@ func (d *LogLevel) Decode(value string) error {
 
 func MustLoad() Config {
 	var conf Config
+	for index, env := range os.Environ() {
+		fmt.Println(index, env)
+	}
 	if err := envconfig.Process(envVarPrefix, &conf); err != nil {
 		log.Panic(err)
 	}
