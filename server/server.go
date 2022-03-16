@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"errors"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +14,7 @@ import (
 )
 
 func Run(conf *config.Config) {
-	panaceaapp.SetConfig()
+	SetPanaceaConfig()
 
 	ctx, err := newContext(conf)
 	if err != nil {
