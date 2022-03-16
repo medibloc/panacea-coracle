@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/medibloc/panacea-core/v2/app/params"
 	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"google.golang.org/grpc"
@@ -13,7 +13,7 @@ import (
 )
 
 // GetPubKey gets the public key from blockchain.
-func GetPubKey(conn *grpc.ClientConn, panaceaAddr string, encodingConfig params.EncodingConfig) ([]byte, error) {
+func GetPubKey(conn *grpc.ClientConn, panaceaAddr string, interfaceRegistry sdktypes.InterfaceRegistry) ([]byte, error) {
 	if conn == nil {
 		return nil, types.ErrNoGrpcConnection
 	}
@@ -28,7 +28,7 @@ func GetPubKey(conn *grpc.ClientConn, panaceaAddr string, encodingConfig params.
 	}
 
 	var acc authtypes.AccountI
-	if err := encodingConfig.InterfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
+	if err := interfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
 		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
 	return acc.GetPubKey().Bytes(), nil

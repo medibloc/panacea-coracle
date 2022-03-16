@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
-	"github.com/medibloc/panacea-core/v2/app/params"
 	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/codec"
@@ -17,7 +16,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -25,10 +23,9 @@ var (
 )
 
 type ValidateDataHandler struct {
+	ctx              *Context
 	validatorAccount account.ValidatorAccount
-	encodingConfig   params.EncodingConfig
 	store            store.S3Store
-	panaceaConn      *grpc.ClientConn
 }
 
 // NewValidateDataHandler creates a ValidateData handler.
@@ -44,15 +41,17 @@ func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, er
 	}
 
 	return ValidateDataHandler{
+		ctx:              ctx,
 		validatorAccount: validatorAccount,
-		//encodingConfig:   panaceaapp.MakeEncodingConfig(),
-		store:       store,
-		panaceaConn: ctx.panaceaConn,
+		store:            store,
 	}, nil
 }
 
 func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if v.panaceaConn == nil {
+	panaceaConn := v.ctx.panaceaConn
+	interfaceRegistry := v.ctx.interfaceRegistry
+
+	if panaceaConn == nil {
 		log.Error(types.ErrNoGrpcConnection)
 		http.Error(w, types.ErrNoGrpcConnection.Error(), http.StatusInternalServerError)
 		return
@@ -76,7 +75,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dealId := mux.Vars(r)[types.DealIdKey]
 
 	// get deal info by Id from blockchain
-	deal, err := GetDeal(v.panaceaConn, dealId)
+	deal, err := GetDeal(panaceaConn, dealId)
 	if err != nil {
 		log.Error("failed to get deal information: ", err)
 		http.Error(w, "failed to get deal information", http.StatusInternalServerError)
@@ -103,7 +102,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// encrypt and store data
-	ownerPubKey, err := GetPubKey(v.panaceaConn, deal.Owner, v.encodingConfig)
+	ownerPubKey, err := GetPubKey(panaceaConn, deal.Owner, interfaceRegistry)
 	if err != nil {
 		log.Error("failed to get public key: ", err)
 		http.Error(w, "failed to get public key", http.StatusInternalServerError)

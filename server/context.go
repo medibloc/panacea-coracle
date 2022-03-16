@@ -2,7 +2,11 @@ package server
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/std"
+	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	log "github.com/sirupsen/logrus"
@@ -12,7 +16,8 @@ import (
 
 // Context for data validator application
 type Context struct {
-	panaceaConn *grpc.ClientConn
+	panaceaConn       *grpc.ClientConn
+	interfaceRegistry sdktypes.InterfaceRegistry
 }
 
 func newContext(conf *config.Config) (*Context, error) {
@@ -22,9 +27,20 @@ func newContext(conf *config.Config) (*Context, error) {
 		return nil, fmt.Errorf("failed to connect to blockchain : %w", err)
 	}
 
+	interfaceRegistry := makeInterfaceRegistry()
+
 	return &Context{
-		panaceaConn: conn,
+		panaceaConn:       conn,
+		interfaceRegistry: interfaceRegistry,
 	}, nil
+}
+
+func makeInterfaceRegistry() sdktypes.InterfaceRegistry {
+	interfaceRegistry := sdktypes.NewInterfaceRegistry()
+	std.RegisterInterfaces(interfaceRegistry)
+	simapp.ModuleBasics.RegisterInterfaces(interfaceRegistry)
+	markettypes.RegisterInterfaces(interfaceRegistry)
+	return interfaceRegistry
 }
 
 func (c Context) Close() error {
