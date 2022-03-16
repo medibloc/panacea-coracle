@@ -2,8 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/std"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -37,8 +36,7 @@ func newContext(conf *config.Config) (*Context, error) {
 
 func makeInterfaceRegistry() sdktypes.InterfaceRegistry {
 	interfaceRegistry := sdktypes.NewInterfaceRegistry()
-	std.RegisterInterfaces(interfaceRegistry)
-	simapp.ModuleBasics.RegisterInterfaces(interfaceRegistry)
+	authtypes.RegisterInterfaces(interfaceRegistry)
 	markettypes.RegisterInterfaces(interfaceRegistry)
 	return interfaceRegistry
 }
