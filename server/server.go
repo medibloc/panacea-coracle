@@ -9,13 +9,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 )
 
 func Run(conf *config.Config) {
-	panaceaapp.SetConfig()
+	//panaceaapp.SetConfig()
 
 	ctx, err := newContext(conf)
 	if err != nil {
