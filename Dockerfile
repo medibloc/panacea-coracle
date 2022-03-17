@@ -1,7 +1,7 @@
 FROM golang:alpine AS build-env
 
 # Install minimum necessary dependencies,
-RUN apk add --no-cache ca-certificates build-base
+RUN apk add --no-cache ca-certificates build-base git
 
 WORKDIR /src
 
