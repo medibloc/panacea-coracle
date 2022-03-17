@@ -24,7 +24,7 @@ func Run(conf *config.Config) {
 
 	svc, err := service.New(conf)
 	if err != nil {
-		log.Panicf("failed to create service: %w", err)
+		log.Panicf("failed to create service: %v", err)
 	}
 	defer svc.Close()
 
