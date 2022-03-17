@@ -1,7 +1,7 @@
 package account
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
@@ -9,10 +9,11 @@ import (
 type ValidatorAccount struct {
 	privKey tmcrypto.PrivKey
 	pubKey  tmcrypto.PubKey
+	hrp     string
 }
 
-func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
-	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic)
+func NewValidatorAccount(mnemonic, hrp string, coinType uint32) (ValidatorAccount, error) {
+	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, coinType)
 
 	if err != nil {
 		return ValidatorAccount{}, err
@@ -21,11 +22,16 @@ func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
 	return ValidatorAccount{
 		privKey: privKey,
 		pubKey:  privKey.PubKey(),
+		hrp:     hrp,
 	}, nil
 }
 
 func (v ValidatorAccount) GetAddress() string {
-	return sdk.AccAddress(v.pubKey.Address().Bytes()).String()
+	address, err := bech32.ConvertAndEncode(v.hrp, v.pubKey.Address().Bytes())
+	if err != nil {
+		panic(err)
+	}
+	return address
 }
 
 func (v ValidatorAccount) GetPrivKey() tmcrypto.PrivKey {

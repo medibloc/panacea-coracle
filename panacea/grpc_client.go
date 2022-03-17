@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
-	"github.com/medibloc/panacea-core/v2/app/params"
 	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
@@ -17,8 +17,8 @@ import (
 )
 
 type GrpcClient struct {
-	conn           *grpc.ClientConn
-	encodingConfig params.EncodingConfig
+	conn              *grpc.ClientConn
+	interfaceRegistry sdk.InterfaceRegistry
 }
 
 func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
@@ -29,9 +29,18 @@ func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
 	}
 
 	return &GrpcClient{
-		conn:           conn,
-		encodingConfig: panaceaapp.MakeEncodingConfig(),
+		conn:              conn,
+		interfaceRegistry: makeInterfaceRegistry(),
 	}, nil
+}
+
+// makeInterfaceRegistry
+func makeInterfaceRegistry() sdk.InterfaceRegistry {
+	interfaceRegistry := sdk.NewInterfaceRegistry()
+	std.RegisterInterfaces(interfaceRegistry)
+	authtypes.RegisterInterfaces(interfaceRegistry)
+	markettypes.RegisterInterfaces(interfaceRegistry)
+	return interfaceRegistry
 }
 
 func (c *GrpcClient) Close() {
@@ -51,7 +60,7 @@ func (c *GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
 	}
 
 	var acc authtypes.AccountI
-	if err := c.encodingConfig.InterfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
+	if err := c.interfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
 		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
 	return acc.GetPubKey().Bytes(), nil

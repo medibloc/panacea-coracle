@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,20 +13,33 @@ import (
 )
 
 type S3Store struct {
-	bucket string
-	region string
+	bucket          string
+	region          string
+	accessKey       string
+	secretAccessKey string
 }
 
 // NewS3Store Create S3Store with bucket and region.
-func NewS3Store(bucket, region string) (S3Store, error) {
+func NewS3Store(bucket, region, accessKey, secretAccessKey string) (S3Store, error) {
 	if bucket == "" {
 		return S3Store{}, fmt.Errorf("'bucket' should not be empty")
 	}
 	if region == "" {
 		return S3Store{}, fmt.Errorf("'region' should not be empty")
 	}
+	if accessKey == "" {
+		return S3Store{}, fmt.Errorf("'accessKey' should not be empty")
+	}
+	if secretAccessKey == "" {
+		return S3Store{}, fmt.Errorf("'secretAccessKey' should not be empty")
+	}
 
-	return S3Store{bucket: bucket, region: region}, nil
+	return S3Store{
+		bucket:          bucket,
+		region:          region,
+		accessKey:       accessKey,
+		secretAccessKey: secretAccessKey,
+	}, nil
 }
 
 // UploadFile path is directory, name is the file name.
@@ -39,7 +53,7 @@ func (s S3Store) UploadFile(path string, name string, data []byte) error {
 				// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
 				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
 				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-				//Credentials: credentials.NewStaticCredentials("AKID", "SECRET_KEY", "TOKEN"),
+				Credentials: credentials.NewStaticCredentials(s.accessKey, s.secretAccessKey, ""),
 			},
 		),
 	)

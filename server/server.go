@@ -14,14 +14,11 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/server/tee"
 
 	"github.com/gorilla/mux"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 )
 
 func Run(conf *config.Config) {
-	panaceaapp.SetConfig()
-
 	svc, err := service.New(conf)
 	if err != nil {
 		log.Panicf("failed to create service: %v", err)
