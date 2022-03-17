@@ -35,7 +35,7 @@ func TestValidateData(t *testing.T) {
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("http://%s/validate-data/%d?requester_address=%s", datavalHTTPAddr, dealID, requesterAddr),
+		fmt.Sprintf("http://%s/v0/data-deal/deals/%d/data?requester_address=%s", datavalHTTPAddr, dealID, requesterAddr),
 		strings.NewReader(data),
 	)
 	require.NoError(t, err)
