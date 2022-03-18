@@ -8,5 +8,10 @@
   "securityVersion": 1,
   "mounts": null,
   "env": null,
-  "files": null
+  "files": [
+    {
+      "source": "/etc/ssl/certs/ca-certificates.crt",
+      "target": "/etc/ssl/certs/ca-certificates.crt"
+    }
+  ]
 }
