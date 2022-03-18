@@ -2,14 +2,13 @@ package service
 
 import (
 	"fmt"
-	"github.com/medibloc/panacea-data-market-validator/account"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/medibloc/panacea-data-market-validator/store"
 )
 
 type Service struct {
-	ValidatorAccount account.ValidatorAccount
+	ValidatorAccount panacea.ValidatorAccount
 	Store            store.S3Store
 	PanaceaClient    *panacea.GrpcClient
 }
