@@ -21,6 +21,7 @@ EXE="./build/datavald" make ego-sign
 ```
 
 If you build the `datavald` without using EGo, please run make commands with the explicit `GOBIN` environment variable.
+Then, enclave-related features will not work.
 ```bash
 GOBIN=go make build
 GOBIN=go make test
