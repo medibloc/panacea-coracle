@@ -6,7 +6,7 @@ import (
 )
 
 // TODO: Use a better name
-const envVarPrefix = "DATAVAL"
+const envVarPrefix = "EDG_DATAVAL_"
 
 type Config struct {
 	LogLevel             LogLevel `envconfig:"EDG_DATAVAL_LOG_LEVEL" default:"info"`
