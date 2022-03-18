@@ -99,34 +99,6 @@ func TestMustLoad_MissingRequiredEnv_AWSS3Region(t *testing.T) {
 	})
 }
 
-func TestMustLoad_MissingRequiredEnv_AWSS3AccessTokenID(t *testing.T) {
-	t.Setenv("EDG_DATAVAL_LOG_LEVEL", "debug")
-	t.Setenv("EDG_DATAVAL_HTTP_LADDR", "0.0.0.0:8181")
-	t.Setenv("EDG_DATAVAL_PANACEA_GRPC_ADDR", "0.0.0.0:9191")
-	t.Setenv("EDG_DATAVAL_VALIDATOR_MNEMONIC", "Your MNEMONIC")
-	t.Setenv("EDG_DATAVAL_AWS_S3_BUCKET", "my-s3-bucket")
-	t.Setenv("EDG_DATAVAL_AWS_S3_REGION", "ap-northeast-2")
-	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
-
-	require.Panics(t, func() {
-		config.MustLoad()
-	})
-}
-
-func TestMustLoad_MissingRequiredEnv_AWSS3SecretAccessTokenID(t *testing.T) {
-	t.Setenv("EDG_DATAVAL_LOG_LEVEL", "debug")
-	t.Setenv("EDG_DATAVAL_HTTP_LADDR", "0.0.0.0:8181")
-	t.Setenv("EDG_DATAVAL_PANACEA_GRPC_ADDR", "0.0.0.0:9191")
-	t.Setenv("EDG_DATAVAL_VALIDATOR_MNEMONIC", "Your MNEMONIC")
-	t.Setenv("EDG_DATAVAL_AWS_S3_BUCKET", "my-s3-bucket")
-	t.Setenv("EDG_DATAVAL_AWS_S3_REGION", "ap-northeast-2")
-	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
-
-	require.Panics(t, func() {
-		config.MustLoad()
-	})
-}
-
 func TestMustLoad_InvalidLogLevel(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_LOG_LEVEL", "hello")
 	t.Setenv("EDG_DATAVAL_HTTP_LADDR", "0.0.0.0:8181")
