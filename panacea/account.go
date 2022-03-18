@@ -3,6 +3,7 @@ package panacea
 import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
+	log "github.com/sirupsen/logrus"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 
@@ -34,7 +35,7 @@ func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
 func (v ValidatorAccount) GetAddress() string {
 	address, err := bech32.ConvertAndEncode(v.hrp, v.pubKey.Address().Bytes())
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return address
 }
