@@ -2,6 +2,7 @@ package crypto_test
 
 import (
 	"github.com/medibloc/panacea-data-market-validator/crypto"
+	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestGeneratePrivateKeyFromMnemonic(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, "", mnemonic)
 
-	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic)
+	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, panacea.CoinType)
 	require.NoError(t, err)
 
 	originData := []byte("Test origin data.")
@@ -23,4 +24,3 @@ func TestGeneratePrivateKeyFromMnemonic(t *testing.T) {
 
 	require.True(t, privKey.PubKey().VerifySignature(originData, sign))
 }
-
