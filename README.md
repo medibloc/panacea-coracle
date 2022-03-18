@@ -11,7 +11,6 @@ A sensitive data validator for Panacea Data Marketplace
 
 It's recommended to run the data validator in the secure enclave.
 So, the following commands build the `datavald` using EGo which requires Intel SGX. For more details, please refer the [EGo installation guide](https://docs.edgeless.systems/ego/#/getting-started/install).
-Build and test without using **EGo**. However, in this case, an error occurs when using the TEE function.
 ```bash
 make build    # generates a binary: ./build/datavald
 make test
