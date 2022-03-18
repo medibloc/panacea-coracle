@@ -1,7 +1,10 @@
 package validation
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/xeipuuv/gojsonschema"
@@ -13,7 +16,12 @@ import (
 //
 // TODO: accept io.Reader instead of []byte
 func ValidateJSONSchema(jsonInput []byte, desiredSchemaURI string) error {
-	schemaLoader := gojsonschema.NewReferenceLoader(desiredSchemaURI)
+	schemaBody, err := getDesiredSchema(desiredSchemaURI)
+	if err != nil {
+		return fmt.Errorf("failed to get JSON schema: %w", err)
+	}
+
+	schemaLoader := gojsonschema.NewBytesLoader(schemaBody)
 	docLoader := gojsonschema.NewBytesLoader(jsonInput)
 
 	result, err := gojsonschema.Validate(schemaLoader, docLoader)
@@ -31,4 +39,14 @@ func ValidateJSONSchema(jsonInput []byte, desiredSchemaURI string) error {
 	}
 
 	return nil
+}
+
+func getDesiredSchema(desiredSchemaURI string) ([]byte, error) {
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+	res, err := client.Get(desiredSchemaURI)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get JSON schema: %w", err)
+	}
+	return ioutil.ReadAll(res.Body)
 }
