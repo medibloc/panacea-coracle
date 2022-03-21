@@ -35,10 +35,9 @@ func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 	return &ValidatorAccount{
 		secp256PrivKey: privKey,
 		secp256PubKey:  privKey.PubKey(),
-		ecdsaPrivKey:   (*ecdsa.PrivateKey)(ecdsaPrivKey),
-		ecdsaPubKey:    (*ecdsa.PublicKey)(ecdsaPubKey),
+		ecdsaPrivKey:   ecdsaPrivKey.ToECDSA(),
+		ecdsaPubKey:    ecdsaPubKey.ToECDSA(),
 		hrp:            AccountAddressPrefix,
-
 	}, nil
 }
 
