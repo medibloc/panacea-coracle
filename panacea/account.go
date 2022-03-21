@@ -16,15 +16,17 @@ const (
 )
 
 type ValidatorAccount struct {
-	secp256PrivKey tmcrypto.PrivKey
-	secp256PubKey  tmcrypto.PubKey
-	ecdsaPrivKey   *ecdsa.PrivateKey
-	ecdsaPubKey  *ecdsa.PublicKey
-	hrp     string
+	secp256k1PrivKey tmcrypto.PrivKey
+	secp256k1PubKey  tmcrypto.PubKey
+	secp256r1PrivKey *ecdsa.PrivateKey
+	secp256r1PubKey  *ecdsa.PublicKey
+	hrp              string
 }
 
 func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType)
+
+	btcec.PrivKeyFromBytes(btcec.S256(), privKey.Bytes())
 
 	if err != nil {
 		return &ValidatorAccount{}, err
@@ -33,35 +35,34 @@ func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 	ecdsaPrivKey, ecdsaPubKey := btcec.PrivKeyFromBytes(elliptic.P256(), privKey.Bytes())
 
 	return &ValidatorAccount{
-		secp256PrivKey: privKey,
-		secp256PubKey:  privKey.PubKey(),
-		ecdsaPrivKey:   ecdsaPrivKey.ToECDSA(),
-		ecdsaPubKey:    ecdsaPubKey.ToECDSA(),
-		hrp:            AccountAddressPrefix,
+		secp256k1PrivKey: privKey,
+		secp256k1PubKey:  privKey.PubKey(),
+		secp256r1PrivKey: ecdsaPrivKey.ToECDSA(),
+		secp256r1PubKey:  ecdsaPubKey.ToECDSA(),
+		hrp:              AccountAddressPrefix,
 	}, nil
 }
 
 func (v ValidatorAccount) GetAddress() string {
-	address, err := bech32.ConvertAndEncode(v.hrp, v.secp256PubKey.Address().Bytes())
+	address, err := bech32.ConvertAndEncode(v.hrp, v.secp256k1PubKey.Address().Bytes())
 	if err != nil {
 		log.Panic(err)
 	}
 	return address
 }
 
-
 func (v ValidatorAccount) GetSecp256PrivKey() tmcrypto.PrivKey {
-	return v.secp256PrivKey
+	return v.secp256k1PrivKey
 }
 
 func (v ValidatorAccount) GetSecp256PubKey() tmcrypto.PubKey {
-	return v.secp256PubKey
+	return v.secp256k1PubKey
 }
 
 func (v ValidatorAccount) GetEcdsaPrivKey() *ecdsa.PrivateKey {
-	return v.ecdsaPrivKey
+	return v.secp256r1PrivKey
 }
 
 func (v ValidatorAccount) GetEcdsaPubKey() *ecdsa.PublicKey {
-	return v.ecdsaPubKey
+	return v.secp256r1PubKey
 }
