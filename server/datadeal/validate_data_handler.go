@@ -1,66 +1,24 @@
-package server
+package datadeal
 
 import (
 	"fmt"
+
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gorilla/mux"
-	panaceaapp "github.com/medibloc/panacea-core/v2/app"
-	"github.com/medibloc/panacea-core/v2/app/params"
-	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
-	"github.com/medibloc/panacea-data-market-validator/account"
+	markettypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"github.com/medibloc/panacea-data-market-validator/codec"
-	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/store"
+	"github.com/medibloc/panacea-data-market-validator/server/response"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
-var (
-	_ http.Handler = ValidateDataHandler{}
-)
-
-type ValidateDataHandler struct {
-	validatorAccount account.ValidatorAccount
-	encodingConfig   params.EncodingConfig
-	store            store.S3Store
-	panaceaConn      *grpc.ClientConn
-}
-
-// NewValidateDataHandler creates a ValidateData handler.
-func NewValidateDataHandler(ctx *Context, conf *config.Config) (http.Handler, error) {
-	validatorAccount, err := account.NewValidatorAccount(conf.ValidatorMnemonic)
-	if err != nil {
-		return ValidateDataHandler{}, errors.Wrap(err, "failed to NewValidatorAccount")
-	}
-
-	store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region)
-	if err != nil {
-		return ValidateDataHandler{}, errors.Wrap(err, "failed to create S3Store")
-	}
-
-	return ValidateDataHandler{
-		validatorAccount: validatorAccount,
-		encodingConfig:   panaceaapp.MakeEncodingConfig(),
-		store:            store,
-		panaceaConn:      ctx.panaceaConn,
-	}, nil
-}
-
-func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if v.panaceaConn == nil {
-		log.Error(types.ErrNoGrpcConnection)
-		http.Error(w, types.ErrNoGrpcConnection.Error(), http.StatusInternalServerError)
-		return
-	}
-
+func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Request) {
 	// content type check from header
-	if err, errCode := v.validate(r); err != nil {
+	if err, errCode := validateHeaders(r); err != nil {
 		log.Error(err)
 		http.Error(w, err.Error(), errCode)
 		return
@@ -77,18 +35,15 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dealId := mux.Vars(r)[types.DealIdKey]
 
 	// get deal info by Id from blockchain
-	deal, err := GetDeal(v.panaceaConn, dealId)
+	deal, err := svc.PanaceaClient.GetDeal(dealId)
 	if err != nil {
 		log.Error("failed to get deal information: ", err)
 		http.Error(w, "failed to get deal information", http.StatusInternalServerError)
 		return
 	}
 
-	// get validator account from mnemonic
-	valAccount := v.validatorAccount
-
 	// trusted validator check
-	if !validation.Contains(deal.TrustedDataValidators, valAccount.GetAddress()) {
+	if !validation.Contains(deal.TrustedDataValidators, svc.ValidatorAccount.GetAddress()) {
 		log.Error("not a trusted data-validator")
 		http.Error(w, "invalid data validator", http.StatusBadRequest)
 		return
@@ -104,7 +59,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// encrypt and store data
-	ownerPubKey, err := GetPubKey(v.panaceaConn, deal.Owner, v.encodingConfig)
+	ownerPubKey, err := svc.PanaceaClient.GetPubKey(deal.Owner)
 	if err != nil {
 		log.Error("failed to get public key: ", err)
 		http.Error(w, "failed to get public key", http.StatusInternalServerError)
@@ -122,8 +77,8 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// make dataHash and upload to s3Store
 	dataHash := crypto.Hash(jsonInput)
 
-	fileName := v.store.MakeRandomFilename()
-	err = v.store.UploadFile(dealId, fileName, encryptedData)
+	fileName := svc.Store.MakeRandomFilename()
+	err = svc.Store.UploadFile(dealId, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
@@ -131,7 +86,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make downloadURL
-	dataURL := v.store.MakeDownloadURL(dealId, fileName)
+	dataURL := svc.Store.MakeDownloadURL(dealId, fileName)
 	encryptedDataURL, err := crypto.EncryptData(ownerPubKey, []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
@@ -144,7 +99,7 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		dataHash,
 		encryptedDataURL,
 		r.URL.Query().Get("requester_address"),
-		v.validatorAccount.GetAddress())
+		svc.ValidatorAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataValidationCertificate: ", err)
 		http.Error(w, "failed to make unsignedDataValidationCertificate", http.StatusInternalServerError)
@@ -158,14 +113,14 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signature, err := valAccount.GetPrivKey().Sign(serializedCertificate)
+	signature, err := svc.ValidatorAccount.GetPrivKey().Sign(serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
 		http.Error(w, "failed to make signature", http.StatusInternalServerError)
 		return
 	}
 
-	resp := &panaceatypes.DataValidationCertificate{
+	resp := &markettypes.DataValidationCertificate{
 		UnsignedCert: &unsignedCertificate,
 		Signature:    signature,
 	}
@@ -178,11 +133,10 @@ func (v ValidateDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, http.StatusCreated, marshaledResp)
+	response.WriteJSONResponse(w, http.StatusCreated, marshaledResp)
 }
 
-// validate Verification of parameter
-func (v ValidateDataHandler) validate(r *http.Request) (error, int) {
+func validateHeaders(r *http.Request) (error, int) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
 	}
