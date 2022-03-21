@@ -17,7 +17,7 @@ func TestCreateCertificate(T *testing.T) {
 
 	acc, err := panacea.NewValidatorAccount(mnemonic)
 
-	certBytes, err := tee.CreateCertificate(acc.GetEcdsaPrivKey())
+	certBytes, err := tee.CreateAndStoreCertificate(acc.GetEcdsaPrivKey())
 	require.NoError(T, err)
 
 	cert, err := x509.ParseCertificate(certBytes)

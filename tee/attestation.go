@@ -1,16 +1,31 @@
 package tee
 
 import (
-	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"github.com/edgelesssys/ego/enclave"
 	"github.com/medibloc/panacea-data-market-validator/types"
+	"io/ioutil"
 	"math/big"
+	"os"
 )
 
-func CreateCertificate(priv *ecdsa.PrivateKey) ([]byte, error) {
+func exists(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
+func CreateAndStoreCertificate(path string) ([]byte, error) {
+	if exists(path) {
+		return ioutil.ReadFile(path)
+
+	}
+
 	template := &x509.Certificate{
 		SerialNumber: &big.Int{},
 		Subject:      pkix.Name{CommonName: "localhost"},

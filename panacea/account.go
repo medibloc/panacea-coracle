@@ -1,8 +1,6 @@
 package panacea
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
@@ -18,8 +16,6 @@ const (
 type ValidatorAccount struct {
 	secp256k1PrivKey tmcrypto.PrivKey
 	secp256k1PubKey  tmcrypto.PubKey
-	secp256r1PrivKey *ecdsa.PrivateKey
-	secp256r1PubKey  *ecdsa.PublicKey
 	hrp              string
 }
 
@@ -32,13 +28,9 @@ func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 		return &ValidatorAccount{}, err
 	}
 
-	ecdsaPrivKey, ecdsaPubKey := btcec.PrivKeyFromBytes(elliptic.P256(), privKey.Bytes())
-
 	return &ValidatorAccount{
 		secp256k1PrivKey: privKey,
 		secp256k1PubKey:  privKey.PubKey(),
-		secp256r1PrivKey: ecdsaPrivKey.ToECDSA(), // only for x509 cert
-		secp256r1PubKey:  ecdsaPubKey.ToECDSA(),
 		hrp:              AccountAddressPrefix,
 	}, nil
 }
@@ -57,12 +49,4 @@ func (v ValidatorAccount) GetSecp256PrivKey() tmcrypto.PrivKey {
 
 func (v ValidatorAccount) GetSecp256PubKey() tmcrypto.PubKey {
 	return v.secp256k1PubKey
-}
-
-func (v ValidatorAccount) GetEcdsaPrivKey() *ecdsa.PrivateKey {
-	return v.secp256r1PrivKey
-}
-
-func (v ValidatorAccount) GetEcdsaPubKey() *ecdsa.PublicKey {
-	return v.secp256r1PubKey
 }
