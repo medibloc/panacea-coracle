@@ -113,7 +113,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	signature, err := svc.ValidatorAccount.GetPrivKey().Sign(serializedCertificate)
+	signature, err := svc.ValidatorAccount.GetSecp256PrivKey().Sign(serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
 		http.Error(w, "failed to make signature", http.StatusInternalServerError)
