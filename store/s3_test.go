@@ -3,6 +3,7 @@ package store_test
 import (
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	awsendpoints "github.com/aws/aws-sdk-go/aws/endpoints"
@@ -13,7 +14,10 @@ import (
 
 // TestS3UploadAndDownload Upload file to s3Store and download generated url link and verify after download
 func TestS3UploadAndDownload(t *testing.T) {
-	s3Store, err := store.NewS3Store("data-market-test", awsendpoints.ApNortheast2RegionID)
+	accessKeyID := os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID")
+	secretAccessKeyID := os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")
+
+	s3Store, err := store.NewS3Store("data-market-test", awsendpoints.ApNortheast2RegionID, accessKeyID, secretAccessKeyID)
 	require.NoError(t, err)
 
 	path := "temp_path"
