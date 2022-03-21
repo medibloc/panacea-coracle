@@ -1,6 +1,7 @@
 package types
 
 const (
-	DealIdKey = "dealId"
+	DealIdKey              = "dealId"
 	AttestationProviderURL = "https://shareduks.uks.attest.azure.net"
+	CertificateKey         = "certificate"
 )
