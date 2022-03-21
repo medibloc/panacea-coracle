@@ -8,21 +8,22 @@ A sensitive data validator for Panacea Data Marketplace
 - Encrypting and storing data for buyers
 
 ## Building and Testing
-By default, DataValidator uses EGo.<br/>
-It also requires an Intel CPU capable of using SGX.<br/>
-Please refer [here](https://docs.edgeless.systems/ego/#/getting-started/install) for installation of EGo.
 
-If you are building using **EGo**, do this
+It's recommended to run the data validator in the secure enclave.
+So, the following commands build the `datavald` using EGo which requires Intel SGX. For more details, please see [EGo installation guide](https://docs.edgeless.systems/ego/#/getting-started/install).
 ```bash
-ego-go build ./cmd/datavald
-ego sign datavald
+make build    # generates a binary: ./build/datavald
+make test
+
+# https://docs.edgeless.systems/ego/#/workflows/build?id=sign-and-run
+EXE="./build/datavald" make ego-sign  
 ```
 
-Build and test without using **EGo**. However, in this case, an error occurs when using the TEE function.
+If you build the `datavald` without using EGo, please run make commands with the explicit `GOBIN` environment variable.
+Then, enclave-related features will not work.
 ```bash
-make build
-make test
-make install
+GOBIN=go make build
+GOBIN=go make test
 ```
 
 ## Running
