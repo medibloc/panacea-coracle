@@ -37,7 +37,7 @@ func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 	return &ValidatorAccount{
 		secp256k1PrivKey: privKey,
 		secp256k1PubKey:  privKey.PubKey(),
-		secp256r1PrivKey: ecdsaPrivKey.ToECDSA(),
+		secp256r1PrivKey: ecdsaPrivKey.ToECDSA(), // only for x509 cert
 		secp256r1PubKey:  ecdsaPubKey.ToECDSA(),
 		hrp:              AccountAddressPrefix,
 	}, nil
