@@ -12,6 +12,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"github.com/medibloc/panacea-data-market-validator/server/service"
 	"github.com/medibloc/panacea-data-market-validator/server/tee"
+	attestation "github.com/medibloc/panacea-data-market-validator/tee"
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/config"
@@ -24,6 +25,13 @@ func Run(conf *config.Config) {
 		log.Panicf("failed to create service: %v", err)
 	}
 	defer svc.Close()
+
+	cert, privKey, err := attestation.CreateCertificate(conf.CertificateStorePath)
+	if err != nil {
+		log.Panicf("failed to create certificate: %v", err)
+	}
+
+	log.Error(cert, privKey)
 
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
