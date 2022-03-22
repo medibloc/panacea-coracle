@@ -14,6 +14,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -29,19 +30,29 @@ type SealCertificate struct {
 // CreateCertificate If there is a sealed certificate in the received path, it responds after parsing.
 // However, if the certificate does not exist, it responds by creating a new one. It also responds with RSA PrivateKey.
 func CreateCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
-	fileFullPath := filepath.Join(storePath, CertificateFilename)
-	if exists(fileFullPath) {
-		log.Info("A sealed certificate exists. Is doing read the certificate.")
-		return readFileAndGetCertificate(fileFullPath)
+	if isExistsCertificate(storePath) {
+		log.Info("A sealed certificate isExistsCertificate. Is doing read the certificate.")
+		return readFileAndGetCertificate(storePath)
 	}
 
 	log.Info("There is no certificate. Generate a new certificate.")
 
-	return createCertificate(storePath)
+	certBytes, priv, err := createCertificate(storePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = sealAndStore(certBytes, priv, storePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return certBytes, priv, nil
 }
 
-func exists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
+func isExistsCertificate(storePath string) bool {
+	storeFullPath := filepath.Join(storePath, CertificateFilename)
+	if _, err := os.Stat(storeFullPath); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
@@ -49,8 +60,9 @@ func exists(path string) bool {
 	return true
 }
 
-func readFileAndGetCertificate(path string) ([]byte, *rsa.PrivateKey, error) {
-	sealedBody, err := ioutil.ReadFile(path)
+func readFileAndGetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
+	storeFullPath := filepath.Join(storePath, CertificateFilename)
+	sealedBody, err := ioutil.ReadFile(storeFullPath)
 
 	if err != nil {
 		return nil, nil, err
@@ -79,6 +91,7 @@ func createCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject:      pkix.Name{CommonName: "DataValidator"},
+		NotAfter: time.Now().AddDate(1, 0, 0),
 	}
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -91,15 +104,11 @@ func createCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 		return nil, nil, err
 	}
 
-	err = sealAndStore(certBytes, priv, storePath)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	return certBytes, priv, nil
+
 }
 
-func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, fileFullPath string) error {
+func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, storePath string) error {
 	cert := SealCertificate{
 		Cert:    certBytes,
 		PrivKey: priv,
@@ -114,12 +123,12 @@ func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, fileFullPath string) e
 		return err
 	}
 
-	err = os.MkdirAll(fileFullPath, 0755)
+	err = os.MkdirAll(storePath, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(fileFullPath, sealedBody, 0755)
+	err = ioutil.WriteFile(filepath.Join(filepath.Join(storePath, CertificateFilename), CertificateFilename), sealedBody, 0755)
 	if err != nil {
 		return err
 	}

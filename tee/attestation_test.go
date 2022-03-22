@@ -1,35 +1,38 @@
-package tee_test
+package tee
 
 import (
-	"crypto/ecdsa"
 	"crypto/x509"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/panacea"
-	"github.com/medibloc/panacea-data-market-validator/tee"
 	"github.com/stretchr/testify/require"
-	"reflect"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
-func TestCreateCertificate(T *testing.T) {
-	mnemonic, err := crypto.GenerateMnemonic()
+func TestIsExistsCertificate(T *testing.T) {
+	storePath := "./test/1/2"
+	storeFullPath := filepath.Join(storePath, CertificateFilename)
+	err := os.MkdirAll(storePath, 0755)
 	require.NoError(T, err)
 
-	acc, err := panacea.NewValidatorAccount(mnemonic)
+	defer func() {
+		err := os.RemoveAll("./test")
+		require.NoError(T, err)
+	} ()
 
-	certBytes, err := tee.CreateAndStoreCertificate(acc.GetEcdsaPrivKey())
+	err = ioutil.WriteFile(storeFullPath, []byte("test"), 0755)
+	require.NoError(T, err)
+}
+
+func TestCreateCertificate(T *testing.T) {
+	storePath := "./test/1/2"
+	certBytes, priv, err := createCertificate(storePath)
 	require.NoError(T, err)
 
 	cert, err := x509.ParseCertificate(certBytes)
 	require.NoError(T, err)
 
-	err = cert.VerifyHostname("localhost")
-	require.NoError(T, err)
-
-	require.Equal(T, reflect.TypeOf(&ecdsa.PublicKey{}), reflect.TypeOf(cert.PublicKey))
-	pubKey := cert.PublicKey.(*ecdsa.PublicKey)
-
-	require.Equal(T, acc.GetEcdsaPubKey(), pubKey)
-	require.Equal(T, x509.ECDSA, cert.PublicKeyAlgorithm)
-	require.Equal(T, "localhost", cert.Subject.CommonName)
+	require.Equal(T, "DataValidator", cert.Subject.CommonName)
+	require.Equal(T, priv.Public(), cert.PublicKey)
+	require.Equal(T, x509.RSA, cert.PublicKeyAlgorithm)
 }
