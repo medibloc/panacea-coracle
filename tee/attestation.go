@@ -7,7 +7,6 @@ import (
 	"crypto/x509/pkix"
 	"github.com/edgelesssys/ego/ecrypto"
 	"github.com/edgelesssys/ego/enclave"
-	"github.com/medibloc/panacea-data-market-validator/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/tendermint/tendermint/libs/json"
 	"io/ioutil"
@@ -91,7 +90,8 @@ func createCertificate() ([]byte, *rsa.PrivateKey, error) {
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject:      pkix.Name{CommonName: "DataValidator"},
-		NotAfter: time.Now().AddDate(1, 0, 0),
+		NotAfter:     time.Now().AddDate(1, 0, 0),
+		DNSNames:     []string{"localhost"},
 	}
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -138,6 +138,6 @@ func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, storePath string) erro
 // CreateAzureAttestationToken If you call this on macOS, you will get the following error.
 // SIGSYS: bad system call
 // PC=0x407f2d0 m=0 sigcode=0
-func CreateAzureAttestationToken(cert []byte) (string, error) {
-	return enclave.CreateAzureAttestationToken(cert, types.AttestationProviderURL)
+func CreateAzureAttestationToken(cert []byte, attestationProviderURL string) (string, error) {
+	return enclave.CreateAzureAttestationToken(cert, attestationProviderURL)
 }

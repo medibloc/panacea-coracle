@@ -36,7 +36,7 @@ func Run(conf *config.Config) {
 		Certificates: []tls.Certificate{
 			{
 				Certificate: [][]byte{cert},
-				PrivateKey: privKey,
+				PrivateKey:  privKey,
 			},
 		},
 	}
@@ -44,14 +44,14 @@ func Run(conf *config.Config) {
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
 	datapool.RegisterHandlers(svc, router)
-	tee.RegisterHandlers(svc, router)
+	tee.RegisterHandlers(svc, cert, conf.AttestationProviderURL, router)
 
 	server := &http.Server{
 		Handler:      router,
 		Addr:         conf.HTTPListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
-		TLSConfig: tlsCfg,
+		TLSConfig:    tlsCfg,
 	}
 
 	httpServerErrCh := make(chan error, 1)
