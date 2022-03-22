@@ -59,6 +59,7 @@ func isExistsCertificate(storePath string) bool {
 	return true
 }
 
+// readFileAndGetCertificate Reads the file to unseal it, then returns the certificate and privKey
 func readFileAndGetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 	storeFullPath := filepath.Join(storePath, CertificateFilename)
 	sealedBody, err := ioutil.ReadFile(storeFullPath)
@@ -80,6 +81,7 @@ func readFileAndGetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error
 	return cert.Cert, cert.PrivKey, nil
 }
 
+// createCertificate Create an x509 certificate and generate an rsa key.
 func createCertificate() ([]byte, *rsa.PrivateKey, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
@@ -108,6 +110,8 @@ func createCertificate() ([]byte, *rsa.PrivateKey, error) {
 
 }
 
+// sealAndStore Seal the certificate and privKey and store it in a specific path.
+//Unsealing is only possible in this enclave.
 func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, storePath string) error {
 	cert := SealCertificate{
 		Cert:    certBytes,
