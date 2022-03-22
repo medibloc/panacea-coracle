@@ -114,6 +114,11 @@ func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, fileFullPath string) e
 		return err
 	}
 
+	err = os.MkdirAll(fileFullPath, 0755)
+	if err != nil {
+		return err
+	}
+
 	err = ioutil.WriteFile(fileFullPath, sealedBody, 0755)
 	if err != nil {
 		return err
