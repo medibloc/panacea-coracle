@@ -37,7 +37,7 @@ func CreateCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 
 	log.Info("There is no certificate. Generate a new certificate.")
 
-	certBytes, priv, err := createCertificate(storePath)
+	certBytes, priv, err := createCertificate()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -81,7 +81,7 @@ func readFileAndGetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error
 	return cert.Cert, cert.PrivKey, nil
 }
 
-func createCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
+func createCertificate() ([]byte, *rsa.PrivateKey, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
@@ -128,7 +128,7 @@ func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, storePath string) erro
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(filepath.Join(storePath, CertificateFilename), CertificateFilename), sealedBody, 0755)
+	err = ioutil.WriteFile(filepath.Join(storePath, CertificateFilename), sealedBody, 0755)
 	if err != nil {
 		return err
 	}
