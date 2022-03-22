@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"github.com/medibloc/panacea-data-market-validator/server/service"
 	"github.com/medibloc/panacea-data-market-validator/server/tee"
+	attestation "github.com/medibloc/panacea-data-market-validator/tee"
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/config"
@@ -25,6 +27,20 @@ func Run(conf *config.Config) {
 	}
 	defer svc.Close()
 
+	cert, privKey, err := attestation.CreateCertificate(conf.CertificateStorePath)
+	if err != nil {
+		log.Panicf("failed to create certificate: %v", err)
+	}
+
+	tlsCfg := &tls.Config{
+		Certificates: []tls.Certificate{
+			{
+				Certificate: [][]byte{cert},
+				PrivateKey: privKey,
+			},
+		},
+	}
+
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
 	datapool.RegisterHandlers(svc, router)
@@ -35,12 +51,13 @@ func Run(conf *config.Config) {
 		Addr:         conf.HTTPListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
+		TLSConfig: tlsCfg,
 	}
 
 	httpServerErrCh := make(chan error, 1)
 	go func() {
 		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServeTLS("", ""); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				httpServerErrCh <- err
 			} else {

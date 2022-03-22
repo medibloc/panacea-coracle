@@ -26,7 +26,9 @@ type SealCertificate struct {
 	PrivKey *rsa.PrivateKey
 }
 
-func CreateCertificate(storePath string) (*SealCertificate, error) {
+// CreateCertificate If there is a sealed certificate in the received path, it responds after parsing.
+// However, if the certificate does not exist, it responds by creating a new one. It also responds with RSA PrivateKey.
+func CreateCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 	fileFullPath := filepath.Join(storePath, CertificateFilename)
 	if exists(fileFullPath) {
 		log.Info("A sealed certificate exists. Is doing read the certificate.")
@@ -35,17 +37,7 @@ func CreateCertificate(storePath string) (*SealCertificate, error) {
 
 	log.Info("There is no certificate. Generate a new certificate.")
 
-	sealCertificate, err := createSealCertificate()
-	if err != nil {
-		return nil, err
-	}
-
-	err = sealAndStore(sealCertificate, fileFullPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return sealCertificate, nil
+	return createCertificate(storePath)
 }
 
 func exists(path string) bool {
@@ -57,31 +49,31 @@ func exists(path string) bool {
 	return true
 }
 
-func readFileAndGetCertificate(path string) (*SealCertificate, error) {
+func readFileAndGetCertificate(path string) ([]byte, *rsa.PrivateKey, error) {
 	sealedBody, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	bytes, err := ecrypto.Unseal(sealedBody, []byte(CertificateKey))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	cert := &SealCertificate{}
 	err = json.Unmarshal(bytes, cert)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return cert, nil
+	return cert.Cert, cert.PrivKey, nil
 }
 
-func createSealCertificate() (*SealCertificate, error) {
+func createCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	template := &x509.Certificate{
@@ -91,22 +83,28 @@ func createSealCertificate() (*SealCertificate, error) {
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	certBytes, err := x509.CreateCertificate(rand.Reader, template, template, &priv.PublicKey, priv)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &SealCertificate{
-		Cert:    certBytes,
-		PrivKey: priv,
-	}, nil
+	err = sealAndStore(certBytes, priv, storePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return certBytes, priv, nil
 }
 
-func sealAndStore(certificateWithPrivKey *SealCertificate, fileFullPath string) error {
-	jsonBytes, err := json.Marshal(certificateWithPrivKey)
+func sealAndStore(certBytes []byte, priv *rsa.PrivateKey, fileFullPath string) error {
+	cert := SealCertificate{
+		Cert:    certBytes,
+		PrivKey: priv,
+	}
+	jsonBytes, err := json.Marshal(cert)
 	if err != nil {
 		return err
 	}
