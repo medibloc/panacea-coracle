@@ -1,5 +1,5 @@
 package types
 
 const (
-	DealIdKey              = "dealId"
+	DealIdKey = "dealId"
 )

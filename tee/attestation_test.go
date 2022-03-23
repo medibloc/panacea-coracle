@@ -3,37 +3,11 @@ package tee
 import (
 	"crypto/x509"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 )
 
-func TestIsExistsCertificate(T *testing.T) {
-	storePath := "./test/1/2"
-	storeFullPath := filepath.Join(storePath, CertificateFilename)
-	err := os.MkdirAll(storePath, 0755)
-	require.NoError(T, err)
-
-	defer func() {
-		err := os.RemoveAll("./test")
-		require.NoError(T, err)
-	}()
-
-	err = ioutil.WriteFile(storeFullPath, []byte("test"), 0755)
-	require.NoError(T, err)
-}
-
-func TestGetCertificate_NotExistCertificate(T *testing.T) {
-	storePath := "./test/1/2"
-	cert, priv, err := GetCertificate(storePath)
-	require.Nil(T, cert)
-	require.Nil(T, priv)
-	require.NoError(T, err)
-}
-
 func TestGetAndCreateCertificate(T *testing.T) {
-	certBytes, priv, err := createCertificate()
+	certBytes, priv, err := CreateCertificate()
 	require.NoError(T, err)
 
 	cert, err := x509.ParseCertificate(certBytes)

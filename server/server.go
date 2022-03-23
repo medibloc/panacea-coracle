@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"crypto/rsa"
 	"errors"
 	"net/http"
 	"os"
@@ -27,10 +26,13 @@ func Run(conf *config.Config) {
 	}
 	defer svc.Close()
 
-	cert, priv, err := getCertificate(conf)
+	log.Info("Generating a new certificate.")
+	cert, priv, err := attestation.CreateCertificate()
 	if err != nil {
 		log.Panicf("failed to get certificate: %v", err)
 	}
+	// TODO This certificate and key are generated or read when the server starts up.
+	// But since there is no place to use it yet, I'll just take a picture of it as a log.
 	log.Info(cert, priv)
 
 	router := mux.NewRouter()
@@ -76,16 +78,4 @@ func Run(conf *config.Config) {
 	if err := server.Shutdown(ctxTimeout); err != nil {
 		log.Errorf("error occurs while server shutting down: %v", err)
 	}
-}
-
-func getCertificate(conf *config.Config) ([]byte, *rsa.PrivateKey, error) {
-	cert, privKey, err := attestation.GetCertificate(conf.CertificateStorePath)
-	if err != nil {
-		return nil, nil, err
-	} else if cert == nil {
-		log.Info("There is no certificate. Generate a new certificate.")
-		return attestation.CreateCertificate(conf.CertificateStorePath)
-	}
-	log.Info("A sealed certificate exists. Is doing read the certificate.")
-	return cert, privKey, err
 }
