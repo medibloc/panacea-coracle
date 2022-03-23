@@ -18,13 +18,21 @@ func TestIsExistsCertificate(T *testing.T) {
 	defer func() {
 		err := os.RemoveAll("./test")
 		require.NoError(T, err)
-	} ()
+	}()
 
 	err = ioutil.WriteFile(storeFullPath, []byte("test"), 0755)
 	require.NoError(T, err)
 }
 
-func TestCreateCertificate(T *testing.T) {
+func TestGetCertificate_NotExistCertificate(T *testing.T) {
+	storePath := "./test/1/2"
+	cert, priv, err := GetCertificate(storePath)
+	require.Nil(T, cert)
+	require.Nil(T, priv)
+	require.NoError(T, err)
+}
+
+func TestGetAndCreateCertificate(T *testing.T) {
 	certBytes, priv, err := createCertificate()
 	require.NoError(T, err)
 

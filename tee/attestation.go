@@ -7,7 +7,6 @@ import (
 	"crypto/x509/pkix"
 	"github.com/edgelesssys/ego/ecrypto"
 	"github.com/edgelesssys/ego/enclave"
-	log "github.com/sirupsen/logrus"
 	"github.com/tendermint/tendermint/libs/json"
 	"io/ioutil"
 	"math/big"
@@ -26,42 +25,15 @@ type SealCertificate struct {
 	PrivKey *rsa.PrivateKey
 }
 
-// CreateCertificate If there is a sealed certificate in the received path, it responds after parsing.
-// However, if the certificate does not exist, it responds by creating a new one. It also responds with RSA PrivateKey.
-func CreateCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
-	if isExistsCertificate(storePath) {
-		log.Info("A sealed certificate isExistsCertificate. Is doing read the certificate.")
-		return readFileAndGetCertificate(storePath)
-	}
-
-	log.Info("There is no certificate. Generate a new certificate.")
-
-	certBytes, priv, err := createCertificate()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	err = sealAndStore(certBytes, priv, storePath)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return certBytes, priv, nil
-}
-
-func isExistsCertificate(storePath string) bool {
+func GetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
 	storeFullPath := filepath.Join(storePath, CertificateFilename)
+
 	if _, err := os.Stat(storeFullPath); err != nil {
 		if os.IsNotExist(err) {
-			return false
+			return nil, nil, nil
 		}
 	}
-	return true
-}
 
-// readFileAndGetCertificate Reads the file to unseal it, then returns the certificate and privKey
-func readFileAndGetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
-	storeFullPath := filepath.Join(storePath, CertificateFilename)
 	sealedBody, err := ioutil.ReadFile(storeFullPath)
 
 	if err != nil {
@@ -79,6 +51,22 @@ func readFileAndGetCertificate(storePath string) ([]byte, *rsa.PrivateKey, error
 		return nil, nil, err
 	}
 	return cert.Cert, cert.PrivKey, nil
+}
+
+// CreateCertificate If there is a sealed certificate in the received path, it responds after parsing.
+// However, if the certificate does not exist, it responds by creating a new one. It also responds with RSA PrivateKey.
+func CreateCertificate(storePath string) ([]byte, *rsa.PrivateKey, error) {
+	certBytes, priv, err := createCertificate()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = sealAndStore(certBytes, priv, storePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return certBytes, priv, nil
 }
 
 // createCertificate Create an x509 certificate and generate an rsa key.

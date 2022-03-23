@@ -26,12 +26,19 @@ func Run(conf *config.Config) {
 	}
 	defer svc.Close()
 
-	cert, privKey, err := attestation.CreateCertificate(conf.CertificateStorePath)
+	cert, privKey, err := attestation.GetCertificate(conf.CertificateStorePath)
 	if err != nil {
-		log.Panicf("failed to create certificate: %v", err)
+		log.Panicf("failed to get certificate: %v", err)
+	} else if cert == nil {
+		log.Info("There is no certificate. Generate a new certificate.")
+		cert, privKey, err = attestation.CreateCertificate(conf.CertificateStorePath)
+		if err != nil {
+			log.Panicf("failed to create certificate: %v", err)
+		}
+	} else {
+		log.Info("A sealed certificate exists. Is doing read the certificate.")
+		log.Info(cert, privKey)
 	}
-
-	log.Error(cert, privKey)
 
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
