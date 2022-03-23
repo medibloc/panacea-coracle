@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// CreateCertificate creates an x509 certificate and generate an rsa key.
-func CreateCertificate() ([]byte, *rsa.PrivateKey, error) {
+// CreateTLSCertificate creates an x509 certificate and generate an rsa key.
+func CreateTLSCertificate() ([]byte, *rsa.PrivateKey, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {

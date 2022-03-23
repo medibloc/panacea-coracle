@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestGetAndCreateCertificate(T *testing.T) {
-	certBytes, priv, err := CreateCertificate()
+func TestCreateTLSCertificate(T *testing.T) {
+	certBytes, priv, err := CreateTLSCertificate()
 	require.NoError(T, err)
 
 	cert, err := x509.ParseCertificate(certBytes)

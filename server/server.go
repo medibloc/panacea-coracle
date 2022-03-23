@@ -27,7 +27,7 @@ func Run(conf *config.Config) {
 	defer svc.Close()
 
 	log.Info("Generating a new certificate.")
-	cert, priv, err := attestation.CreateCertificate()
+	cert, priv, err := attestation.CreateTLSCertificate()
 	if err != nil {
 		log.Panicf("failed to get certificate: %v", err)
 	}
