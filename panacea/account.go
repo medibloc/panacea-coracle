@@ -1,7 +1,6 @@
 package panacea
 
 import (
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	log "github.com/sirupsen/logrus"
@@ -21,8 +20,6 @@ type ValidatorAccount struct {
 
 func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType)
-
-	btcec.PrivKeyFromBytes(btcec.S256(), privKey.Bytes())
 
 	if err != nil {
 		return &ValidatorAccount{}, err
