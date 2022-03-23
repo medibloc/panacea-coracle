@@ -39,6 +39,7 @@ func Run(conf *config.Config) {
 		log.Info("A sealed certificate exists. Is doing read the certificate.")
 		log.Info(cert, privKey)
 	}
+	defer svc.Close()
 
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
