@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/rsa"
 	"errors"
 	"net/http"
 	"os"
@@ -26,20 +27,11 @@ func Run(conf *config.Config) {
 	}
 	defer svc.Close()
 
-	cert, privKey, err := attestation.GetCertificate(conf.CertificateStorePath)
+	cert, priv, err := getCertificate(conf)
 	if err != nil {
 		log.Panicf("failed to get certificate: %v", err)
-	} else if cert == nil {
-		log.Info("There is no certificate. Generate a new certificate.")
-		cert, privKey, err = attestation.CreateCertificate(conf.CertificateStorePath)
-		if err != nil {
-			log.Panicf("failed to create certificate: %v", err)
-		}
-	} else {
-		log.Info("A sealed certificate exists. Is doing read the certificate.")
-		log.Info(cert, privKey)
 	}
-	defer svc.Close()
+	log.Info(cert, priv)
 
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
@@ -84,4 +76,16 @@ func Run(conf *config.Config) {
 	if err := server.Shutdown(ctxTimeout); err != nil {
 		log.Errorf("error occurs while server shutting down: %v", err)
 	}
+}
+
+func getCertificate(conf *config.Config) ([]byte, *rsa.PrivateKey, error) {
+	cert, privKey, err := attestation.GetCertificate(conf.CertificateStorePath)
+	if err != nil {
+		return nil, nil, err
+	} else if cert == nil {
+		log.Info("There is no certificate. Generate a new certificate.")
+		return attestation.CreateCertificate(conf.CertificateStorePath)
+	}
+	log.Info("A sealed certificate exists. Is doing read the certificate.")
+	return cert, privKey, err
 }
