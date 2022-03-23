@@ -18,7 +18,7 @@ func TestMustLoad(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	c := config.MustLoad()
 	require.Equal(t, log.DebugLevel, log.Level(c.LogLevel))
@@ -30,7 +30,7 @@ func TestMustLoad(t *testing.T) {
 	require.Equal(t, "my-access-key", c.AWSS3AccessKeyID)
 	require.Equal(t, "my-secret-access-key", c.AWSS3SecretAccessKey)
 	require.Equal(t, "my-config-dir", c.ConfigDir)
-	require.Equal(t, "my-attestation-provider-url", c.EnclaveAttestationProviderURL)
+	require.Equal(t, "my-enclave-attestation-provider-url", c.EnclaveAttestationProviderURL)
 }
 
 func TestMustLoad_MissingRequiredEnv_HttpAddr(t *testing.T) {
@@ -42,7 +42,7 @@ func TestMustLoad_MissingRequiredEnv_HttpAddr(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -58,7 +58,7 @@ func TestMustLoad_MissingRequiredEnv_GrpcAddr(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -74,7 +74,7 @@ func TestMustLoad_MissingRequiredEnv_ValidatorMnemonic(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -90,7 +90,7 @@ func TestMustLoad_MissingRequiredEnv_AWSS3Bucket(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -106,7 +106,7 @@ func TestMustLoad_MissingRequiredEnv_AWSS3Region(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -122,7 +122,7 @@ func TestMustLoad_MissingRequiredEnv_CertificateStorePath(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_BUCKET", "my-s3-bucket")
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
@@ -153,7 +153,7 @@ func TestMustLoad_InvalidLogLevel(t *testing.T) {
 	t.Setenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID", "my-access-key")
 	t.Setenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY", "my-secret-access-key")
 	t.Setenv("EDG_DATAVAL_CONFIG_DIR", "my-config-dir")
-	t.Setenv("EDG_DATAVAL_ATTESTATION_PROVIDER_URL", "my-attestation-provider-url")
+	t.Setenv("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL", "my-enclave-attestation-provider-url")
 
 	require.Panics(t, func() {
 		config.MustLoad()
