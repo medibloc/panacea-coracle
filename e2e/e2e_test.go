@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 
-	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
+	panaceatypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

@@ -1,8 +1,9 @@
 package types
 
 import (
-	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
 	"strconv"
+
+	panaceatypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 )
 
 func NewUnsignedDataValidationCertificate(dealIdStr string, dataHash []byte, encryptedDataUrl []byte, requesterAddress, dataValidatorAddress string) (panaceatypes.UnsignedDataValidationCertificate, error) {

@@ -1,11 +1,12 @@
 package codec_test
 
 import (
-	panaceatypes "github.com/medibloc/panacea-core/v2/x/market/types"
+	"testing"
+
+	panaceatypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-data-market-validator/codec"
 	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestJsonMarshalAndUnMarshal(t *testing.T) {
