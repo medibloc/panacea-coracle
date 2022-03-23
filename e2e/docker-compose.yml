@@ -21,7 +21,7 @@ services:
       EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID: "${EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID}"
       EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY: "${EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY}"
       EDG_DATAVAL_CONFIG_DIR: "~/configs"
-      EnclaveAttestationProviderURL: "https://shareduks.uks.attest.azure.net"
+      EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL: "https://shareduks.uks.attest.azure.net"
     volumes:
       - .:/e2e
     depends_on:
