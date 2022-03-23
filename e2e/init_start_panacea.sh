@@ -36,7 +36,7 @@ sleep 10
 DATAVAL_ADDR=$(panacead keys show dataval -a)
 sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json > /tmp/create_deal.json
 
-panacead tx market create-deal \
+panacead tx datadeal create-deal \
   --deal-file /tmp/create_deal.json \
   --from buyer \
   --chain-id ${CHAIN_ID} \
