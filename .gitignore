@@ -19,3 +19,5 @@ build/
 
 # Dotenv file that is usually used for docker-compose
 .env
+enclave.json
+*.pem

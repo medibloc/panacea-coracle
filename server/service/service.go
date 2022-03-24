@@ -8,7 +8,7 @@ import (
 )
 
 type Service struct {
-	ValidatorAccount panacea.ValidatorAccount
+	ValidatorAccount *panacea.ValidatorAccount
 	Store            store.S3Store
 	PanaceaClient    *panacea.GrpcClient
 }

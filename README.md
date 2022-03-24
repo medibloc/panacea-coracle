@@ -8,7 +8,6 @@ A sensitive data validator for Panacea Data Marketplace
 - Encrypting and storing data for buyers
 
 ## Building and Testing
-
 It's recommended to run the data validator in the secure enclave.
 So, the following commands build the `datavald` using EGo which requires Intel SGX. For more details, please see [EGo installation guide](https://docs.edgeless.systems/ego/#/getting-started/install).
 ```bash
