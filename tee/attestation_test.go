@@ -2,18 +2,19 @@ package tee
 
 import (
 	"crypto/x509"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestCreateTLSCertificate(T *testing.T) {
-	certBytes, priv, err := CreateTLSCertificate()
-	require.NoError(T, err)
+func TestCreateTLSCertificate(t *testing.T) {
+	tlsCert, err := CreateTLSCertificate()
+	require.NoError(t, err)
 
-	cert, err := x509.ParseCertificate(certBytes)
-	require.NoError(T, err)
+	cert, err := x509.ParseCertificate(tlsCert.Cert)
+	require.NoError(t, err)
 
-	require.Equal(T, "DataValidator", cert.Subject.CommonName)
-	require.Equal(T, priv.Public(), cert.PublicKey)
-	require.Equal(T, x509.RSA, cert.PublicKeyAlgorithm)
+	require.Equal(t, "DataValidator", cert.Subject.CommonName)
+	require.Equal(t, tlsCert.PrivKey.Public(), cert.PublicKey)
+	require.Equal(t, x509.RSA, cert.PublicKeyAlgorithm)
 }
