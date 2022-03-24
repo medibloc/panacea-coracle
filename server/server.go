@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"net/http"
 	"os"
@@ -36,15 +35,12 @@ func Run(conf *config.Config) {
 		Addr:         conf.HTTPListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
-		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{*svc.TLSCert},
-		},
 	}
 
 	httpServerErrCh := make(chan error, 1)
 	go func() {
 		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
-		if err := server.ListenAndServeTLS("", ""); err != nil {
+		if err := server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				httpServerErrCh <- err
 			} else {
