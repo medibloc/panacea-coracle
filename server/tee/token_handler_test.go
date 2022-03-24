@@ -26,12 +26,12 @@ func TestHandleToken(t *testing.T) {
 	recorder := httptest.NewRecorder()
 
 	// Prepare a service struct and execute the HTTP request
-	tlsCert, _, err := tee.CreateTLSCertificate()
+	tlsCert, err := tee.CreateTLSCertificate()
 	require.NoError(t, err)
 	svc := &teeService{
 		&service.Service{
-			Conf:           &config.Config{EnclaveAttestationProviderURL: "https://shareduks.uks.attest.azure.net"},
-			TLSCertificate: tlsCert,
+			Conf:    &config.Config{EnclaveAttestationProviderURL: "https://shareduks.uks.attest.azure.net"},
+			TLSCert: tlsCert,
 		},
 	}
 	svc.handleToken(recorder, req)

@@ -15,7 +15,7 @@ func (svc *teeService) handleToken(writer http.ResponseWriter, request *http.Req
 	// If so, we must keep in mind that the 'exp' of JWT that MAA sets is 8H.
 	// But, the current strategy is not bad in perspective of the MAA overload,
 	// since HTTP clients must communicate with MAA to verify JWT anyway.
-	jwt, err := tee.CreateAzureAttestationToken(svc.TLSCertificate, svc.Conf.EnclaveAttestationProviderURL)
+	jwt, err := tee.CreateAzureAttestationToken(svc.TLSCert.Cert, svc.Conf.EnclaveAttestationProviderURL)
 	if err != nil {
 		log.Errorf("failed to create Azure attestation token: %v", err)
 		http.Error(writer, "failed to create attestation token", http.StatusInternalServerError)

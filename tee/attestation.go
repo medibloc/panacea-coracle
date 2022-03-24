@@ -5,17 +5,23 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"github.com/edgelesssys/ego/enclave"
 	"math/big"
 	"time"
+
+	"github.com/edgelesssys/ego/enclave"
 )
 
+type TLSCertificate struct {
+	Cert    []byte
+	PrivKey *rsa.PrivateKey
+}
+
 // CreateTLSCertificate creates an x509 certificate and generate an rsa key.
-func CreateTLSCertificate() ([]byte, *rsa.PrivateKey, error) {
+func CreateTLSCertificate() (*TLSCertificate, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	template := &x509.Certificate{
@@ -27,15 +33,18 @@ func CreateTLSCertificate() ([]byte, *rsa.PrivateKey, error) {
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	certBytes, err := x509.CreateCertificate(rand.Reader, template, template, &priv.PublicKey, priv)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return certBytes, priv, nil
+	return &TLSCertificate{
+		Cert:    certBytes,
+		PrivKey: priv,
+	}, nil
 }
 
 // CreateAzureAttestationToken sends the x509 certificate and remote report to Azure to verify
