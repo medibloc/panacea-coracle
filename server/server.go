@@ -44,7 +44,7 @@ func Run(conf *config.Config) {
 	httpServerErrCh := make(chan error, 1)
 	go func() {
 		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServeTLS("", ""); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				httpServerErrCh <- err
 			} else {
