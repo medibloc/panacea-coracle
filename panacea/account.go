@@ -13,37 +13,37 @@ const (
 )
 
 type ValidatorAccount struct {
-	privKey tmcrypto.PrivKey
-	pubKey  tmcrypto.PubKey
-	hrp     string
+	secp256k1PrivKey tmcrypto.PrivKey
+	secp256k1PubKey  tmcrypto.PubKey
+	hrp              string
 }
 
-func NewValidatorAccount(mnemonic string) (ValidatorAccount, error) {
+func NewValidatorAccount(mnemonic string) (*ValidatorAccount, error) {
 	privKey, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType)
 
 	if err != nil {
-		return ValidatorAccount{}, err
+		return &ValidatorAccount{}, err
 	}
 
-	return ValidatorAccount{
-		privKey: privKey,
-		pubKey:  privKey.PubKey(),
-		hrp:     AccountAddressPrefix,
+	return &ValidatorAccount{
+		secp256k1PrivKey: privKey,
+		secp256k1PubKey:  privKey.PubKey(),
+		hrp:              AccountAddressPrefix,
 	}, nil
 }
 
 func (v ValidatorAccount) GetAddress() string {
-	address, err := bech32.ConvertAndEncode(v.hrp, v.pubKey.Address().Bytes())
+	address, err := bech32.ConvertAndEncode(v.hrp, v.secp256k1PubKey.Address().Bytes())
 	if err != nil {
 		log.Panic(err)
 	}
 	return address
 }
 
-func (v ValidatorAccount) GetPrivKey() tmcrypto.PrivKey {
-	return v.privKey
+func (v ValidatorAccount) GetSecp256k1PrivKey() tmcrypto.PrivKey {
+	return v.secp256k1PrivKey
 }
 
-func (v ValidatorAccount) GetPubKey() tmcrypto.PubKey {
-	return v.pubKey
+func (v ValidatorAccount) GetSecp256k1PubKey() tmcrypto.PubKey {
+	return v.secp256k1PubKey
 }

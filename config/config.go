@@ -9,14 +9,16 @@ import (
 const envVarPrefix = "EDG_DATAVAL_"
 
 type Config struct {
-	LogLevel             LogLevel `envconfig:"EDG_DATAVAL_LOG_LEVEL" default:"info"`
-	HTTPListenAddr       string   `envconfig:"EDG_DATAVAL_HTTP_LADDR" required:"true"`
-	PanaceaGrpcAddress   string   `envconfig:"EDG_DATAVAL_PANACEA_GRPC_ADDR" required:"true"`
-	ValidatorMnemonic    string   `envconfig:"EDG_DATAVAL_VALIDATOR_MNEMONIC" required:"true"`
-	AWSS3Bucket          string   `envconfig:"EDG_DATAVAL_AWS_S3_BUCKET" required:"true"`
-	AWSS3Region          string   `envconfig:"EDG_DATAVAL_AWS_S3_REGION" required:"true"`
-	AWSS3AccessKeyID     string   `envconfig:"EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID" required:"true"`
-	AWSS3SecretAccessKey string   `envconfig:"EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY" required:"true"`
+	LogLevel                      LogLevel `envconfig:"EDG_DATAVAL_LOG_LEVEL" default:"info"`
+	HTTPListenAddr                string   `envconfig:"EDG_DATAVAL_HTTP_LADDR" required:"true"`
+	PanaceaGrpcAddress            string   `envconfig:"EDG_DATAVAL_PANACEA_GRPC_ADDR" required:"true"`
+	ValidatorMnemonic             string   `envconfig:"EDG_DATAVAL_VALIDATOR_MNEMONIC" required:"true"`
+	AWSS3Bucket                   string   `envconfig:"EDG_DATAVAL_AWS_S3_BUCKET" required:"true"`
+	AWSS3Region                   string   `envconfig:"EDG_DATAVAL_AWS_S3_REGION" required:"true"`
+	AWSS3AccessKeyID              string   `envconfig:"EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID" required:"true"`
+	AWSS3SecretAccessKey          string   `envconfig:"EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY" required:"true"`
+	ConfigDir                     string   `envconfig:"EDG_DATAVAL_CONFIG_DIR" required:"true"`
+	EnclaveAttestationProviderURL string   `envconfig:"EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL" required:"true"`
 }
 
 // LogLevel is a type aliasing for the envconfig custom decoder.
