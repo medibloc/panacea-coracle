@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net/http"
 	"os"
@@ -35,6 +36,14 @@ func Run(conf *config.Config) {
 		Addr:         conf.HTTPListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{
+				{
+					Certificate: [][]byte{svc.TLSCert.Cert},
+					PrivateKey:  svc.TLSCert.PrivKey,
+				},
+			},
+		},
 	}
 
 	httpServerErrCh := make(chan error, 1)
