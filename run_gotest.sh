@@ -36,7 +36,7 @@ fi
 # Instead, sign the test binary for EGo and run it with the `ego` command.
 # NOTE: We need this 'for' loop because Go doesn't support building a test binary for all packages.
 for pkg in ${ENCLAVE_TEST_PKGS}; do
-    PKG_DIR=${pkg#$PKG_PREFIX}
+    PKG_DIR=${pkg#$PKG_PREFIX}  # truncate the prefix
     ENCLAVE_JSON_PATH="${SCRIPT_DIR}/${PKG_DIR}/testdata/enclave.json"
     TEST_BIN_PATH="./$(jq -c '.exe' -r ${ENCLAVE_JSON_PATH})"
 
