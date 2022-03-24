@@ -1,6 +1,9 @@
 package crypto
 
-import "crypto/sha256"
+import (
+	"crypto/rand"
+	"crypto/sha256"
+)
 
 // Hash with SHA256.
 func Hash(data []byte) []byte {
@@ -9,4 +12,12 @@ func Hash(data []byte) []byte {
 	hash.Write(data)
 
 	return hash.Sum(nil)
+}
+
+func RandomHash() ([]byte, error) {
+	data := make([]byte, 100)
+	if _, err := rand.Read(data); err != nil {
+		return nil, err
+	}
+	return Hash(data), nil
 }
