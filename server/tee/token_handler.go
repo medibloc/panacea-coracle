@@ -8,9 +8,13 @@ import (
 )
 
 func (svc *teeService) handleToken(writer http.ResponseWriter, request *http.Request) {
-	// TODO: Consider creating a Azure attestation token at once when the process is started,
+	// TODO:
+	// Consider creating a Azure attestation token at once when the process is started,
 	// rather than whenever HTTP clients call 'GET ../attestation-token'.
-	// It's related to the 'exp: 8h' of JWT that Azure sets. It means that we need to handle the recreation of Azure attestation token.
+	// It would be good for reducing the overload of MAA.
+	// If so, we must keep in mind that the 'exp' of JWT that MAA sets is 8H.
+	// But, the current strategy is not bad in perspective of the MAA overload,
+	// since HTTP clients must communicate with MAA to verify JWT anyway.
 	jwt, err := tee.CreateAzureAttestationToken(svc.TLSCertificate, svc.Conf.EnclaveAttestationProviderURL)
 	if err != nil {
 		log.Errorf("failed to create Azure attestation token: %v", err)
