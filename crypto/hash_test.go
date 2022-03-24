@@ -20,10 +20,3 @@ func TestHash(t *testing.T) {
 	expectedHashDataStr := "0LbS3ZeQ1DB4XYqM8cuG3+miR2ZKCMSWGSZ5YKnzpG0="
 	require.Equal(t, expectedHashDataStr, hashDataStr)
 }
-
-func TestRandomHash(t *testing.T) {
-	hash, err := crypto.RandomHash()
-	require.NoError(t, err)
-	require.NotNil(t, hash)
-	require.Equal(t, 32, len(hash))
-}

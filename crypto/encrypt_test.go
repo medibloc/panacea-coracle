@@ -17,7 +17,7 @@ func TestEncryptData(t *testing.T) {
 	pubKey := privKey.PubKey().SerializeCompressed()
 	origData := []byte("encrypt origData please")
 
-	cipherText, err := EncryptData(pubKey, origData)
+	cipherText, err := EncryptDataWithSecp256k1(pubKey, origData)
 	require.NoError(t, err)
 
 	plainText, err := btcec.Decrypt(privKey, cipherText)
@@ -38,7 +38,7 @@ func TestEncryptData_FailDecryption(t *testing.T) {
 	pubKey := privKey1.PubKey().SerializeCompressed()
 	origData := []byte("decryption will be failed")
 
-	cipherText, err := EncryptData(pubKey, origData)
+	cipherText, err := EncryptDataWithSecp256k1(pubKey, origData)
 	require.NoError(t, err)
 
 	// try to decrypt using privKey2
@@ -47,7 +47,7 @@ func TestEncryptData_FailDecryption(t *testing.T) {
 }
 
 func TestEncryptDataWithAES256(t *testing.T) {
-	secretKey, err := RandomHash()
+	secretKey, err := randomBytes(32)
 	require.NoError(t, err)
 	additional := Hash([]byte(fmt.Sprintf("data-pool-%v", 1)))
 
