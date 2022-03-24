@@ -1,13 +1,13 @@
 #!/bin/bash
 
-set -euox pipefail
+set -euo pipefail
 
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
 
 echo "GOBIN: ${GOBIN}"
 
 # NOTE: Please update this array if necessary
-PKG_PREFIX="github.com/medibloc/panacea-data-market-validator"
+PKG_PREFIX=$(grep '^module ' ./go.mod | awk "{print \$2}")
 TEST_PKGS_WITH_EGO=(
     "${PKG_PREFIX}/server/tee"
 )
