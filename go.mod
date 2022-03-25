@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220322085500-ae0d89281e46
+	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220324080511-7595cf300067
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.14

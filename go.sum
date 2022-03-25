@@ -505,6 +505,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0j
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220322085500-ae0d89281e46 h1:s8S8/y9MthRRdgWTEdjjB41f5Tn6kpDL2+0GdLEcWV0=
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220322085500-ae0d89281e46/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
+github.com/medibloc/panacea-core/v2 v2.0.3-0.20220324080511-7595cf300067 h1:t+Fx23MlzVlLo0vx/7exX50EeXjFEbKYoEU/gEs/8Lg=
+github.com/medibloc/panacea-core/v2 v2.0.3-0.20220324080511-7595cf300067/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/miekg/dns v1.1.26/go.mod h1:bPDLeHnStXmXAq1m/Ch/hvfNHr14JKNPMBo3VZKjuso=
 github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643 h1:hLDRPB66XQT/8+wG9WsDpiCvZf1yKO7sz7scAjSlBa0=

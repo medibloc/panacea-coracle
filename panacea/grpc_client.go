@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markettypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -83,4 +84,23 @@ func (c *GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
 	}
 
 	return *response.GetDeal(), nil
+}
+
+// RegisterDataValidator registers data validator on blockchain
+func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
+	client := datapooltypes.NewMsgClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	dataValidator := datapooltypes.DataValidator{
+		Address:  address,
+		Endpoint: endpoint,
+	}
+
+	_, err := client.RegisterDataValidator(ctx, &datapooltypes.MsgRegisterDataValidator{ValidatorDetail: &dataValidator})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
