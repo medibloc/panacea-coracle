@@ -8,6 +8,11 @@ import (
 )
 
 func (svc *teeService) handleToken(writer http.ResponseWriter, request *http.Request) {
+	if !svc.Conf.EnclaveEnabled {
+		http.Error(writer, "enclave disabled", http.StatusForbidden)
+		return
+	}
+
 	// TODO:
 	// Consider creating a Azure attestation token at once when the process is started,
 	// rather than whenever HTTP clients call 'GET ../attestation-token'.

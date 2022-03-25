@@ -24,7 +24,7 @@ func CreateTLSCertificate() (*tls.Certificate, error) {
 		SerialNumber: serialNumber,
 		Subject:      pkix.Name{CommonName: "DataValidator"},
 		NotAfter:     time.Now().AddDate(1, 0, 0),
-		DNSNames:     []string{"localhost"},
+		DNSNames:     []string{"localhost"}, // TODO: Set proper DNS names
 	}
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)

@@ -34,10 +34,13 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
-	tlsCert, err := tee.CreateTLSCertificate()
-	if err != nil {
-		panaceaClient.Close()
-		return nil, fmt.Errorf("failed to create TLS certificate: %w", err)
+	var tlsCert *tls.Certificate
+	if conf.EnclaveEnabled {
+		tlsCert, err = tee.CreateTLSCertificate()
+		if err != nil {
+			panaceaClient.Close()
+			return nil, fmt.Errorf("failed to create TLS certificate: %w", err)
+		}
 	}
 
 	return &Service{
