@@ -9,10 +9,10 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/medibloc/panacea-data-market-validator/server/datadeal"
-	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"github.com/medibloc/panacea-data-market-validator/server/service"
-	"github.com/medibloc/panacea-data-market-validator/server/tee"
+	"github.com/medibloc/panacea-data-market-validator/server/service/datadeal"
+	"github.com/medibloc/panacea-data-market-validator/server/service/datapool"
+	"github.com/medibloc/panacea-data-market-validator/server/service/tee"
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/config"
