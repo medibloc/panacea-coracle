@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,10 +20,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(conf *config.Config) {
+func Run(conf *config.Config) error {
 	svc, err := service.New(conf)
 	if err != nil {
-		log.Panicf("failed to create service: %v", err)
+		return fmt.Errorf("failed to create service: %w", err)
 	}
 	defer svc.Close()
 
@@ -33,7 +34,7 @@ func Run(conf *config.Config) {
 
 	server := &http.Server{
 		Handler:      router,
-		Addr:         conf.HTTPListenAddr,
+		Addr:         conf.HTTP.ListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
@@ -67,8 +68,10 @@ func Run(conf *config.Config) {
 	defer cancel()
 
 	if err := server.Shutdown(ctxTimeout); err != nil {
-		log.Errorf("error occurs while server shutting down: %v", err)
+		return fmt.Errorf("error occurs while server shutting down: %w", err)
 	}
+
+	return nil
 }
 
 func listenAndServe(server *http.Server, tlsCert *tls.Certificate) error {
