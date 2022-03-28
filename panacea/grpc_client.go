@@ -41,6 +41,7 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	std.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
 	markettypes.RegisterInterfaces(interfaceRegistry)
+	datapooltypes.RegisterInterfaces(interfaceRegistry)
 	return interfaceRegistry
 }
 
@@ -97,10 +98,15 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
 		Endpoint: endpoint,
 	}
 
-	_, err := client.RegisterDataValidator(ctx, &datapooltypes.MsgRegisterDataValidator{ValidatorDetail: &dataValidator})
+	msgRegisterDataValidator := datapooltypes.NewMsgRegisterDataValidator(&dataValidator)
+	_, err := client.RegisterDataValidator(ctx, msgRegisterDataValidator)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
+/*
+EDG_DATAVAL_LOG_LEVEL=info EDG_DATAVAL_HTTP_LADDR=127.0.0.1:8090 EDG_DATAVAL_PANACEA_GRPC_ADDR=127.0.0.1:9090 EDG_DATAVAL_VALIDATOR_MNEMONIC="good mountain label apple stable squeeze eagle marine elephant flag desert monster awkward predict loyal south trick begin easy tattoo argue alert razor click" EDG_DATAVAL_AWS_S3_BUCKET="data-market-inchul" EDG_DATAVAL_AWS_S3_REGION="ap-northeast-2" EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID="AKIAWVYF3EGTH34JHEHG" EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY="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" ego run ./build/datavald
+ */
