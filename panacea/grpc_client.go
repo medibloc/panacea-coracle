@@ -31,12 +31,12 @@ func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
 
 	return &GrpcClient{
 		conn:              conn,
-		interfaceRegistry: makeInterfaceRegistry(),
+		interfaceRegistry: MakeInterfaceRegistry(),
 	}, nil
 }
 
-// makeInterfaceRegistry
-func makeInterfaceRegistry() sdk.InterfaceRegistry {
+// MakeInterfaceRegistry
+func MakeInterfaceRegistry() sdk.InterfaceRegistry {
 	interfaceRegistry := sdk.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
