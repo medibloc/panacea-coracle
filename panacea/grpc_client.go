@@ -44,7 +44,7 @@ func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
 	}, nil
 }
 
-// MakeInterfaceRegistry
+// makeInterfaceRegistry
 func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	interfaceRegistry := sdk.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
@@ -119,7 +119,7 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 
 // RegisterDataValidator registers data validator on blockchain
 func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAcc *ValidatorAccount) error {
-	interfaceRegistry := makeInterfaceRegistry()
+	interfaceRegistry := c.interfaceRegistry
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT})
 	txBuilder := txConfig.NewTxBuilder()
@@ -152,7 +152,6 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(200000)
 
-	var sigsV2 []signing.SignatureV2
 	sigV2 := signing.SignatureV2{
 		PubKey: privKey.PubKey(),
 		Data: &signing.SingleSignatureData{
@@ -161,9 +160,8 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 		},
 		Sequence: sequence,
 	}
-	sigsV2 = append(sigsV2, sigV2)
 
-	err = txBuilder.SetSignatures(sigsV2...)
+	err = txBuilder.SetSignatures(sigV2)
 	if err != nil {
 		return nil
 	}
@@ -171,7 +169,6 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 	accountNumber := account.GetAccountNumber()
 
 	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
-	sigsV2 = []signing.SignatureV2{}
 	signerData := xauthsigning.SignerData{
 		ChainID:       "panacea-3",
 		AccountNumber: accountNumber,
@@ -182,9 +179,8 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 	if err != nil {
 		return nil
 	}
-	sigsV2 = append(sigsV2, sigv2)
 
-	err = txBuilder.SetSignatures(sigsV2...)
+	err = txBuilder.SetSignatures(sigv2)
 	if err != nil {
 		return nil
 	}
