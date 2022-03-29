@@ -184,6 +184,7 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 
 	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
 	chainId, err := c.GetChainId()
+	fmt.Println(chainId)
 	if err != nil {
 		return err
 	}
