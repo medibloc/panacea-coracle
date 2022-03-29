@@ -17,7 +17,7 @@ func TestS3UploadAndDownload(t *testing.T) {
 	accessKeyID := os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID")
 	secretAccessKeyID := os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")
 
-	s3Store, err := store.NewS3Store("data-market-inchul", awsendpoints.ApNortheast2RegionID, accessKeyID, secretAccessKeyID)
+	s3Store, err := store.NewS3Store("data-market-test", awsendpoints.ApNortheast2RegionID, accessKeyID, secretAccessKeyID)
 	require.NoError(t, err)
 
 	path := "temp_path"
