@@ -1,6 +1,7 @@
 package panacea
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	log "github.com/sirupsen/logrus"
@@ -38,6 +39,10 @@ func (v ValidatorAccount) GetAddress() string {
 		log.Panic(err)
 	}
 	return address
+}
+
+func (v ValidatorAccount) AccAddressFromBech32() sdk.AccAddress {
+	return v.secp256k1PubKey.Bytes()
 }
 
 func (v ValidatorAccount) GetSecp256k1PrivKey() tmcrypto.PrivKey {

@@ -17,8 +17,8 @@ type Config struct {
 	AWSS3Region                   string   `envconfig:"EDG_DATAVAL_AWS_S3_REGION" required:"true"`
 	AWSS3AccessKeyID              string   `envconfig:"EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID" required:"true"`
 	AWSS3SecretAccessKey          string   `envconfig:"EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY" required:"true"`
-	//ConfigDir                     string   `envconfig:"EDG_DATAVAL_CONFIG_DIR" required:"true"`
-	//EnclaveAttestationProviderURL string   `envconfig:"EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL" required:"true"`
+	ConfigDir                     string   `envconfig:"EDG_DATAVAL_CONFIG_DIR" required:"true"`
+	EnclaveAttestationProviderURL string   `envconfig:"EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL" required:"true"`
 }
 
 // LogLevel is a type aliasing for the envconfig custom decoder.

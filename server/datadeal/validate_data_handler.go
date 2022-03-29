@@ -66,7 +66,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	encryptedData, err := crypto.EncryptDataWithSecp256k1(ownerPubKey, jsonInput)
+	encryptedData, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), jsonInput)
 	if err != nil {
 		log.Error("failed to encrypt data: ", err)
 		http.Error(w, "", http.StatusInternalServerError)
@@ -87,7 +87,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	// make downloadURL
 	dataURL := svc.Store.MakeDownloadURL(dealId, fileName)
-	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey, []byte(dataURL))
+	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
 		http.Error(w, "failed to make encryptedDataURL", http.StatusInternalServerError)
@@ -146,3 +146,7 @@ func validateHeaders(r *http.Request) (error, int) {
 	}
 	return nil, 0
 }
+
+/*
+EDG_DATAVAL_LOG_LEVEL=info EDG_DATAVAL_HTTP_LADDR=127.0.0.1:8090 EDG_DATAVAL_PANACEA_GRPC_ADDR=127.0.0.1:9090 EDG_DATAVAL_VALIDATOR_MNEMONIC="good mountain label apple stable squeeze eagle marine elephant flag desert monster awkward predict loyal south trick begin easy tattoo argue alert razor click" EDG_DATAVAL_AWS_S3_BUCKET="data-market-inchul" EDG_DATAVAL_AWS_S3_REGION="ap-northeast-2" EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID="AKIAWVYF3EGTH34JHEHG" EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY="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" ./build/datavald
+ */
