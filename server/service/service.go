@@ -29,6 +29,11 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient")
 	}
 
+	err = panaceaClient.RegisterDataValidator(validatorAccount.GetAddress(), conf.PublicEndPointUrl, validatorAccount)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Service{
 		ValidatorAccount: validatorAccount,
 		Store:            s3Store,

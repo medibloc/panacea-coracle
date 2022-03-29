@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	markettypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
@@ -49,7 +49,7 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	interfaceRegistry := sdk.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
-	markettypes.RegisterInterfaces(interfaceRegistry)
+	datadealtypes.RegisterInterfaces(interfaceRegistry)
 	datapooltypes.RegisterInterfaces(interfaceRegistry)
 	return interfaceRegistry
 }
@@ -81,63 +81,44 @@ func (c *GrpcClient) GetPubKey(panaceaAddr string) (types.PubKey, error) {
 	return acc.GetPubKey(), nil
 }
 
-func (c *GrpcClient) GetAccountNumber(panaceaAddr string) (uint64, error) {
+func (c *GrpcClient) GetAccount(panaceaAddr string) (authtypes.AccountI, error) {
 	client := authtypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	response, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: panaceaAddr})
 	if err != nil {
-		return 0, fmt.Errorf("failed to get account info via grpc: %w", err)
+		return nil, fmt.Errorf("failed to get account info via grpc: %w", err)
 	}
 
 	var acc authtypes.AccountI
 	if err := c.interfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
-		return 0, fmt.Errorf("failed to unpack account info: %w", err)
+		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
-	return acc.GetAccountNumber(), nil
-}
-
-func (c *GrpcClient) GetSequence(panaceaAddr string) (uint64, error) {
-	client := authtypes.NewQueryClient(c.conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	response, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: panaceaAddr})
-	if err != nil {
-		return 0, fmt.Errorf("failed to get account info via grpc: %w", err)
-	}
-
-	var acc authtypes.AccountI
-	if err := c.interfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
-		return 0, fmt.Errorf("failed to unpack account info: %w", err)
-	}
-	return acc.GetSequence(), nil
+	return acc, nil
 }
 
 // GetDeal gets deal info from blockchain
-func (c *GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
+func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	dealId, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return markettypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)
+		return datadealtypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)
 	}
 
-	client := markettypes.NewQueryClient(c.conn)
+	client := datadealtypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	response, err := client.Deal(ctx, &markettypes.QueryDealRequest{DealId: dealId})
+	response, err := client.Deal(ctx, &datadealtypes.QueryDealRequest{DealId: dealId})
 	if err != nil {
-		return markettypes.Deal{}, fmt.Errorf("failed to get deal info: %w", err)
+		return datadealtypes.Deal{}, fmt.Errorf("failed to get deal info: %w", err)
 	}
 
 	return *response.GetDeal(), nil
 }
 
 // RegisterDataValidator registers data validator on blockchain
-func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
-	_, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAcc *ValidatorAccount) error {
 	interfaceRegistry := makeInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT})
@@ -155,20 +136,16 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
 		return err
 	}
 
-	conf := config.MustLoad()
-	account, err := NewValidatorAccount(conf.ValidatorMnemonic)
-	if err != nil {
-		return err
-	}
-
 	privKey := secp256k1.PrivKey{
-		Key: account.secp256k1PrivKey.Bytes(),
+		Key: validatorAcc.secp256k1PrivKey.Bytes(),
 	}
 
-	sequence, err := c.GetSequence(address)
+	account, err := c.GetAccount(address)
 	if err != nil {
 		return err
 	}
+
+	sequence := account.GetSequence()
 
 	//TODO: Fee will be set in Config.toml in near future, now just hard-coded.
 	fees := cosmostype.NewCoins(cosmostype.NewInt64Coin("umed", 1000000))
@@ -191,11 +168,9 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
 		return nil
 	}
 
-	accountNumber, err := c.GetAccountNumber(address)
-	if err != nil {
-		return err
-	}
+	accountNumber := account.GetAccountNumber()
 
+	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
 	sigsV2 = []signing.SignatureV2{}
 	signerData := xauthsigning.SignerData{
 		ChainID:       "panacea-3",
@@ -219,9 +194,12 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
+
 	newTxClient := txtypes.NewServiceClient(c.conn)
 	resp, err := newTxClient.BroadcastTx(
-		context.Background(),
+		ctx,
 		&txtypes.BroadcastTxRequest{
 			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
 			TxBytes: txBytes,
@@ -232,7 +210,7 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string) error {
 	}
 
 	if resp.TxResponse.Code == 0 {
-		log.Info("transaction successfully broadcast")
+		log.Info("broadcast transaction successfully")
 	} else {
 		return fmt.Errorf(resp.TxResponse.RawLog)
 	}
