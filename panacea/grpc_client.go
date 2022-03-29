@@ -3,6 +3,7 @@ package panacea
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	txclient "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -117,6 +118,19 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	return *response.GetDeal(), nil
 }
 
+func (c *GrpcClient) GetChainId() (string, error) {
+	client := tmservice.NewServiceClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.GetBlockByHeight(ctx, &tmservice.GetBlockByHeightRequest{Height: 1})
+	if err != nil {
+		return "", err
+	}
+
+	return response.GetBlock().GetHeader().ChainID, nil
+}
+
 // RegisterDataValidator registers data validator on blockchain
 func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAcc *ValidatorAccount) error {
 	interfaceRegistry := c.interfaceRegistry
@@ -169,8 +183,13 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 	accountNumber := account.GetAccountNumber()
 
 	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
+	chainId, err := c.GetChainId()
+	if err != nil {
+		return err
+	}
+
 	signerData := xauthsigning.SignerData{
-		ChainID:       "panacea-3",
+		ChainID:       chainId,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
@@ -206,7 +225,7 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 	}
 
 	if resp.TxResponse.Code == 0 {
-		log.Info("broadcast transaction successfully")
+		log.Info("register data validator success")
 	} else {
 		return fmt.Errorf(resp.TxResponse.RawLog)
 	}
