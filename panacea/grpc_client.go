@@ -180,14 +180,13 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 		return nil
 	}
 
-	accountNumber := account.GetAccountNumber()
-
 	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
 	chainId, err := c.GetChainId()
-	fmt.Println(chainId)
 	if err != nil {
 		return err
 	}
+
+	accountNumber := account.GetAccountNumber()
 
 	signerData := xauthsigning.SignerData{
 		ChainID:       chainId,
@@ -210,12 +209,9 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
-	defer cancel()
-
 	newTxClient := txtypes.NewServiceClient(c.conn)
 	resp, err := newTxClient.BroadcastTx(
-		ctx,
+		context.Background(),
 		&txtypes.BroadcastTxRequest{
 			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
 			TxBytes: txBytes,
