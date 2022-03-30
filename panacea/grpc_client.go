@@ -194,6 +194,8 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 		Sequence:      sequence,
 	}
 
+	fmt.Println(chainId)
+
 	sigv2, err := txclient.SignWithPrivKey(signing.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder, &privKey, txConfig, sequence)
 	if err != nil {
 		return nil
