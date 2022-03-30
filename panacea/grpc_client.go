@@ -66,19 +66,11 @@ func (c *GrpcClient) Close() error {
 
 // GetPubKey gets the public key from blockchain.
 func (c *GrpcClient) GetPubKey(panaceaAddr string) (types.PubKey, error) {
-	client := authtypes.NewQueryClient(c.conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	response, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: panaceaAddr})
+	acc, err := c.GetAccount(panaceaAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get account info via grpc: %w", err)
+		return nil, err
 	}
 
-	var acc authtypes.AccountI
-	if err := c.interfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
-		return nil, fmt.Errorf("failed to unpack account info: %w", err)
-	}
 	return acc.GetPubKey(), nil
 }
 
@@ -193,8 +185,6 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
-
-	fmt.Println(chainId)
 
 	sigv2, err := txclient.SignWithPrivKey(signing.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder, &privKey, txConfig, sequence)
 	if err != nil {
