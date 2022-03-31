@@ -8,6 +8,7 @@ import (
 // TODO: Use a better name
 const envVarPrefix = "EDG_DATAVAL_"
 
+// TODO: Use TOML instead of env vars (too many env vars now)
 type Config struct {
 	LogLevel                      LogLevel `envconfig:"EDG_DATAVAL_LOG_LEVEL" default:"info"`
 	HTTPListenAddr                string   `envconfig:"EDG_DATAVAL_HTTP_LADDR" required:"true"`
@@ -18,7 +19,8 @@ type Config struct {
 	AWSS3AccessKeyID              string   `envconfig:"EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID" required:"true"`
 	AWSS3SecretAccessKey          string   `envconfig:"EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY" required:"true"`
 	ConfigDir                     string   `envconfig:"EDG_DATAVAL_CONFIG_DIR" required:"true"`
-	EnclaveAttestationProviderURL string   `envconfig:"EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL" required:"true"`
+	EnclaveEnabled                bool     `envconfig:"EDG_DATAVAL_ENCLAVE_ENABLED" required:"true"`
+	EnclaveAttestationProviderURL string   `envconfig:"EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL" required:"false"`
 }
 
 // LogLevel is a type aliasing for the envconfig custom decoder.
@@ -39,5 +41,12 @@ func MustLoad() Config {
 	if err := envconfig.Process(envVarPrefix, &conf); err != nil {
 		log.Panic(err)
 	}
+
+	if conf.EnclaveEnabled {
+		if conf.EnclaveAttestationProviderURL == "" {
+			log.Panic("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL is required if EDG_DATAVAL_ENCLAVE_ENABLED is true")
+		}
+	}
+
 	return conf
 }
