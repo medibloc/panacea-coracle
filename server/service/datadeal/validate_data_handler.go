@@ -18,9 +18,9 @@ import (
 
 func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Request) {
 	// content type check from header
-	if err, errCode := validateHeaders(r); err != nil {
+	if err, errorStatusCode := validateBasic(r); err != nil {
 		log.Error(err)
-		http.Error(w, err.Error(), errCode)
+		http.Error(w, err.Error(), errorStatusCode)
 		return
 	}
 
@@ -32,9 +32,9 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	dealId := mux.Vars(r)[types.DealIdKey]
+	dealId := mux.Vars(r)[types.DealIDKey]
 
-	// get deal info by Id from blockchain
+	// get deal info by ID from blockchain
 	deal, err := svc.PanaceaClient.GetDeal(dealId)
 	if err != nil {
 		log.Error("failed to get deal information: ", err)
@@ -94,7 +94,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	unsignedCertificate, err := types.NewUnsignedDataValidationCertificate(
+	unsignedCertificate, err := types.NewUnsignedDataValidationCertificateOfDataDeal(
 		dealId,
 		dataHash,
 		encryptedDataURL,
@@ -136,7 +136,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	response.WriteJSONResponse(w, http.StatusCreated, marshaledResp)
 }
 
-func validateHeaders(r *http.Request) (error, int) {
+func validateBasic(r *http.Request) (error, int) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
 	}

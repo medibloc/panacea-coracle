@@ -10,7 +10,7 @@ import (
 )
 
 func TestJsonMarshalAndUnMarshal(t *testing.T) {
-	unsignedCertificate, err := types.NewUnsignedDataValidationCertificate(
+	unsignedCertificate, err := types.NewUnsignedDataValidationCertificateOfDataDeal(
 		"1",
 		[]byte("dataHash"),
 		[]byte("encryptedDataURL"),

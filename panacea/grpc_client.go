@@ -9,7 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	markettypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -39,7 +40,7 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	interfaceRegistry := sdk.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
-	markettypes.RegisterInterfaces(interfaceRegistry)
+	datadealtypes.RegisterInterfaces(interfaceRegistry)
 	return interfaceRegistry
 }
 
@@ -67,20 +68,41 @@ func (c *GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
 }
 
 // GetDeal gets deal info from blockchain
-func (c *GrpcClient) GetDeal(id string) (markettypes.Deal, error) {
+func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	dealId, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return markettypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)
+		return datadealtypes.Deal{}, fmt.Errorf("failed to parse deal id: %w", err)
 	}
 
-	client := markettypes.NewQueryClient(c.conn)
+	client := datadealtypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	response, err := client.Deal(ctx, &markettypes.QueryDealRequest{DealId: dealId})
+	response, err := client.Deal(ctx, &datadealtypes.QueryDealRequest{DealId: dealId})
 	if err != nil {
-		return markettypes.Deal{}, fmt.Errorf("failed to get deal info: %w", err)
+		return datadealtypes.Deal{}, fmt.Errorf("failed to get deal info: %w", err)
 	}
 
 	return *response.GetDeal(), nil
+}
+
+func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
+	poolId, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return datapooltypes.Pool{}, fmt.Errorf("failed to parse pool id: %w", err)
+	}
+
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.Pool(ctx, &datapooltypes.QueryPoolRequest{
+		PoolId: poolId,
+	})
+	if err != nil {
+		return datapooltypes.Pool{}, fmt.Errorf("failed to get pool info: %w", err)
+	}
+
+	return *response.GetPool(), nil
+
 }
