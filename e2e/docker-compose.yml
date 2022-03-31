@@ -42,4 +42,4 @@ services:
     depends_on:
       - dataval
     command: >
-      /e2e/wait-for dataval:8080 --timeout=600 -- go test -v -count=1 ./e2e
+      sh -c "echo 'wait 60 sec' && sleep 60 && /e2e/wait-for panacea:9090 --timeout=600 -- datavald"

@@ -115,7 +115,7 @@ func (c *GrpcClient) GetChainId() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	response, err := client.GetBlockByHeight(ctx, &tmservice.GetBlockByHeightRequest{Height: 1})
+	response, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		return "", err
 	}
@@ -201,9 +201,12 @@ func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAc
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
+
 	newTxClient := txtypes.NewServiceClient(c.conn)
 	resp, err := newTxClient.BroadcastTx(
-		context.Background(),
+		ctx,
 		&txtypes.BroadcastTxRequest{
 			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
 			TxBytes: txBytes,
