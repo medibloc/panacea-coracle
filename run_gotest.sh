@@ -9,7 +9,7 @@ echo "GOBIN: ${GOBIN}"
 # NOTE: Please update this array if necessary
 PKG_PREFIX=$(grep '^module ' ./go.mod | awk "{print \$2}")
 ENCLAVE_TEST_PKGS=(
-    "${PKG_PREFIX}/server/tee"
+    "${PKG_PREFIX}/server/service/tee"
 )
 
 #####################################################################
