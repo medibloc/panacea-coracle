@@ -1,52 +1,76 @@
 package config
 
-import (
-	"github.com/kelseyhightower/envconfig"
-	log "github.com/sirupsen/logrus"
-)
+import "fmt"
 
-// TODO: Use a better name
-const envVarPrefix = "EDG_DATAVAL_"
-
-// TODO: Use TOML instead of env vars (too many env vars now)
 type Config struct {
-	LogLevel                      LogLevel `envconfig:"EDG_DATAVAL_LOG_LEVEL" default:"info"`
-	HTTPListenAddr                string   `envconfig:"EDG_DATAVAL_HTTP_LADDR" required:"true"`
-	PanaceaGrpcAddress            string   `envconfig:"EDG_DATAVAL_PANACEA_GRPC_ADDR" required:"true"`
-	ValidatorMnemonic             string   `envconfig:"EDG_DATAVAL_VALIDATOR_MNEMONIC" required:"true"`
-	AWSS3Bucket                   string   `envconfig:"EDG_DATAVAL_AWS_S3_BUCKET" required:"true"`
-	AWSS3Region                   string   `envconfig:"EDG_DATAVAL_AWS_S3_REGION" required:"true"`
-	AWSS3AccessKeyID              string   `envconfig:"EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID" required:"true"`
-	AWSS3SecretAccessKey          string   `envconfig:"EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY" required:"true"`
-	ConfigDir                     string   `envconfig:"EDG_DATAVAL_CONFIG_DIR" required:"true"`
-	EnclaveEnabled                bool     `envconfig:"EDG_DATAVAL_ENCLAVE_ENABLED" required:"true"`
-	EnclaveAttestationProviderURL string   `envconfig:"EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL" required:"false"`
+	BaseConfig `mapstructure:",squash"`
+
+	HTTP    HTTPConfig    `mapstructure:"http"`
+	Panacea PanaceaConfig `mapstructure:"panacea"`
+	AWSS3   AWSS3Config   `mapstructure:"aws-s3"`
+	Enclave EnclaveConfig `mapstructure:"enclave"`
 }
 
-// LogLevel is a type aliasing for the envconfig custom decoder.
-// https://github.com/kelseyhightower/envconfig#custom-decoders
-type LogLevel log.Level
-
-func (d *LogLevel) Decode(value string) error {
-	lvl, err := log.ParseLevel(value)
-	if err != nil {
-		return err
-	}
-	*d = LogLevel(lvl)
-	return nil
+type BaseConfig struct {
+	LogLevel              string `mapstructure:"log-level"`
+	ValidatorMnemonic     string `mapstructure:"validator-mnemonic"`
+	DataEncryptionKeyFile string `mapstructure:"data-encryption-key-file"`
 }
 
-func MustLoad() Config {
-	var conf Config
-	if err := envconfig.Process(envVarPrefix, &conf); err != nil {
-		log.Panic(err)
-	}
+type HTTPConfig struct {
+	ListenAddr string `mapstructure:"laddr"`
+}
 
-	if conf.EnclaveEnabled {
-		if conf.EnclaveAttestationProviderURL == "" {
-			log.Panic("EDG_DATAVAL_ENCLAVE_ATTESTATION_PROVIDER_URL is required if EDG_DATAVAL_ENCLAVE_ENABLED is true")
+type PanaceaConfig struct {
+	GRPCAddr string `mapstructure:"grpc-addr"`
+}
+
+type AWSS3Config struct {
+	Region          string `mapstructure:"region"`
+	Bucket          string `mapstructure:"bucket"`
+	AccessKeyID     string `mapstructure:"access-key-id"`
+	SecretAccessKey string `mapstructure:"secret-access-key"`
+}
+
+type EnclaveConfig struct {
+	Enable                  bool   `mapstructure:"enable"`
+	AttestationProviderAddr string `mapstructure:"attestation-provider-addr"`
+}
+
+func DefaultConfig() *Config {
+	return &Config{
+		BaseConfig: BaseConfig{
+			LogLevel:              "info",
+			ValidatorMnemonic:     "",
+			DataEncryptionKeyFile: "config/data_encryption_key.sealed",
+		},
+		HTTP: HTTPConfig{
+			ListenAddr: "0.0.0.0:8080",
+		},
+		Panacea: PanaceaConfig{
+			GRPCAddr: "127.0.0.1:9090",
+		},
+		AWSS3: AWSS3Config{
+			Region:          "",
+			Bucket:          "",
+			AccessKeyID:     "",
+			SecretAccessKey: "",
+		},
+		Enclave: EnclaveConfig{
+			Enable:                  true,
+			AttestationProviderAddr: "127.0.0.1:9999",
+		},
+	}
+}
+
+func (c *Config) validate() error {
+	if c.Enclave.Enable {
+		if c.Enclave.AttestationProviderAddr == "" {
+			return fmt.Errorf("attestation-provider-addr should be specified if enclave is enabled")
 		}
 	}
 
-	return conf
+	//TODO: validate other configs
+
+	return nil
 }

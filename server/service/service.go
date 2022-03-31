@@ -24,7 +24,7 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to load validator account: %w", err)
 	}
 
-	s3Store, err := store.NewS3Store(conf.AWSS3Bucket, conf.AWSS3Region, conf.AWSS3AccessKeyID, conf.AWSS3SecretAccessKey)
+	s3Store, err := store.NewS3Store(conf.AWSS3.Bucket, conf.AWSS3.Region, conf.AWSS3.AccessKeyID, conf.AWSS3.SecretAccessKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create S3Store: %w", err)
 	}
@@ -35,7 +35,7 @@ func New(conf *config.Config) (*Service, error) {
 	}
 
 	var tlsCert *tls.Certificate
-	if conf.EnclaveEnabled {
+	if conf.Enclave.Enable {
 		tlsCert, err = tee.CreateTLSCertificate()
 		if err != nil {
 			panaceaClient.Close()
