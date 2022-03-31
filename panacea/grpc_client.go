@@ -124,12 +124,13 @@ func (c *GrpcClient) GetChainId() (string, error) {
 }
 
 // RegisterDataValidator registers data validator on blockchain
-func (c *GrpcClient) RegisterDataValidator(address, endpoint string, validatorAcc *ValidatorAccount) error {
+func (c *GrpcClient) RegisterDataValidator(endpoint string, validatorAcc *ValidatorAccount) error {
 	interfaceRegistry := c.interfaceRegistry
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT})
 	txBuilder := txConfig.NewTxBuilder()
 
+	address := validatorAcc.GetAddress()
 	dataValidator := &datapooltypes.DataValidator{
 		Address:  address,
 		Endpoint: endpoint,

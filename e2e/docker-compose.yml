@@ -28,7 +28,12 @@ services:
     depends_on:
       - panacea
     command: >
-      /e2e/wait-for panacea:9090 --timeout=600 -- datavald
+      sh -c "
+              echo 'wait 60 sec...' &&
+              sleep 60 &&
+              echo 'end wait'
+              /e2e/wait-for panacea:9090 --timeout=600 -- datavald
+            "
 
   e2e-test:
     build:
@@ -42,4 +47,4 @@ services:
     depends_on:
       - dataval
     command: >
-      sh -c "echo 'wait 60 sec' && sleep 60 && /e2e/wait-for panacea:9090 --timeout=600 -- datavald"
+      /e2e/wait-for dataval:8080 --timeout=600 -- go test -v -count=1 ./e2e
