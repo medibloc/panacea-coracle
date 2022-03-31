@@ -2,6 +2,8 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/rand"
+	"fmt"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -15,7 +17,7 @@ func TestEncryptData(t *testing.T) {
 	pubKey := privKey.PubKey().SerializeCompressed()
 	origData := []byte("encrypt origData please")
 
-	cipherText, err := EncryptData(pubKey, origData)
+	cipherText, err := EncryptDataWithSecp256k1(pubKey, origData)
 	require.NoError(t, err)
 
 	plainText, err := btcec.Decrypt(privKey, cipherText)
@@ -36,10 +38,36 @@ func TestEncryptData_FailDecryption(t *testing.T) {
 	pubKey := privKey1.PubKey().SerializeCompressed()
 	origData := []byte("decryption will be failed")
 
-	cipherText, err := EncryptData(pubKey, origData)
+	cipherText, err := EncryptDataWithSecp256k1(pubKey, origData)
 	require.NoError(t, err)
 
 	// try to decrypt using privKey2
 	_, err = btcec.Decrypt(privKey2, cipherText)
 	require.Error(t, err)
+}
+
+func TestEncryptDataWithAES256(t *testing.T) {
+	secretKey, err := randomBytes(32)
+	require.NoError(t, err)
+	additional := Hash([]byte(fmt.Sprintf("data-pool-%v", 1)))
+
+	data, err := randomBytes(100000)
+	require.NoError(t, err)
+
+	cipherText, err := EncryptDataWithAES256(secretKey, additional, data)
+	require.NoError(t, err)
+	require.NotEqual(t, data, cipherText)
+
+	decryptText, err := DecryptDataWithAES256(secretKey, additional, cipherText)
+	require.NoError(t, err)
+
+	require.Equal(t, data, decryptText)
+}
+
+func randomBytes(size int) ([]byte, error) {
+	data := make([]byte, size)
+	if _, err := rand.Read(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }

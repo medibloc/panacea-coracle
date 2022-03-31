@@ -1,6 +1,8 @@
 package crypto
 
-import "crypto/sha256"
+import (
+	"crypto/sha256"
+)
 
 // Hash with SHA256.
 func Hash(data []byte) []byte {
