@@ -14,9 +14,8 @@ all: build test install
 build: go.sum
 	$(GOBIN) build -mod=readonly $(BUILD_FLAGS) -o $(OUT_DIR)/datavald ./cmd/datavald
 
-UNIT_TESTS=$(shell go list ./... | grep -v /e2e)  # except e2e/*_test.go
 test:
-	$(GOBIN) test -v $(UNIT_TESTS)
+	GOBIN=$(GOBIN) ./run_gotest.sh
 
 # Set env vars used by ./e2e/docker-compose.yml before running this target (recommended to use .env file).
 e2e-test:

@@ -12,7 +12,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"github.com/medibloc/panacea-data-market-validator/server/service"
 	"github.com/medibloc/panacea-data-market-validator/server/tee"
-	attestation "github.com/medibloc/panacea-data-market-validator/tee"
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/config"
@@ -25,15 +24,6 @@ func Run(conf *config.Config) {
 		log.Panicf("failed to create service: %v", err)
 	}
 	defer svc.Close()
-
-	log.Info("Generating a new certificate.")
-	cert, priv, err := attestation.CreateTLSCertificate()
-	if err != nil {
-		log.Panicf("failed to get certificate: %v", err)
-	}
-	// TODO This certificate and key are generated or read when the server starts up.
-	// But since there is no place to use it yet, I'll just take a picture of it as a log.
-	log.Info(cert, priv)
 
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)

@@ -1,16 +1,21 @@
 package service
 
 import (
+	"crypto/tls"
 	"fmt"
+
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/medibloc/panacea-data-market-validator/store"
+	"github.com/medibloc/panacea-data-market-validator/tee"
 )
 
 type Service struct {
+	Conf             *config.Config
 	ValidatorAccount *panacea.ValidatorAccount
 	Store            store.S3Store
 	PanaceaClient    *panacea.GrpcClient
+	TLSCert          *tls.Certificate
 }
 
 func New(conf *config.Config) (*Service, error) {
@@ -26,13 +31,21 @@ func New(conf *config.Config) (*Service, error) {
 
 	panaceaClient, err := panacea.NewGrpcClient(conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create PanaceaGRPCClient")
+		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
+	}
+
+	tlsCert, err := tee.CreateTLSCertificate()
+	if err != nil {
+		panaceaClient.Close()
+		return nil, fmt.Errorf("failed to create TLS certificate: %w", err)
 	}
 
 	return &Service{
+		Conf:             conf,
 		ValidatorAccount: validatorAccount,
 		Store:            s3Store,
 		PanaceaClient:    panaceaClient,
+		TLSCert:          tlsCert,
 	}, nil
 }
 
