@@ -5,17 +5,17 @@ import "fmt"
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
-	HTTP       HTTPConfig     `mapstructure:"http"`
-	Panacea    PanaceaConfig  `mapstructure:"panacea"`
-	AWSS3      AWSS3Config    `mapstructure:"aws-s3"`
-	Enclave    EnclaveConfig  `mapstructure:"enclave"`
-	EndPoint   EndPointConfig `mapstructure:"endpoint"`
+	HTTP    HTTPConfig    `mapstructure:"http"`
+	Panacea PanaceaConfig `mapstructure:"panacea"`
+	AWSS3   AWSS3Config   `mapstructure:"aws-s3"`
+	Enclave EnclaveConfig `mapstructure:"enclave"`
 }
 
 type BaseConfig struct {
 	LogLevel              string `mapstructure:"log-level"`
 	ValidatorMnemonic     string `mapstructure:"validator-mnemonic"`
 	DataEncryptionKeyFile string `mapstructure:"data-encryption-key-file"`
+	EndPoint              string `mapstructure:"endpoint"`
 }
 
 type HTTPConfig struct {
@@ -38,16 +38,13 @@ type EnclaveConfig struct {
 	AttestationProviderAddr string `mapstructure:"attestation-provider-addr"`
 }
 
-type EndPointConfig struct {
-	PublicEndPointURL string `mapstructure:"public-endpoint-url"`
-}
-
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
 			LogLevel:              "info",
 			ValidatorMnemonic:     "",
 			DataEncryptionKeyFile: "config/data_encryption_key.sealed",
+			EndPoint:              "",
 		},
 		HTTP: HTTPConfig{
 			ListenAddr: "0.0.0.0:8080",
@@ -64,9 +61,6 @@ func DefaultConfig() *Config {
 		Enclave: EnclaveConfig{
 			Enable:                  true,
 			AttestationProviderAddr: "127.0.0.1:9999",
-		},
-		EndPoint: EndPointConfig{
-			PublicEndPointURL: "",
 		},
 	}
 }

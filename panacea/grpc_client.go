@@ -131,10 +131,10 @@ func (c *GrpcClient) GetRegisteredDataValidator(address string) (datapooltypes.D
 
 	res, err := client.DataValidator(ctx, &datapooltypes.QueryDataValidatorRequest{Address: address})
 	if err != nil {
-		return datapooltypes.DataValidator{}, err
+		return datapooltypes.DataValidator{}, fmt.Errorf("failed to get data validator info: %w", err)
 	}
 
-	return *res.GetDataValidator(), err
+	return *res.GetDataValidator(), nil
 }
 
 // RegisterDataValidator registers data validator on blockchain
@@ -242,6 +242,7 @@ func (c *GrpcClient) RegisterDataValidator(endpoint string, validatorAcc *Valida
 		} else {
 			return fmt.Errorf(resp.TxResponse.RawLog)
 		}
+
 	} else {
 		return fmt.Errorf("%s was already registered data validator", address)
 	}

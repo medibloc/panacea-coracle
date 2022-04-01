@@ -22,6 +22,7 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 log-level = "{{ .BaseConfig.LogLevel }}"
 validator-mnemonic = "{{ .BaseConfig.ValidatorMnemonic }}"
 data-encryption-key-file = "{{ .BaseConfig.DataEncryptionKeyFile }}"
+endpoint = "{{ .BaseConfig.EndPoint }}"
 
 ###############################################################################
 ###                         HTTP Configuration                              ###
@@ -59,13 +60,6 @@ secret-access-key = "{{ .AWSS3.SecretAccessKey }}"
 enable = {{ .Enclave.Enable }}
 attestation-provider-addr = "{{ .Enclave.AttestationProviderAddr }}"
 
-###############################################################################
-###                         EndPoint Configuration                           ###
-###############################################################################
-
-[endpoint]
-
-public-endpoint-url = "{{ .EndPoint.PublicEndPointURL }}"
 `
 
 const (

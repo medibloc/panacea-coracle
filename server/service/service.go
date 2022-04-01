@@ -42,7 +42,7 @@ func New(conf *config.Config) (*Service, error) {
 		}
 	}
 
-	err = panaceaClient.RegisterDataValidator(conf.EndPoint.PublicEndPointURL, validatorAccount)
+	err = panaceaClient.RegisterDataValidator(conf.EndPoint, validatorAccount)
 	if err != nil {
 		return nil, err
 	}
