@@ -10,7 +10,8 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 
-	panaceatypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -19,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateData(t *testing.T) {
+func TestDataDealValidateData(t *testing.T) {
 	buyerMnemonic := os.Getenv("E2E_DATA_BUYER_MNEMONIC")
 	require.NotEmpty(t, buyerMnemonic)
 	datavalHTTPAddr := os.Getenv("E2E_DATAVAL_HTTP_ADDR")
@@ -46,7 +47,7 @@ func TestValidateData(t *testing.T) {
 	defer resp.Body.Close()
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-	var cert panaceatypes.DataValidationCertificate
+	var cert datadealtypes.DataValidationCertificate
 	unmarshaler := &jsonpb.Unmarshaler{}
 	err = unmarshaler.Unmarshal(resp.Body, &cert)
 	require.NoError(t, err)
@@ -59,6 +60,46 @@ func TestValidateData(t *testing.T) {
 	decryptedData := decrypt(t, privKey, downloadedData)
 
 	require.Equal(t, data, string(decryptedData))
+}
+
+func TestDataPoolValidateData(t *testing.T) {
+	buyerMnemonic := os.Getenv("E2E_DATA_BUYER_MNEMONIC")
+	require.NotEmpty(t, buyerMnemonic)
+	dataValMnemonic := os.Getenv("E2E_DATAVAL_MNEMONIC")
+	require.NotEmpty(t, dataValMnemonic)
+	datavalHTTPAddr := os.Getenv("E2E_DATAVAL_HTTP_ADDR")
+	require.NotEmpty(t, datavalHTTPAddr)
+
+	poolID := 1
+	round := 1
+	requesterAddr := "panacea1c7yh0ql0rhvyqm4vuwgaqu0jypafnwqdc6x60e"
+	data := `{
+		"name": "This is a name",
+		"description": "This is a description",
+		"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+	}`
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("http://%s/v0/data-pool/pools/%d/rounds/%d/data?requester_address=%s", datavalHTTPAddr, poolID, round, requesterAddr),
+		strings.NewReader(data),
+	)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	var cert datapooltypes.DataValidationCertificate
+	unmarshaler := &jsonpb.Unmarshaler{}
+	err = unmarshaler.Unmarshal(resp.Body, &cert)
+	require.NoError(t, err)
+
+	// TODO Check if MED is sent to the seller normally after the sale data.
+
+	// TODO Confirm that the buyer who purchased NFT Token can import data normally.
 }
 
 const (

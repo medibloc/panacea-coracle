@@ -93,7 +93,7 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 	}
 
 	client := datapooltypes.NewQueryClient(c.conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancel()
 
 	response, err := client.Pool(ctx, &datapooltypes.QueryPoolRequest{
