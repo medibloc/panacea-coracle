@@ -20,13 +20,13 @@ services:
       - .:/e2e
     depends_on:
       - panacea
-    command: >
-      sh -c "
-              echo 'wait 60 sec...' &&
-              sleep 60 &&
-              echo 'end wait'
-              /e2e/wait-for panacea:9090 --timeout=600 -- /e2e/init_start_dataval.sh
-            "
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo 'wait 60 sec...'
+        sleep 60
+        echo 'end wait'
+        /e2e/wait-for panacea:9090 --timeout=600 -- /e2e/init_start_dataval.sh
 
   e2e-test:
     build:
