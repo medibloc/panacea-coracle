@@ -6,7 +6,7 @@
 ###############################################################################
 
 log-level = "info"
-validator-mnemonic = "__VALIDATOR_MENMONIC__"
+validator-mnemonic = "__VALIDATOR_MNEMONIC__"
 data-encryption-key-file = "config/data_encryption_key.sealed"
 
 ###############################################################################
