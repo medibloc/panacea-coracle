@@ -1,0 +1,54 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                           Base Configuration                            ###
+###############################################################################
+
+log-level = "info"
+validator-mnemonic = "onkey wait often alert owner bus limb meadow pink buffalo defense alert other offer winner logic cry mule pool youth guilt private dress gift"
+data-encryption-key-file = "config/data_encryption_key.sealed"
+
+###############################################################################
+###                         HTTP Configuration                              ###
+###############################################################################
+
+[http]
+
+laddr = "0.0.0.0:8080"
+
+###############################################################################
+###                         Panacea Configuration                           ###
+###############################################################################
+
+[panacea]
+
+grpc-addr = "panacea:9090"
+
+###############################################################################
+###                         AWS S3 Configuration                            ###
+###############################################################################
+
+[aws-s3]
+
+region = "ap-northeast-2"
+bucket = "data-market-test"
+access-key-id = "AKIAWVYF3EGTIQLGIUKW"
+secret-access-key = "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"
+
+###############################################################################
+###                         Enclave Configuration                           ###
+###############################################################################
+
+[enclave]
+
+enable = false
+attestation-provider-addr = "https://shareduks.uks.attest.azure.net"
+
+###############################################################################
+###                         EndPoint Configuration                           ###
+###############################################################################
+
+[endpoint]
+
+public-endpoint-url = "https://my-validator.org"

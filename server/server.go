@@ -2,38 +2,30 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/medibloc/panacea-data-market-validator/server/datadeal"
-	"github.com/medibloc/panacea-data-market-validator/server/datapool"
 	"github.com/medibloc/panacea-data-market-validator/server/service"
-	"github.com/medibloc/panacea-data-market-validator/server/tee"
-	attestation "github.com/medibloc/panacea-data-market-validator/tee"
+	"github.com/medibloc/panacea-data-market-validator/server/service/datadeal"
+	"github.com/medibloc/panacea-data-market-validator/server/service/datapool"
+	"github.com/medibloc/panacea-data-market-validator/server/service/tee"
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(conf *config.Config) {
+func Run(conf *config.Config) error {
 	svc, err := service.New(conf)
 	if err != nil {
-		log.Panicf("failed to create service: %v", err)
+		return fmt.Errorf("failed to create service: %w", err)
 	}
 	defer svc.Close()
-
-	log.Info("Generating a new certificate.")
-	cert, priv, err := attestation.CreateTLSCertificate()
-	if err != nil {
-		log.Panicf("failed to get certificate: %v", err)
-	}
-	// TODO This certificate and key are generated or read when the server starts up.
-	// But since there is no place to use it yet, I'll just take a picture of it as a log.
-	log.Info(cert, priv)
 
 	router := mux.NewRouter()
 	datadeal.RegisterHandlers(svc, router)
@@ -42,7 +34,7 @@ func Run(conf *config.Config) {
 
 	server := &http.Server{
 		Handler:      router,
-		Addr:         conf.HTTPListenAddr,
+		Addr:         conf.HTTP.ListenAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
@@ -50,7 +42,7 @@ func Run(conf *config.Config) {
 	httpServerErrCh := make(chan error, 1)
 	go func() {
 		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
-		if err := server.ListenAndServe(); err != nil {
+		if err := listenAndServe(server, svc.TLSCert); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				httpServerErrCh <- err
 			} else {
@@ -76,6 +68,19 @@ func Run(conf *config.Config) {
 	defer cancel()
 
 	if err := server.Shutdown(ctxTimeout); err != nil {
-		log.Errorf("error occurs while server shutting down: %v", err)
+		return fmt.Errorf("error occurs while server shutting down: %w", err)
+	}
+
+	return nil
+}
+
+func listenAndServe(server *http.Server, tlsCert *tls.Certificate) error {
+	if tlsCert != nil {
+		server.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{*tlsCert},
+		}
+		return server.ListenAndServeTLS("", "")
+	} else {
+		return server.ListenAndServe()
 	}
 }

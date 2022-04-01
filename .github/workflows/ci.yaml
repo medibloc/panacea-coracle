@@ -2,12 +2,11 @@ name: CI
 
 on:
   push:
-    branches:    # only for pushes on main
+    branches: # only for pushes on main
       - main
-  pull_request:  # for all PRs regardless of its base branch
+  pull_request: # for all PRs regardless of its base branch
 
 jobs:
-
   build:
     name: Build & Test
     runs-on: ubuntu-latest
@@ -30,16 +29,16 @@ jobs:
       - name: Run unit tests
         env:
           GOBIN: go
-          EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID: ${{ secrets.EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID }}
-          EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY }}
+          EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}
+          EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
         run: make test
 
       - name: Run e2e tests
         env:
           E2E_DATAVAL_MNEMONIC: ${{ secrets.E2E_DATAVAL_MNEMONIC }}
           E2E_DATA_BUYER_MNEMONIC: ${{ secrets.E2E_DATA_BUYER_MNEMONIC }}
-          EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID: ${{ secrets.EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID }}
-          EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY }}
+          E2E_AWS_S3_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}
+          E2E_AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
         run: make e2e-test
 
       # TODO: publish a docker image to Github Packages

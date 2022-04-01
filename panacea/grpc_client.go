@@ -33,8 +33,8 @@ type GrpcClient struct {
 }
 
 func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
-	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.PanaceaGrpcAddress)
-	conn, err := grpc.Dial(conf.PanaceaGrpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.Panacea.GRPCAddr)
+	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
 	}
