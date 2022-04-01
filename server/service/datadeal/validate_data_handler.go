@@ -50,12 +50,10 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	// data schema validation
-	for _, uri := range deal.DataSchema {
-		if err := validation.ValidateJSONSchema(jsonInput, uri); err != nil {
-			log.Error(err)
-			http.Error(w, "JSON schema validation failed", http.StatusForbidden)
-			return
-		}
+	if err := validation.ValidateJSONSchemata(jsonInput, deal.DataSchema); err != nil {
+		log.Error(err)
+		http.Error(w, "JSON schema validation failed", http.StatusForbidden)
+		return
 	}
 
 	// encrypt and store data
