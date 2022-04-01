@@ -6,7 +6,7 @@
 ###############################################################################
 
 log-level = "info"
-validator-mnemonic = "onkey wait often alert owner bus limb meadow pink buffalo defense alert other offer winner logic cry mule pool youth guilt private dress gift"
+validator-mnemonic = "__VALIDATOR_MENMONIC__"
 data-encryption-key-file = "config/data_encryption_key.sealed"
 
 ###############################################################################
@@ -33,8 +33,8 @@ grpc-addr = "panacea:9090"
 
 region = "ap-northeast-2"
 bucket = "data-market-test"
-access-key-id = "AKIAWVYF3EGTIQLGIUKW"
-secret-access-key = "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"
+access-key-id = "__AWS_S3_ACCESS_KEY_ID__"
+secret-access-key = "__AWS_S3_SECRET_ACCESS_KEY__"
 
 ###############################################################################
 ###                         Enclave Configuration                           ###
@@ -43,7 +43,7 @@ secret-access-key = "O8cwYtieXOETNGrnB9X3xbF2/8BCpztySr936pzX"
 [enclave]
 
 enable = false
-attestation-provider-addr = "https://shareduks.uks.attest.azure.net"
+attestation-provider-addr = ""
 
 ###############################################################################
 ###                         EndPoint Configuration                           ###
