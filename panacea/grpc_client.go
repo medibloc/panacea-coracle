@@ -110,6 +110,7 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	return *response.GetDeal(), nil
 }
 
+// GetChainId gets chain id from blockchain
 func (c *GrpcClient) GetChainId() (string, error) {
 	client := tmservice.NewServiceClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -123,6 +124,7 @@ func (c *GrpcClient) GetChainId() (string, error) {
 	return response.GetBlock().GetHeader().ChainID, nil
 }
 
+// GetRegisteredDataValidator gets registered data validator for checking duplication from blockchain
 func (c *GrpcClient) GetRegisteredDataValidator(address string) (datapooltypes.DataValidator, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 
