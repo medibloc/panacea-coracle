@@ -3,11 +3,12 @@ package datapool
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
+	panaceadatapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/codec"
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/server/response"
 	"github.com/medibloc/panacea-data-market-validator/types"
+	datapooltypes "github.com/medibloc/panacea-data-market-validator/types/datapool"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -58,7 +59,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	// TODO encrypt and store data
 
 	// response data
-	unsignedCertificate, err := types.NewUnsignedDataValidationCertificateOfDataPool(
+	unsignedCertificate, err := datapooltypes.NewUnsignedDataValidationCertificate(
 		pool,
 		dataHash,
 		r.URL.Query().Get("requester_address"),
@@ -82,7 +83,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	resp := &datapooltypes.DataValidationCertificate{
+	resp := &panaceadatapooltypes.DataValidationCertificate{
 		UnsignedCert: &unsignedCertificate,
 		Signature:    signature,
 	}
