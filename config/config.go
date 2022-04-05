@@ -15,11 +15,11 @@ type BaseConfig struct {
 	LogLevel              string `mapstructure:"log-level"`
 	ValidatorMnemonic     string `mapstructure:"validator-mnemonic"`
 	DataEncryptionKeyFile string `mapstructure:"data-encryption-key-file"`
-	EndPoint              string `mapstructure:"endpoint"`
 }
 
 type HTTPConfig struct {
 	ListenAddr string `mapstructure:"laddr"`
+	Endpoint              string `mapstructure:"endpoint"`
 }
 
 type PanaceaConfig struct {
@@ -44,10 +44,10 @@ func DefaultConfig() *Config {
 			LogLevel:              "info",
 			ValidatorMnemonic:     "",
 			DataEncryptionKeyFile: "config/data_encryption_key.sealed",
-			EndPoint:              "",
 		},
 		HTTP: HTTPConfig{
 			ListenAddr: "0.0.0.0:8080",
+			Endpoint:              "",
 		},
 		Panacea: PanaceaConfig{
 			GRPCAddr: "127.0.0.1:9090",

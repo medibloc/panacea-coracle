@@ -22,7 +22,6 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 log-level = "{{ .BaseConfig.LogLevel }}"
 validator-mnemonic = "{{ .BaseConfig.ValidatorMnemonic }}"
 data-encryption-key-file = "{{ .BaseConfig.DataEncryptionKeyFile }}"
-endpoint = "{{ .BaseConfig.EndPoint }}"
 
 ###############################################################################
 ###                         HTTP Configuration                              ###
@@ -31,6 +30,7 @@ endpoint = "{{ .BaseConfig.EndPoint }}"
 [http]
 
 laddr = "{{ .HTTP.ListenAddr }}"
+endpoint = "{{ .HTTP.Endpoint }}"
 
 ###############################################################################
 ###                         Panacea Configuration                           ###

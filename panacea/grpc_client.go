@@ -3,6 +3,7 @@ package panacea
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	txclient "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,6 +15,7 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"strconv"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
@@ -148,106 +150,113 @@ func (c *GrpcClient) RegisterDataValidator(endpoint string, validatorAcc *Valida
 
 	address := validatorAcc.GetAddress()
 
-	getRegisteredDataValidator, _ := c.GetRegisteredDataValidator(address)
+	_, err := c.GetRegisteredDataValidator(address)
 
-	var dataValidator datapooltypes.DataValidator
+	if err != nil {
+		if strings.HasSuffix(err.Error(), datapooltypes.ErrDataValidatorNotFound.Error()) {
+			err, txBytes, err2, done := c.getTxByteOfRegisterDataValidator(endpoint, validatorAcc, address, txBuilder, txConfig)
+			if done {
+				return err2
+			}
 
-	if getRegisteredDataValidator == dataValidator {
-		dataValidator := &datapooltypes.DataValidator{
-			Address:  address,
-			Endpoint: endpoint,
+			ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+			defer cancel()
+
+			newTxClient := txtypes.NewServiceClient(c.conn)
+			resp, err := newTxClient.BroadcastTx(
+				ctx,
+				&txtypes.BroadcastTxRequest{
+					Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
+					TxBytes: txBytes,
+				},
+			)
+			if err != nil {
+				return nil
+			}
+
+			if resp.TxResponse.Code == 0 {
+				log.Info("register data validator success")
+			} else {
+				return fmt.Errorf(resp.TxResponse.RawLog)
+			}
+
 		}
-
-		msgRegisterDataValidator := datapooltypes.NewMsgRegisterDataValidator(dataValidator)
-
-		err := txBuilder.SetMsgs(msgRegisterDataValidator)
-		if err != nil {
-			return err
-		}
-
-		privKey := secp256k1.PrivKey{
-			Key: validatorAcc.secp256k1PrivKey.Bytes(),
-		}
-
-		account, err := c.GetAccount(address)
-		if err != nil {
-			return err
-		}
-
-		sequence := account.GetSequence()
-
-		//TODO: Fee will be set in Config.toml in near future, now just hard-coded.
-		fees := cosmostype.NewCoins(cosmostype.NewInt64Coin("umed", 1000000))
-		txBuilder.SetFeeAmount(fees)
-		txBuilder.SetGasLimit(200000)
-
-		sigV2 := signing.SignatureV2{
-			PubKey: privKey.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-				Signature: nil,
-			},
-			Sequence: sequence,
-		}
-
-		err = txBuilder.SetSignatures(sigV2)
-		if err != nil {
-			return nil
-		}
-
-		//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
-		chainId, err := c.GetChainId()
-		if err != nil {
-			return err
-		}
-
-		accountNumber := account.GetAccountNumber()
-
-		signerData := xauthsigning.SignerData{
-			ChainID:       chainId,
-			AccountNumber: accountNumber,
-			Sequence:      sequence,
-		}
-
-		sigv2, err := txclient.SignWithPrivKey(signing.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder, &privKey, txConfig, sequence)
-		if err != nil {
-			return nil
-		}
-
-		err = txBuilder.SetSignatures(sigv2)
-		if err != nil {
-			return nil
-		}
-
-		txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
-		if err != nil {
-			return err
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
-		defer cancel()
-
-		newTxClient := txtypes.NewServiceClient(c.conn)
-		resp, err := newTxClient.BroadcastTx(
-			ctx,
-			&txtypes.BroadcastTxRequest{
-				Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
-				TxBytes: txBytes,
-			},
-		)
-		if err != nil {
-			return nil
-		}
-
-		if resp.TxResponse.Code == 0 {
-			log.Info("register data validator success")
-		} else {
-			return fmt.Errorf(resp.TxResponse.RawLog)
-		}
-
-	} else {
-		return fmt.Errorf("%s was already registered data validator", address)
+		return err
 	}
 
-	return nil
+	return fmt.Errorf("%s was already registered data validator", address)
+}
+
+func (c *GrpcClient) getTxByteOfRegisterDataValidator(endpoint string, validatorAcc *ValidatorAccount, address string, txBuilder client.TxBuilder, txConfig client.TxConfig) (error, []byte, error, bool) {
+	dataValidator := &datapooltypes.DataValidator{
+		Address:  address,
+		Endpoint: endpoint,
+	}
+
+	msgRegisterDataValidator := datapooltypes.NewMsgRegisterDataValidator(dataValidator)
+
+	err := txBuilder.SetMsgs(msgRegisterDataValidator)
+	if err != nil {
+		return nil, nil, err, true
+	}
+
+	privKey := secp256k1.PrivKey{
+		Key: validatorAcc.secp256k1PrivKey.Bytes(),
+	}
+
+	account, err := c.GetAccount(address)
+	if err != nil {
+		return nil, nil, err, true
+	}
+
+	sequence := account.GetSequence()
+
+	//TODO: Fee will be set in Config.toml in near future, now just hard-coded.
+	fees := cosmostype.NewCoins(cosmostype.NewInt64Coin("umed", 1000000))
+	txBuilder.SetFeeAmount(fees)
+	txBuilder.SetGasLimit(200000)
+
+	sigV2 := signing.SignatureV2{
+		PubKey: privKey.PubKey(),
+		Data: &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+			Signature: nil,
+		},
+		Sequence: sequence,
+	}
+
+	err = txBuilder.SetSignatures(sigV2)
+	if err != nil {
+		return nil, nil, nil, true
+	}
+
+	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
+	chainId, err := c.GetChainId()
+	if err != nil {
+		return nil, nil, err, true
+	}
+
+	accountNumber := account.GetAccountNumber()
+
+	signerData := xauthsigning.SignerData{
+		ChainID:       chainId,
+		AccountNumber: accountNumber,
+		Sequence:      sequence,
+	}
+
+	sigv2, err := txclient.SignWithPrivKey(signing.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder, &privKey, txConfig, sequence)
+	if err != nil {
+		return nil, nil, nil, true
+	}
+
+	err = txBuilder.SetSignatures(sigv2)
+	if err != nil {
+		return nil, nil, nil, true
+	}
+
+	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, nil, err, true
+	}
+	return err, txBytes, nil, false
 }
