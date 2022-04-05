@@ -1,16 +1,16 @@
 package codec_test
 
 import (
+	datadealtypes "github.com/medibloc/panacea-data-market-validator/types/datadeal"
 	"testing"
 
 	panaceatypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-data-market-validator/codec"
-	"github.com/medibloc/panacea-data-market-validator/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestJsonMarshalAndUnMarshal(t *testing.T) {
-	unsignedCertificate, err := types.NewUnsignedDataValidationCertificate(
+	unsignedCertificate, err := datadealtypes.NewUnsignedDataValidationCertificate(
 		"1",
 		[]byte("dataHash"),
 		[]byte("encryptedDataURL"),

@@ -3,19 +3,9 @@ package panacea
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	txclient "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	cosmostype "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"strconv"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
@@ -141,122 +131,23 @@ func (c *GrpcClient) GetRegisteredDataValidator(address string) (datapooltypes.D
 	return *res.GetDataValidator(), nil
 }
 
-// RegisterDataValidator registers data validator on blockchain
-func (c *GrpcClient) RegisterDataValidator(endpoint string, validatorAcc *ValidatorAccount) error {
-	interfaceRegistry := c.interfaceRegistry
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	txConfig := tx.NewTxConfig(marshaler, []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT})
-	txBuilder := txConfig.NewTxBuilder()
-
-	address := validatorAcc.GetAddress()
-
-	_, err := c.GetRegisteredDataValidator(address)
-
+func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
+	poolId, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		if strings.HasSuffix(err.Error(), datapooltypes.ErrDataValidatorNotFound.Error()) {
-			err, txBytes, err2, done := c.getTxByteOfRegisterDataValidator(endpoint, validatorAcc, address, txBuilder, txConfig)
-			if done {
-				return err2
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
-			defer cancel()
-
-			newTxClient := txtypes.NewServiceClient(c.conn)
-			resp, err := newTxClient.BroadcastTx(
-				ctx,
-				&txtypes.BroadcastTxRequest{
-					Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
-					TxBytes: txBytes,
-				},
-			)
-			if err != nil {
-				return nil
-			}
-
-			if resp.TxResponse.Code == 0 {
-				log.Info("register data validator success")
-			} else {
-				return fmt.Errorf(resp.TxResponse.RawLog)
-			}
-
-		}
-		return err
+		return datapooltypes.Pool{}, fmt.Errorf("failed to parse pool id: %w", err)
 	}
 
-	return fmt.Errorf("%s was already registered data validator", address)
-}
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-func (c *GrpcClient) getTxByteOfRegisterDataValidator(endpoint string, validatorAcc *ValidatorAccount, address string, txBuilder client.TxBuilder, txConfig client.TxConfig) (error, []byte, error, bool) {
-	dataValidator := &datapooltypes.DataValidator{
-		Address:  address,
-		Endpoint: endpoint,
-	}
-
-	msgRegisterDataValidator := datapooltypes.NewMsgRegisterDataValidator(dataValidator)
-
-	err := txBuilder.SetMsgs(msgRegisterDataValidator)
+	response, err := client.Pool(ctx, &datapooltypes.QueryPoolRequest{
+		PoolId: poolId,
+	})
 	if err != nil {
-		return nil, nil, err, true
+		return datapooltypes.Pool{}, fmt.Errorf("failed to get pool info: %w", err)
 	}
 
-	privKey := secp256k1.PrivKey{
-		Key: validatorAcc.secp256k1PrivKey.Bytes(),
-	}
+	return *response.GetPool(), nil
 
-	account, err := c.GetAccount(address)
-	if err != nil {
-		return nil, nil, err, true
-	}
-
-	sequence := account.GetSequence()
-
-	//TODO: Fee will be set in Config.toml in near future, now just hard-coded.
-	fees := cosmostype.NewCoins(cosmostype.NewInt64Coin("umed", 1000000))
-	txBuilder.SetFeeAmount(fees)
-	txBuilder.SetGasLimit(200000)
-
-	sigV2 := signing.SignatureV2{
-		PubKey: privKey.PubKey(),
-		Data: &signing.SingleSignatureData{
-			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: nil,
-		},
-		Sequence: sequence,
-	}
-
-	err = txBuilder.SetSignatures(sigV2)
-	if err != nil {
-		return nil, nil, nil, true
-	}
-
-	//TODO: ChainID will be set in Config.toml in near future, it just hard-coded.
-	chainId, err := c.GetChainId()
-	if err != nil {
-		return nil, nil, err, true
-	}
-
-	accountNumber := account.GetAccountNumber()
-
-	signerData := xauthsigning.SignerData{
-		ChainID:       chainId,
-		AccountNumber: accountNumber,
-		Sequence:      sequence,
-	}
-
-	sigv2, err := txclient.SignWithPrivKey(signing.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder, &privKey, txConfig, sequence)
-	if err != nil {
-		return nil, nil, nil, true
-	}
-
-	err = txBuilder.SetSignatures(sigv2)
-	if err != nil {
-		return nil, nil, nil, true
-	}
-
-	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
-	if err != nil {
-		return nil, nil, err, true
-	}
-	return err, txBytes, nil, false
 }

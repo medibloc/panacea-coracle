@@ -12,7 +12,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220401023011-823ee24d1b6b
+	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220405085457-3f37140ba99b
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.9.0

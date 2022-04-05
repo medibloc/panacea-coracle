@@ -1,5 +1,6 @@
 package types
 
 const (
-	DealIdKey = "dealId"
+	DealIDKey = "dealId"
+	PoolIDKey = "poolId"
 )

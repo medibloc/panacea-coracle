@@ -7,6 +7,17 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+// ValidateJSONSchemata gets data from desiredSchemaURI list one by one and calls ValidateJSONSchema.
+func ValidateJSONSchemata(jsonInput []byte, desiredSchemaURIs []string) error {
+	for _, desiredSchemaURI := range desiredSchemaURIs {
+		err := ValidateJSONSchema(jsonInput, desiredSchemaURI)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ValidateJSONSchema performs the JSON Schema validation: https://json-schema.org/
 // This fetches the schema definition via http(s) or local filesystem.
 // If jsonInput is not a valid JSON or if jsonInput doesn't conform to the desired JSON schema, an error is returned.
