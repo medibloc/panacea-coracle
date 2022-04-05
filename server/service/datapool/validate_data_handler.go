@@ -46,6 +46,11 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	// TODO data schemata validation
+	if err := validation.ValidateJSONSchemata(jsonInput, pool.DataSchema); err != nil {
+		log.Error(err)
+		http.Error(w, "JSON schema validation failed", http.StatusForbidden)
+		return
+	}
 
 	// make dataHash
 	dataHash := crypto.Hash(jsonInput)
