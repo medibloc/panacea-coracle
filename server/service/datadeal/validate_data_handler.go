@@ -2,6 +2,7 @@ package datadeal
 
 import (
 	"fmt"
+	datadealtypes "github.com/medibloc/panacea-data-market-validator/types/datadeal"
 
 	"io/ioutil"
 	"net/http"
@@ -94,7 +95,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	unsignedCertificate, err := types.NewUnsignedDataValidationCertificateOfDataDeal(
+	unsignedCertificate, err := datadealtypes.NewUnsignedDataValidationCertificate(
 		dealId,
 		dataHash,
 		encryptedDataURL,
