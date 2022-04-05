@@ -30,7 +30,9 @@ func TestHandleToken(t *testing.T) {
 	require.NoError(t, err)
 	svc := &teeService{
 		&service.Service{
-			Conf:    &config.Config{EnclaveAttestationProviderURL: "https://shareduks.uks.attest.azure.net"},
+			Conf:    &config.Config{Enclave: config.EnclaveConfig{
+				AttestationProviderAddr: "https://shareduks.uks.attest.azure.net"},
+			},
 			TLSCert: tlsCert,
 		},
 	}
@@ -45,7 +47,7 @@ func TestHandleToken(t *testing.T) {
 	attestationTokenBytes, err := ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
 
-	report, err := attestation.VerifyAzureAttestationToken(string(attestationTokenBytes), svc.Conf.EnclaveAttestationProviderURL)
+	report, err := attestation.VerifyAzureAttestationToken(string(attestationTokenBytes), svc.Conf.Enclave.AttestationProviderAddr)
 	require.NoError(t, err)
 	t.Log("Azure attestation token verified")
 
