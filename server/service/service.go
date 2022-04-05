@@ -33,6 +33,11 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
+	_, err = panaceaClient.GetRegisteredDataValidator(validatorAccount.GetAddress())
+	if err != nil {
+		return nil, err
+	}
+
 	var tlsCert *tls.Certificate
 	if conf.Enclave.Enable {
 		tlsCert, err = tee.CreateTLSCertificate()

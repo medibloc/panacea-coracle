@@ -117,7 +117,7 @@ func (c *GrpcClient) GetChainId() (string, error) {
 }
 
 // GetRegisteredDataValidator gets registered data validator for checking duplication from blockchain
-func (c *GrpcClient) GetRegisteredDataValidator(address string) (datapooltypes.DataValidator, error) {
+func (c *GrpcClient) GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -125,10 +125,10 @@ func (c *GrpcClient) GetRegisteredDataValidator(address string) (datapooltypes.D
 
 	res, err := client.DataValidator(ctx, &datapooltypes.QueryDataValidatorRequest{Address: address})
 	if err != nil {
-		return datapooltypes.DataValidator{}, fmt.Errorf("failed to get data validator info: %w", err)
+		return nil, fmt.Errorf("failed to get data validator info: %w", err)
 	}
 
-	return *res.GetDataValidator(), nil
+	return res.GetDataValidator(), nil
 }
 
 func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
