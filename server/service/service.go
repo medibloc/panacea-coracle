@@ -33,9 +33,11 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
-	_, err = panaceaClient.GetRegisteredDataValidator(validatorAccount.GetAddress())
+	registeredDataValidator, err := panaceaClient.GetRegisteredDataValidator(validatorAccount.GetAddress())
 	if err != nil {
 		return nil, err
+	} else if registeredDataValidator == nil {
+		return nil, fmt.Errorf("this data validator is not registered in Panacea yet")
 	}
 
 	var tlsCert *tls.Certificate

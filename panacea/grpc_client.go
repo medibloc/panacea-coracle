@@ -49,11 +49,7 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 
 func (c *GrpcClient) Close() error {
 	log.Info("closing Panacea gRPC connection")
-	err := c.conn.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.conn.Close()
 }
 
 // GetPubKey gets the public key from blockchain.
@@ -116,7 +112,7 @@ func (c *GrpcClient) GetChainId() (string, error) {
 	return response.GetBlock().GetHeader().ChainID, nil
 }
 
-// GetRegisteredDataValidator gets registered data validator for checking duplication from blockchain
+// GetRegisteredDataValidator gets registered data validator
 func (c *GrpcClient) GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 
