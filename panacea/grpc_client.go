@@ -3,7 +3,6 @@ package panacea
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"strconv"
 	"time"
@@ -96,20 +95,6 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	}
 
 	return *response.GetDeal(), nil
-}
-
-// GetChainId gets chain id from blockchain
-func (c *GrpcClient) GetChainId() (string, error) {
-	client := tmservice.NewServiceClient(c.conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	response, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
-	if err != nil {
-		return "", err
-	}
-
-	return response.GetBlock().GetHeader().ChainID, nil
 }
 
 // GetRegisteredDataValidator gets registered data validator
