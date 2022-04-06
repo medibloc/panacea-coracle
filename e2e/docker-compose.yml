@@ -20,8 +20,8 @@ services:
       - .:/e2e
     depends_on:
       - panacea
-    command:
-      - /e2e/wait-for panacea:9090 --timeout=600 -- /e2e/init_start_dataval.sh
+    command: >
+      /e2e/wait-for panacea:9090 --timeout=600 -- /e2e/init_start_dataval.sh
 
   e2e-test:
     build:
