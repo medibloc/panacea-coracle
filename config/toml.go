@@ -30,6 +30,7 @@ data-encryption-key-file = "{{ .BaseConfig.DataEncryptionKeyFile }}"
 [http]
 
 laddr = "{{ .HTTP.ListenAddr }}"
+endpoint = "{{ .HTTP.Endpoint }}"
 
 ###############################################################################
 ###                         Panacea Configuration                           ###
@@ -58,6 +59,7 @@ secret-access-key = "{{ .AWSS3.SecretAccessKey }}"
 
 enable = {{ .Enclave.Enable }}
 attestation-provider-addr = "{{ .Enclave.AttestationProviderAddr }}"
+
 `
 
 const (

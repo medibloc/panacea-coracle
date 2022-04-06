@@ -3,6 +3,7 @@ package panacea
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"strconv"
 	"time"
 
@@ -41,16 +42,26 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	std.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
 	datadealtypes.RegisterInterfaces(interfaceRegistry)
+	datapooltypes.RegisterInterfaces(interfaceRegistry)
 	return interfaceRegistry
 }
 
-func (c *GrpcClient) Close() {
+func (c *GrpcClient) Close() error {
 	log.Info("closing Panacea gRPC connection")
-	c.conn.Close()
+	return c.conn.Close()
 }
 
 // GetPubKey gets the public key from blockchain.
-func (c *GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
+func (c *GrpcClient) GetPubKey(panaceaAddr string) (types.PubKey, error) {
+	acc, err := c.GetAccount(panaceaAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return acc.GetPubKey(), nil
+}
+
+func (c *GrpcClient) GetAccount(panaceaAddr string) (authtypes.AccountI, error) {
 	client := authtypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -64,7 +75,7 @@ func (c *GrpcClient) GetPubKey(panaceaAddr string) ([]byte, error) {
 	if err := c.interfaceRegistry.UnpackAny(response.GetAccount(), &acc); err != nil {
 		return nil, fmt.Errorf("failed to unpack account info: %w", err)
 	}
-	return acc.GetPubKey().Bytes(), nil
+	return acc, nil
 }
 
 // GetDeal gets deal info from blockchain
@@ -84,6 +95,21 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	}
 
 	return *response.GetDeal(), nil
+}
+
+// GetRegisteredDataValidator gets registered data validator
+func (c *GrpcClient) GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	res, err := client.DataValidator(ctx, &datapooltypes.QueryDataValidatorRequest{Address: address})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data validator info: %w", err)
+	}
+
+	return res.GetDataValidator(), nil
 }
 
 func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {

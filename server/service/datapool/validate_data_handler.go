@@ -39,14 +39,14 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	// trusted validator check
-	if !validation.Contains(pool.TrustedDataValidators, svc.ValidatorAccount.GetAddress()) {
+	if !validation.Contains(pool.PoolParams.TrustedDataValidators, svc.ValidatorAccount.GetAddress()) {
 		log.Error("not a trusted data-validator")
 		http.Error(w, "invalid data validator", http.StatusBadRequest)
 		return
 	}
 
 	// TODO data schemata validation
-	if err := validation.ValidateJSONSchemata(jsonInput, pool.DataSchema); err != nil {
+	if err := validation.ValidateJSONSchemata(jsonInput, pool.PoolParams.DataSchema); err != nil {
 		log.Error(err)
 		http.Error(w, "JSON schema validation failed", http.StatusForbidden)
 		return
