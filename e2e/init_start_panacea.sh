@@ -34,7 +34,7 @@ PID_PANACEAD=$!
 sleep 10
 
 panacead tx bank send $(panacead keys show dataval -a) $(panacead keys show validator -a) 100umed --chain-id ${CHAIN_ID} -b block --yes
-panacead tx datapool register-data-validator --from dataval --chain-id ${CHAIN_ID} -b block --yes
+panacead tx datapool register-data-validator https://my-validator.org --from dataval --chain-id ${CHAIN_ID} -b block --yes
 
 DATAVAL_ADDR=$(panacead keys show dataval -a)
 sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json > /tmp/create_deal.json
