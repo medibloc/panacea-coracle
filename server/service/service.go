@@ -3,10 +3,12 @@ package service
 import (
 	"crypto/tls"
 	"fmt"
+	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
+	"strings"
 )
 
 type Service struct {
@@ -30,14 +32,16 @@ func New(conf *config.Config) (*Service, error) {
 
 	panaceaClient, err := panacea.NewGrpcClient(conf)
 	if err != nil {
+
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
-	registeredDataValidator, err := panaceaClient.GetRegisteredDataValidator(validatorAccount.GetAddress())
+	_, err = panaceaClient.GetRegisteredDataValidator(validatorAccount.GetAddress())
 	if err != nil {
+		if strings.HasSuffix(err.Error(), datapooltypes.ErrDataValidatorNotFound.Error()) {
+			return nil, fmt.Errorf("this data validator is not registered in Panacea yet")
+		}
 		return nil, err
-	} else if registeredDataValidator == nil {
-		return nil, fmt.Errorf("this data validator is not registered in Panacea yet")
 	}
 
 	var tlsCert *tls.Certificate
