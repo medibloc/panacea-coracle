@@ -507,6 +507,8 @@ github.com/medibloc/panacea-core/v2 v2.0.3-0.20220404055338-bfd966ec39b4 h1:RV2K
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220404055338-bfd966ec39b4/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220405085457-3f37140ba99b h1:6CVUN98LutNQx3TLVVeCfuN0BZsettOPyp3t2ilyXFw=
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220405085457-3f37140ba99b/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
+github.com/medibloc/panacea-core/v2 v2.0.3-0.20220406114638-a61d3361ebcd h1:gZf1+8S8QU9B0NR5NLUgI41mlWVNU5QU2/oN/FQAtQ4=
+github.com/medibloc/panacea-core/v2 v2.0.3-0.20220406114638-a61d3361ebcd/go.mod h1:WA7zDlNSKEdGGj1Y5YG2kVEMINYqVBbXV4jJIYLAUKs=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/miekg/dns v1.1.26/go.mod h1:bPDLeHnStXmXAq1m/Ch/hvfNHr14JKNPMBo3VZKjuso=
 github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643 h1:hLDRPB66XQT/8+wG9WsDpiCvZf1yKO7sz7scAjSlBa0=
