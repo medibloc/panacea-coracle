@@ -501,12 +501,6 @@ github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Ky
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220322085500-ae0d89281e46 h1:s8S8/y9MthRRdgWTEdjjB41f5Tn6kpDL2+0GdLEcWV0=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220322085500-ae0d89281e46/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220404055338-bfd966ec39b4 h1:RV2KndMOwdzvP8LigDDa+hyCmDhbvdBBs0PnfYBxXiM=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220404055338-bfd966ec39b4/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220405085457-3f37140ba99b h1:6CVUN98LutNQx3TLVVeCfuN0BZsettOPyp3t2ilyXFw=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220405085457-3f37140ba99b/go.mod h1:LVGCBJurRj1HvmqklupkANSAXOaZGN6SkWF6s006/zo=
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220406114638-a61d3361ebcd h1:gZf1+8S8QU9B0NR5NLUgI41mlWVNU5QU2/oN/FQAtQ4=
 github.com/medibloc/panacea-core/v2 v2.0.3-0.20220406114638-a61d3361ebcd/go.mod h1:WA7zDlNSKEdGGj1Y5YG2kVEMINYqVBbXV4jJIYLAUKs=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=

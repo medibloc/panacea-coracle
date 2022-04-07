@@ -19,6 +19,7 @@ type BaseConfig struct {
 
 type HTTPConfig struct {
 	ListenAddr string `mapstructure:"laddr"`
+	Endpoint   string `mapstructure:"endpoint"`
 }
 
 type PanaceaConfig struct {
@@ -46,6 +47,7 @@ func DefaultConfig() *Config {
 		},
 		HTTP: HTTPConfig{
 			ListenAddr: "0.0.0.0:8080",
+			Endpoint:   "",
 		},
 		Panacea: PanaceaConfig{
 			GRPCAddr: "127.0.0.1:9090",

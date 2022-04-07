@@ -21,18 +21,17 @@ func TestHandleToken(t *testing.T) {
 	enclaveSignerID, err := hex.DecodeString(os.Getenv("EDG_TEST_ENCLAVE_SIGNER_ID_HEX"))
 	require.NoError(t, err)
 
-	// Make a HTTP request and a HTTP server simulator (recorder)
+	// Make an HTTP request and an HTTP server simulator (recorder)
 	req := httptest.NewRequest(http.MethodGet, "/v0/tee/attestation-token", nil)
 	recorder := httptest.NewRecorder()
 
 	// Prepare a service struct and execute the HTTP request
 	tlsCert, err := tee.CreateTLSCertificate()
 	require.NoError(t, err)
+	enclaveConfig := config.EnclaveConfig{Enable: true, AttestationProviderAddr: "https://shareduks.uks.attest.azure.net"}
 	svc := &teeService{
 		&service.Service{
-			Conf:    &config.Config{Enclave: config.EnclaveConfig{
-				AttestationProviderAddr: "https://shareduks.uks.attest.azure.net"},
-			},
+			Conf:    &config.Config{Enclave: enclaveConfig},
 			TLSCert: tlsCert,
 		},
 	}

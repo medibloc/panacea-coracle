@@ -65,7 +65,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	encryptedData, err := crypto.EncryptDataWithSecp256k1(ownerPubKey, jsonInput)
+	encryptedData, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), jsonInput)
 	if err != nil {
 		log.Error("failed to encrypt data: ", err)
 		http.Error(w, "", http.StatusInternalServerError)
@@ -86,7 +86,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	// make downloadURL
 	dataURL := svc.Store.MakeDownloadURL(dealId, fileName)
-	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey, []byte(dataURL))
+	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
 		http.Error(w, "failed to make encryptedDataURL", http.StatusInternalServerError)

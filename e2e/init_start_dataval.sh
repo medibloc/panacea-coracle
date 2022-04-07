@@ -8,7 +8,7 @@ datavald init
 
 # Modify the config.toml template
 cat ${SCRIPT_DIR}/config.toml | \
-    sed "s|__VALIDATOR_MENMONIC__|${E2E_DATAVAL_MNEMONIC}|g" | \
+    sed "s|__VALIDATOR_MNEMONIC__|${E2E_DATAVAL_MNEMONIC}|g" | \
     sed "s|__AWS_S3_ACCESS_KEY_ID__|${E2E_AWS_S3_ACCESS_KEY_ID}|g" | \
     sed "s|__AWS_S3_SECRET_ACCESS_KEY__|${E2E_AWS_S3_SECRET_ACCESS_KEY}|g" \
     > ~/.dataval/config.toml
