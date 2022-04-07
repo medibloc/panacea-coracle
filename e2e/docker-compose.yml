@@ -30,6 +30,7 @@ services:
     environment:
       E2E_DATAVAL_HTTP_ADDR: "dataval:8080"
       E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
+      E2E_DATAVAL_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
     volumes:
       - .:/e2e
     depends_on:
