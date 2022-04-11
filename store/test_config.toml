@@ -43,5 +43,5 @@ secret-access-key = "{{ .AWSS3.SecretAccessKey }}"
 
 [enclave]
 
-enable = {{ .Enclave.Enable }}
-attestation-provider-addr = "{{ .Enclave.AttestationProviderAddr }}"
+enable = false
+attestation-provider-addr = ""
