@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -78,7 +77,7 @@ func (s AWSS3Storage) UploadFile(path string, name string, data []byte) error {
 // UploadFileWithSgx path is a directory, name is the file name.
 // The sgxSecretKey, additional, and data are components of encryption data.
 // It is stored in the 'data-market' bucket
-func (s AWSS3Storage) UploadFileWithSgx(path string, name string, sgxSecretKey, additional, data []byte) error {
+func (s AWSS3Storage) UploadFileWithSgx(path string, name string, dataWithAES256 []byte) error {
 	sess := session.Must(
 		session.NewSession(
 			&aws.Config{
@@ -93,12 +92,7 @@ func (s AWSS3Storage) UploadFileWithSgx(path string, name string, sgxSecretKey, 
 	)
 	svc := s3.New(sess)
 
-	dataWithAES256, err := crypto.EncryptDataWithAES256(sgxSecretKey, additional, data)
-	if err != nil {
-		return err
-	}
-
-	_, err = svc.PutObject(&s3.PutObjectInput{
+	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(makeFullPath(path, name)),
 		Body:          bytes.NewReader(dataWithAES256),
