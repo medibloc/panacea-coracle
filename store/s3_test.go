@@ -7,6 +7,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,8 +16,13 @@ import (
 )
 
 func TestStorageUploadWithSgx(t *testing.T) {
-	conf, err := config.ReadConfigTOML("./test_config.toml")
-	require.NoError(t, err)
+	conf := &config.Config{
+		AWSS3: config.AWSS3Config{
+			Region:          "ap-northeast-2",
+			Bucket:          "data-market-test",
+			AccessKeyID:     os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID"),
+			SecretAccessKey: os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")},
+	}
 
 	s3Store, err := store.NewS3Store(conf)
 	require.NoError(t, err)
@@ -38,8 +44,13 @@ func TestStorageUploadWithSgx(t *testing.T) {
 
 // TestS3UploadAndDownload Upload file to s3Store and download generated url link and verify after download
 func TestS3UploadAndDownload(t *testing.T) {
-	conf, err := config.ReadConfigTOML("./test_config.toml")
-	require.NoError(t, err)
+	conf := &config.Config{
+		AWSS3: config.AWSS3Config{
+			Region:          "ap-northeast-2",
+			Bucket:          "data-market-test",
+			AccessKeyID:     os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID"),
+			SecretAccessKey: os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")},
+	}
 
 	s3Store, err := store.NewS3Store(conf)
 	require.NoError(t, err)
