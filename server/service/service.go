@@ -14,7 +14,7 @@ import (
 type Service struct {
 	Conf             *config.Config
 	ValidatorAccount *panacea.ValidatorAccount
-	Store            store.S3Store
+	Store            store.Storage
 	PanaceaClient    *panacea.GrpcClient
 	TLSCert          *tls.Certificate
 }
@@ -25,9 +25,9 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to load validator account: %w", err)
 	}
 
-	s3Store, err := store.NewS3Store(conf.AWSS3.Bucket, conf.AWSS3.Region, conf.AWSS3.AccessKeyID, conf.AWSS3.SecretAccessKey)
+	s3Store, err := store.NewS3Store(conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create S3Store: %w", err)
+		return nil, fmt.Errorf("failed to create AWSS3Storage: %w", err)
 	}
 
 	panaceaClient, err := panacea.NewGrpcClient(conf)

@@ -5,9 +5,9 @@
 ###                           Base Configuration                            ###
 ###############################################################################
 
-log-level = "info"
-validator-mnemonic = "__VALIDATOR_MNEMONIC__"
-data-encryption-key-file = "config/data_encryption_key.sealed"
+log-level = "{{ .BaseConfig.LogLevel }}"
+validator-mnemonic = "{{ .BaseConfig.ValidatorMnemonic }}"
+data-encryption-key-file = "{{ .BaseConfig.DataEncryptionKeyFile }}"
 
 ###############################################################################
 ###                         HTTP Configuration                              ###
@@ -15,8 +15,8 @@ data-encryption-key-file = "config/data_encryption_key.sealed"
 
 [http]
 
-laddr = "0.0.0.0:8080"
-endpoint = "https://my-validator.org"
+laddr = "{{ .HTTP.ListenAddr }}"
+endpoint = "{{ .HTTP.Endpoint }}"
 
 ###############################################################################
 ###                         Panacea Configuration                           ###
@@ -24,7 +24,7 @@ endpoint = "https://my-validator.org"
 
 [panacea]
 
-grpc-addr = "panacea:9090"
+grpc-addr = "{{ .Panacea.GRPCAddr }}"
 
 ###############################################################################
 ###                         AWS S3 Configuration                            ###
@@ -32,10 +32,10 @@ grpc-addr = "panacea:9090"
 
 [aws-s3]
 
-region = "ap-northeast-2"
-bucket = "data-market-test"
-access-key-id = "__AWS_S3_ACCESS_KEY_ID__"
-secret-access-key = "__AWS_S3_SECRET_ACCESS_KEY__"
+region = "{{ .AWSS3.Region }}"
+bucket = "{{ .AWSS3.Bucket }}"
+access-key-id = "{{ .AWSS3.AccessKeyID }}"
+secret-access-key = "{{ .AWSS3.SecretAccessKey }}"
 
 ###############################################################################
 ###                         Enclave Configuration                           ###
@@ -43,5 +43,5 @@ secret-access-key = "__AWS_S3_SECRET_ACCESS_KEY__"
 
 [enclave]
 
-enable = false
-attestation-provider-addr = ""
+enable = {{ .Enclave.Enable }}
+attestation-provider-addr = "{{ .Enclave.AttestationProviderAddr }}"

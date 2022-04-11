@@ -1,23 +1,47 @@
 package store_test
 
 import (
+	"crypto/rand"
+	"fmt"
+	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 
-	awsendpoints "github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/stretchr/testify/require"
 
 	"github.com/medibloc/panacea-data-market-validator/store"
 )
 
+func TestStorageUploadWithSgx(t *testing.T) {
+	conf, err := config.ReadConfigTOML("./test_config.toml")
+	require.NoError(t, err)
+
+	s3Store, err := store.NewS3Store(conf)
+	require.NoError(t, err)
+
+	path := "temp_path"
+	name := "name"
+
+	sgxSecretKey, err := randomBytes(32)
+	require.NoError(t, err)
+
+	data, err := randomBytes(100000)
+	require.NoError(t, err)
+
+	additional := crypto.Hash([]byte(fmt.Sprintf("data-pool-%v", 1)))
+
+	err = s3Store.UploadFileWithSgx(path, name, sgxSecretKey, additional, data)
+	require.NoError(t, err)
+}
+
 // TestS3UploadAndDownload Upload file to s3Store and download generated url link and verify after download
 func TestS3UploadAndDownload(t *testing.T) {
-	accessKeyID := os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID")
-	secretAccessKeyID := os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")
+	conf, err := config.ReadConfigTOML("./test_config.toml")
+	require.NoError(t, err)
 
-	s3Store, err := store.NewS3Store("data-market-test", awsendpoints.ApNortheast2RegionID, accessKeyID, secretAccessKeyID)
+	s3Store, err := store.NewS3Store(conf)
 	require.NoError(t, err)
 
 	path := "temp_path"
@@ -36,4 +60,12 @@ func TestS3UploadAndDownload(t *testing.T) {
 	resData, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 	require.Equal(t, data, resData)
+}
+
+func randomBytes(size int) ([]byte, error) {
+	data := make([]byte, size)
+	if _, err := rand.Read(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
