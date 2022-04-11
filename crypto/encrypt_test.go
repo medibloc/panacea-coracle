@@ -47,6 +47,7 @@ func TestEncryptData_FailDecryption(t *testing.T) {
 }
 
 func TestEncryptDataWithAES256(t *testing.T) {
+	fmt.Println(1)
 	secretKey, err := randomBytes(32)
 	require.NoError(t, err)
 	additional := Hash([]byte(fmt.Sprintf("data-pool-%v", 1)))

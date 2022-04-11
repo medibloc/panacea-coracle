@@ -2,7 +2,6 @@ package datapool
 
 import (
 	"fmt"
-	"github.com/edgelesssys/ego/enclave"
 	"github.com/gorilla/mux"
 	panaceadatapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/codec"
@@ -59,14 +58,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	// make dataHash
 	dataHash := crypto.Hash(jsonInput)
 
-	// TODO encrypt and store data
-	key, info, err := enclave.GetProductSealKey()
-	if err != nil {
-		log.Error("fail to get Intel SGX Product Key: ", err)
-		return
-	}
-
-	dataWithAES256, err := crypto.EncryptDataWithAES256(key, info, jsonInput)
+	dataWithAES256, err := crypto.EncryptDataWithAES256(svc.DataEncKey, nil, jsonInput)
 	if err != nil {
 		log.Error("failed to make encrypted data: ", err)
 		http.Error(w, "failed to make encrypted data", http.StatusInternalServerError)
@@ -75,7 +67,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	filename := svc.Store.MakeRandomFilename()
 
-	err = svc.Store.UploadFileWithSgx(poolID, filename, dataWithAES256)
+	err = svc.Store.UploadFile(poolID, filename, dataWithAES256)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
@@ -90,7 +82,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 		svc.ValidatorAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataValidationCertificate: ", err)
-		http.Error(w, "failed to make unsignedDataValidationCertificate", http.StatusInternalServerError)
+		http.Error(w, "faile Fd to make unsignedDataValidationCertificate", http.StatusInternalServerError)
 		return
 	}
 
