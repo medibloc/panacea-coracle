@@ -82,7 +82,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 		svc.ValidatorAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataValidationCertificate: ", err)
-		http.Error(w, "faile Fd to make unsignedDataValidationCertificate", http.StatusInternalServerError)
+		http.Error(w, "failed to make unsignedDataValidationCertificate", http.StatusInternalServerError)
 		return
 	}
 
