@@ -2,9 +2,7 @@ package store_test
 
 import (
 	"crypto/rand"
-	"fmt"
 	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,7 +13,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/store"
 )
 
-func TestStorageUploadWithSgx(t *testing.T) {
+func TestStorageUpload(t *testing.T) {
 	conf := &config.Config{
 		AWSS3: config.AWSS3Config{
 			Region:          "ap-northeast-2",
@@ -30,15 +28,10 @@ func TestStorageUploadWithSgx(t *testing.T) {
 	path := "temp_path"
 	name := "name"
 
-	sgxSecretKey, err := randomBytes(32)
-	require.NoError(t, err)
-
 	data, err := randomBytes(100000)
 	require.NoError(t, err)
 
-	additional := crypto.Hash([]byte(fmt.Sprintf("data-pool-%v", 1)))
-
-	err = s3Store.UploadFileWithSgx(path, name, sgxSecretKey, additional, data)
+	err = s3Store.UploadFile(path, name, data)
 	require.NoError(t, err)
 }
 

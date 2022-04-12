@@ -3,11 +3,16 @@ package service
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/edgelesssys/ego/ecrypto"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
+	"github.com/tendermint/tendermint/libs/os"
+	"io/fs"
+	"io/ioutil"
 	"strings"
 )
 
@@ -17,6 +22,7 @@ type Service struct {
 	Store            store.Storage
 	PanaceaClient    *panacea.GrpcClient
 	TLSCert          *tls.Certificate
+	DataEncKey       []byte
 }
 
 func New(conf *config.Config) (*Service, error) {
@@ -53,12 +59,41 @@ func New(conf *config.Config) (*Service, error) {
 		}
 	}
 
+	var key []byte
+	if os.FileExists(conf.DataEncryptionKeyFile) {
+		file, err := ioutil.ReadFile(conf.DataEncryptionKeyFile)
+		if err != nil {
+			return nil, err
+		}
+
+		key, err = ecrypto.Unseal(file, nil)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		key, err := crypto.GenerateRandom32BytesKey()
+		if err != nil {
+			return nil, err
+		}
+
+		sealed, err := ecrypto.SealWithProductKey(key, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		err = ioutil.WriteFile(conf.DataEncryptionKeyFile, sealed, fs.FileMode(644))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Service{
 		Conf:             conf,
 		ValidatorAccount: validatorAccount,
 		Store:            s3Store,
 		PanaceaClient:    panaceaClient,
 		TLSCert:          tlsCert,
+		DataEncKey:       key,
 	}, nil
 }
 

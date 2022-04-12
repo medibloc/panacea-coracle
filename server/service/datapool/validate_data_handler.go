@@ -30,8 +30,10 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	poolID := mux.Vars(r)[types.PoolIDKey]
+
 	// get pool info by ID from blockchain
-	pool, err := svc.PanaceaClient.GetPool(mux.Vars(r)[types.PoolIDKey])
+	pool, err := svc.PanaceaClient.GetPool(poolID)
 	if err != nil {
 		log.Error(err)
 		http.Error(w, "failed to get pool information", http.StatusInternalServerError)
@@ -56,7 +58,21 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	// make dataHash
 	dataHash := crypto.Hash(jsonInput)
 
-	// TODO encrypt and store data
+	dataWithAES256, err := crypto.EncryptDataWithAES256(svc.DataEncKey, nil, jsonInput)
+	if err != nil {
+		log.Error("failed to make encrypted data: ", err)
+		http.Error(w, "failed to make encrypted data", http.StatusInternalServerError)
+		return
+	}
+
+	filename := svc.Store.MakeRandomFilename()
+
+	err = svc.Store.UploadFile(poolID, filename, dataWithAES256)
+	if err != nil {
+		log.Error("failed to store data: ", err)
+		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
+		return
+	}
 
 	// response data
 	unsignedCertificate, err := datapooltypes.NewUnsignedDataValidationCertificate(
@@ -76,6 +92,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 		http.Error(w, "failed to make marshal unsignedDataValidationCertificate", http.StatusInternalServerError)
 		return
 	}
+
 	signature, err := svc.ValidatorAccount.GetSecp256k1PrivKey().Sign(serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
