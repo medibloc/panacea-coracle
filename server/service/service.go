@@ -83,13 +83,13 @@ func New(conf *config.Config) (*Service, error) {
 
 		// ex) $HOME/config/data_encryption_file.sealed
 		// dir = $HOME/config/, file = data_encryption_file.sealed
-		dir, file := filepath.Split(conf.DataEncryptionKeyFile)
+		dir, _ := filepath.Split(conf.DataEncryptionKeyFile)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.WriteFile(file, sealed, 0755)
+		err = os.WriteFile(conf.DataEncryptionKeyFile, sealed, 0755)
 		if err != nil {
 			return nil, err
 		}
