@@ -6,6 +6,7 @@ SCRIPT_DIR=$(cd `dirname $0` && pwd)
 rm -rf ~/.dataval
 datavald init
 
+mkdir ${SCRIPT_DIR}/config
 touch ${SCRIPT_DIR}/config/data_encryption_key.sealed
 
 # Modify the config.toml template

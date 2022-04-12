@@ -62,26 +62,31 @@ func New(conf *config.Config) (*Service, error) {
 	if os.FileExists(conf.DataEncryptionKeyFile) {
 		file, err := os.ReadFile(conf.DataEncryptionKeyFile)
 		if err != nil {
+			fmt.Println("os.ReadFile Error: ", err)
 			return nil, err
 		}
 
 		key, err = ecrypto.Unseal(file, nil)
 		if err != nil {
+			fmt.Println("Unseal Error: ", err)
 			return nil, err
 		}
 	} else {
 		key, err := crypto.GenerateRandom32BytesKey()
 		if err != nil {
+			fmt.Println("Random Generation Error: ", err)
 			return nil, err
 		}
 
 		sealed, err := ecrypto.SealWithProductKey(key, nil)
 		if err != nil {
+			fmt.Println("Seal Error: ", err)
 			return nil, err
 		}
 
 		err = os.WriteFile(conf.DataEncryptionKeyFile, sealed, fs.FileMode(644))
 		if err != nil {
+			fmt.Println("os.WriteFile Error: ", err)
 			return nil, err
 		}
 	}
