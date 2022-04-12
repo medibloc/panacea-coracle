@@ -6,6 +6,8 @@ SCRIPT_DIR=$(cd `dirname $0` && pwd)
 rm -rf ~/.dataval
 datavald init
 
+touch ${SCRIPT_DIR}/config/data_encryption_key.sealed
+
 # Modify the config.toml template
 cat ${SCRIPT_DIR}/config.toml | \
     sed "s|__VALIDATOR_MNEMONIC__|${E2E_DATAVAL_MNEMONIC}|g" | \
