@@ -43,7 +43,7 @@ func DefaultConfig() *Config {
 		BaseConfig: BaseConfig{
 			LogLevel:              "info",
 			ValidatorMnemonic:     "",
-			DataEncryptionKeyFile: "config/data_encryption_key.sealed",
+			DataEncryptionKeyFile: "~/.dataval/config/data_encryption_key.sealed",
 		},
 		HTTP: HTTPConfig{
 			ListenAddr: "0.0.0.0:8080",
