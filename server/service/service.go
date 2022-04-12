@@ -71,7 +71,7 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 	} else {
-		key, err := crypto.GenerateRandom32BytesKey()
+		key, err = crypto.GenerateRandom32BytesKey()
 		if err != nil {
 			return nil, err
 		}
