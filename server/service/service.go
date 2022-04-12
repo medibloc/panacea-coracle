@@ -12,7 +12,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/tee"
 	"github.com/tendermint/tendermint/libs/os"
 	"io/fs"
-	"io/ioutil"
 	"strings"
 )
 
@@ -61,7 +60,7 @@ func New(conf *config.Config) (*Service, error) {
 
 	var key []byte
 	if os.FileExists(conf.DataEncryptionKeyFile) {
-		file, err := ioutil.ReadFile(conf.DataEncryptionKeyFile)
+		file, err := os.ReadFile(conf.DataEncryptionKeyFile)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +80,7 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 
-		err = ioutil.WriteFile(conf.DataEncryptionKeyFile, sealed, fs.FileMode(644))
+		err = os.WriteFile(conf.DataEncryptionKeyFile, sealed, fs.FileMode(644))
 		if err != nil {
 			return nil, err
 		}

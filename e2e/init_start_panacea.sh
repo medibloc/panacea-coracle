@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-SCRIPT_DIR=$(cd `dirname $0` && pwd)
+SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 
 CHAIN_ID="testing"
 
@@ -13,7 +13,7 @@ panacead init node1 --chain-id ${CHAIN_ID}
 # Init accounts
 panacead keys add validator
 panacead add-genesis-account $(panacead keys show validator -a) 100000000000umed
-panacead gentx validator 1000000umed --commission-rate 0.1 --commission-max-rate 0.2 --commission-max-change-rate 0.01  --min-self-delegation 1 --chain-id ${CHAIN_ID}
+panacead gentx validator 1000000umed --commission-rate 0.1 --commission-max-rate 0.2 --commission-max-change-rate 0.01 --min-self-delegation 1 --chain-id ${CHAIN_ID}
 
 echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add buyer -i
 panacead add-genesis-account $(panacead keys show buyer -a) 100000000000umed
@@ -36,13 +36,8 @@ sleep 10
 panacead tx bank send $(panacead keys show dataval -a) $(panacead keys show validator -a) 100umed --chain-id ${CHAIN_ID} -b block --yes
 
 DATAVAL_ADDR=$(panacead keys show dataval -a)
-sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json > /tmp/create_deal.json
-sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json > /tmp/create_pool.json
-
-cat /tmp/create_deal.json
-cat /tmp/create_pool.json
-
-ls ${SCRIPT_DIR}
+sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
+sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
 
 panacead tx datapool register-nft-contract ${SCRIPT_DIR}/cw721_base.wasm \
   --from validator \
