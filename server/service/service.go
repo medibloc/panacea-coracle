@@ -10,8 +10,9 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
-	"github.com/tendermint/tendermint/libs/os"
-	"io/fs"
+	tos "github.com/tendermint/tendermint/libs/os"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -59,34 +60,37 @@ func New(conf *config.Config) (*Service, error) {
 	}
 
 	var key []byte
-	if os.FileExists(conf.DataEncryptionKeyFile) {
+	if tos.FileExists(conf.DataEncryptionKeyFile) {
 		file, err := os.ReadFile(conf.DataEncryptionKeyFile)
 		if err != nil {
-			fmt.Println("os.ReadFile Error: ", err)
 			return nil, err
 		}
 
 		key, err = ecrypto.Unseal(file, nil)
 		if err != nil {
-			fmt.Println("Unseal Error: ", err)
 			return nil, err
 		}
 	} else {
 		key, err := crypto.GenerateRandom32BytesKey()
 		if err != nil {
-			fmt.Println("Random Generation Error: ", err)
 			return nil, err
 		}
 
 		sealed, err := ecrypto.SealWithProductKey(key, nil)
 		if err != nil {
-			fmt.Println("Seal Error: ", err)
 			return nil, err
 		}
 
-		err = os.WriteFile(conf.DataEncryptionKeyFile, sealed, fs.FileMode(644))
+		// ex) $HOME/config/data_encryption_file.sealed
+		// dir = $HOME/config/, file = data_encryption_file.sealed
+		dir, file := filepath.Split(conf.DataEncryptionKeyFile)
+		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			fmt.Println("os.WriteFile Error: ", err)
+			return nil, err
+		}
+
+		err = os.WriteFile(file, sealed, 0755)
+		if err != nil {
 			return nil, err
 		}
 	}
