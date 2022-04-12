@@ -74,38 +74,6 @@ func (s AWSS3Storage) UploadFile(path string, name string, data []byte) error {
 	return nil
 }
 
-// UploadFileWithSgx path is a directory, name is the file name.
-// The sgxSecretKey, additional, and data are components of encryption data.
-// It is stored in the 'data-market' bucket
-func (s AWSS3Storage) UploadFileWithSgx(path string, name string, dataWithAES256 []byte) error {
-	sess := session.Must(
-		session.NewSession(
-			&aws.Config{
-				Region: aws.String(s.region),
-				// There are several ways to set credit.
-				// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
-				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
-				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-				Credentials: credentials.NewStaticCredentials(s.accessKeyID, s.secretAccessKey, ""),
-			},
-		),
-	)
-	svc := s3.New(sess)
-
-	_, err := svc.PutObject(&s3.PutObjectInput{
-		Bucket:        aws.String(s.bucket),
-		Key:           aws.String(makeFullPath(path, name)),
-		Body:          bytes.NewReader(dataWithAES256),
-		ContentLength: aws.Int64(int64(len(dataWithAES256))),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // MakeDownloadURL path is directory, name is the file name.
 // It is downloaded in the 'data-market' bucket
 func (s AWSS3Storage) MakeDownloadURL(path string, name string) string {

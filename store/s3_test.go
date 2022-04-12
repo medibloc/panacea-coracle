@@ -13,7 +13,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/store"
 )
 
-func TestStorageUploadWithSgx(t *testing.T) {
+func TestStorageUpload(t *testing.T) {
 	conf := &config.Config{
 		AWSS3: config.AWSS3Config{
 			Region:          "ap-northeast-2",
@@ -31,7 +31,7 @@ func TestStorageUploadWithSgx(t *testing.T) {
 	data, err := randomBytes(100000)
 	require.NoError(t, err)
 
-	err = s3Store.UploadFileWithSgx(path, name, data)
+	err = s3Store.UploadFile(path, name, data)
 	require.NoError(t, err)
 }
 

@@ -81,7 +81,7 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 
-		err = ioutil.WriteFile("data_encryption_key.sealed", sealed, fs.FileMode(644))
+		err = ioutil.WriteFile(conf.DataEncryptionKeyFile, sealed, fs.FileMode(644))
 		if err != nil {
 			return nil, err
 		}
