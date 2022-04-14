@@ -39,12 +39,12 @@ DATAVAL_ADDR=$(panacead keys show dataval -a)
 sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
 sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
 
-panacead tx datapool register-nft-contract ${SCRIPT_DIR}/cw721_base.wasm \
-  --from validator \
-  --chain-id ${CHAIN_ID} \
-  --gas 10000000 \
-  -b block \
-  --yes
+#panacead tx datapool register-nft-contract ${SCRIPT_DIR}/cw721_base.wasm \
+#  --from validator \
+#  --chain-id ${CHAIN_ID} \
+#  --gas 10000000 \
+#  -b block \
+#  --yes
 
 panacead tx datapool register-data-validator "https://my-endpoint.com" \
   --from dataval \
