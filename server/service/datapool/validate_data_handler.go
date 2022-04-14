@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,9 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	filename := svc.Store.MakeRandomFilename()
 
-	err = svc.Store.UploadFile(poolID, filename, dataWithAES256)
+	round := pool.Round
+
+	err = svc.Store.UploadFile(poolID, strconv.FormatUint(round, 10), filename, dataWithAES256)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)

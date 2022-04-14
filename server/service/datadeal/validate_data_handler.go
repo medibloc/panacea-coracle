@@ -76,8 +76,10 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	// make dataHash and upload to s3Store
 	dataHash := crypto.Hash(jsonInput)
 
+	dealAddress := deal.DealAddress
+
 	fileName := svc.Store.MakeRandomFilename()
-	err = svc.Store.UploadFile(dealId, fileName, encryptedData)
+	err = svc.Store.UploadFile(dealId, dealAddress, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)

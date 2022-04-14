@@ -45,7 +45,7 @@ func NewS3Store(conf *config.Config) (Storage, error) {
 
 // UploadFile path is directory, name is the file name.
 // It is stored in the 'data-market' bucket
-func (s AWSS3Storage) UploadFile(path string, name string, data []byte) error {
+func (s AWSS3Storage) UploadFile(path string, round string, name string, data []byte) error {
 	sess := session.Must(
 		session.NewSession(
 			&aws.Config{
@@ -62,7 +62,7 @@ func (s AWSS3Storage) UploadFile(path string, name string, data []byte) error {
 
 	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
-		Key:           aws.String(makeFullPath(path, name)),
+		Key:           aws.String(makeFullPath(path, round, name)),
 		Body:          bytes.NewReader(data),
 		ContentLength: aws.Int64(int64(len(data))),
 	})
