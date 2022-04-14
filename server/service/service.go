@@ -11,7 +11,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
 	tos "github.com/tendermint/tendermint/libs/os"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -61,7 +60,7 @@ func New(conf *config.Config) (*Service, error) {
 
 	var key []byte
 	if tos.FileExists(conf.DataEncryptionKeyFile) {
-		file, err := os.ReadFile(conf.DataEncryptionKeyFile)
+		file, err := tos.ReadFile(conf.DataEncryptionKeyFile)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +70,7 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 	} else {
-		key, err = crypto.GenerateRandom32BytesKey()
+		key, err = crypto.GenerateRandomKey(32)
 		if err != nil {
 			return nil, err
 		}
@@ -84,12 +83,12 @@ func New(conf *config.Config) (*Service, error) {
 		// ex) $HOME/config/data_encryption_file.sealed
 		// dir = $HOME/config/, file = data_encryption_file.sealed
 		dir, _ := filepath.Split(conf.DataEncryptionKeyFile)
-		err = os.MkdirAll(dir, 0755)
+		err = tos.EnsureDir(dir, 0755)
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.WriteFile(conf.DataEncryptionKeyFile, sealed, 0755)
+		err = tos.WriteFile(conf.DataEncryptionKeyFile, sealed, 0755)
 		if err != nil {
 			return nil, err
 		}

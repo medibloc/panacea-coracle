@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"bytes"
-	"crypto/rand"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/stretchr/testify/require"
@@ -47,11 +46,11 @@ func TestEncryptData_FailDecryption(t *testing.T) {
 }
 
 func TestEncryptDataWithAES256(t *testing.T) {
-	secretKey, err := randomBytes(32)
+	secretKey, err := GenerateRandomKey(32)
 	require.NoError(t, err)
 	additional := Hash([]byte(fmt.Sprintf("data-pool-%v", 1)))
 
-	data, err := randomBytes(100000)
+	data, err := GenerateRandomKey(100000)
 	require.NoError(t, err)
 
 	cipherText, err := EncryptDataWithAES256(secretKey, additional, data)
@@ -62,12 +61,4 @@ func TestEncryptDataWithAES256(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, data, decryptText)
-}
-
-func randomBytes(size int) ([]byte, error) {
-	data := make([]byte, size)
-	if _, err := rand.Read(data); err != nil {
-		return nil, err
-	}
-	return data, nil
 }

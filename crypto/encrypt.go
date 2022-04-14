@@ -84,8 +84,8 @@ func DecryptDataWithAES256(secretKey []byte, additional []byte, ciphertext []byt
 	return plaintext, nil
 }
 
-func GenerateRandom32BytesKey() ([]byte, error) {
-	data := make([]byte, 32)
+func GenerateRandomKey(size int) ([]byte, error) {
+	data := make([]byte, size)
 	if _, err := rand.Read(data); err != nil {
 		return nil, err
 	}
