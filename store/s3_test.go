@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,10 +29,12 @@ func TestStorageUpload(t *testing.T) {
 	path := "temp_path"
 	name := "name"
 
+	round := uint64(1)
+
 	data, err := randomBytes(100000)
 	require.NoError(t, err)
 
-	err = s3Store.UploadFile(path, name, data)
+	err = s3Store.UploadFile(path, strconv.FormatUint(round, 10), name, data)
 	require.NoError(t, err)
 }
 
@@ -52,7 +55,9 @@ func TestS3UploadAndDownload(t *testing.T) {
 	name := s3Store.MakeRandomFilename()
 	data := []byte(name)
 
-	err = s3Store.UploadFile(path, name, data)
+	round := uint64(1)
+
+	err = s3Store.UploadFile(path, strconv.FormatUint(round, 10), name, data)
 	require.NoError(t, err)
 
 	downloadURL := s3Store.MakeDownloadURL(path, name)
