@@ -87,7 +87,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	// make downloadURL
-	dataURL := svc.Store.MakeDownloadURL(dealId, fileName)
+	dataURL := svc.Store.MakeDownloadURL(dealId, dealAddress, fileName)
 	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
