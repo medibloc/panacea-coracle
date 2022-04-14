@@ -76,8 +76,8 @@ func (s AWSS3Storage) UploadFile(path string, round string, name string, data []
 
 // MakeDownloadURL path is directory, name is the file name.
 // It is downloaded in the 'data-market' bucket
-func (s AWSS3Storage) MakeDownloadURL(path string, name string) string {
-	return fmt.Sprintf("https://%v.s3.%v.amazonaws.com/%v", s.bucket, s.region, makeFullPath(path, name))
+func (s AWSS3Storage) MakeDownloadURL(path string, round string, name string) string {
+	return fmt.Sprintf("https://%v.s3.%v.amazonaws.com/%v", s.bucket, s.region, makeFullPath(path, round, name))
 }
 
 // MakeRandomFilename Create filename with UUID

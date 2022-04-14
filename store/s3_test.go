@@ -60,7 +60,7 @@ func TestS3UploadAndDownload(t *testing.T) {
 	err = s3Store.UploadFile(path, strconv.FormatUint(round, 10), name, data)
 	require.NoError(t, err)
 
-	downloadURL := s3Store.MakeDownloadURL(path, name)
+	downloadURL := s3Store.MakeDownloadURL(path, strconv.FormatUint(round, 10), name)
 	resp, err := http.Get(downloadURL)
 
 	defer resp.Body.Close()
