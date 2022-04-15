@@ -501,8 +501,8 @@ github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Ky
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220414074038-d8d4544f2f01 h1:K6f6Bjm4zyARXvymWZDgn0kpz3kAYnfqcm6yhLzfTbY=
-github.com/medibloc/panacea-core/v2 v2.0.3-0.20220414074038-d8d4544f2f01/go.mod h1:WA7zDlNSKEdGGj1Y5YG2kVEMINYqVBbXV4jJIYLAUKs=
+github.com/medibloc/panacea-core/v2 v2.0.3-0.20220415013825-be75838b4b10 h1:Y4A48woT2OHNMBlzHQWfYSSbAib+HisFSxRdFyVpvNM=
+github.com/medibloc/panacea-core/v2 v2.0.3-0.20220415013825-be75838b4b10/go.mod h1:WA7zDlNSKEdGGj1Y5YG2kVEMINYqVBbXV4jJIYLAUKs=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/miekg/dns v1.1.26/go.mod h1:bPDLeHnStXmXAq1m/Ch/hvfNHr14JKNPMBo3VZKjuso=
 github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643 h1:hLDRPB66XQT/8+wG9WsDpiCvZf1yKO7sz7scAjSlBa0=

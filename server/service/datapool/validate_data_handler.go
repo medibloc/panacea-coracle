@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +71,13 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	round := pool.Round
 
-	err = svc.Store.UploadFile(poolID, strconv.FormatUint(round, 10), filename, dataWithAES256)
+	var path strings.Builder
+
+	path.WriteString(poolID)
+	path.WriteString("/")
+	path.WriteString(strconv.FormatUint(round, 10))
+
+	err = svc.Store.UploadFile(path.String(), filename, dataWithAES256)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)

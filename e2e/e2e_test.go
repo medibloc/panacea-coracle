@@ -90,6 +90,7 @@ func TestDataPoolValidateData(t *testing.T) {
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
+	fmt.Println(resp)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var cert datapooltypes.DataValidationCertificate

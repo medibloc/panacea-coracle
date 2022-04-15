@@ -3,7 +3,6 @@ package datadeal
 import (
 	"fmt"
 	datadealtypes "github.com/medibloc/panacea-data-market-validator/types/datadeal"
-
 	"io/ioutil"
 	"net/http"
 
@@ -76,10 +75,9 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	// make dataHash and upload to s3Store
 	dataHash := crypto.Hash(jsonInput)
 
-	dealAddress := deal.DealAddress
-
 	fileName := svc.Store.MakeRandomFilename()
-	err = svc.Store.UploadFile(dealId, dealAddress, fileName, encryptedData)
+
+	err = svc.Store.UploadFile(dealId, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
@@ -87,7 +85,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	// make downloadURL
-	dataURL := svc.Store.MakeDownloadURL(dealId, dealAddress, fileName)
+	dataURL := svc.Store.MakeDownloadURL(dealId, fileName)
 	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)

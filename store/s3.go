@@ -45,7 +45,7 @@ func NewS3Store(conf *config.Config) (Storage, error) {
 
 // UploadFile path is directory, name is the file name.
 // It is stored in the 'data-market' bucket
-func (s AWSS3Storage) UploadFile(path string, round string, name string, data []byte) error {
+func (s AWSS3Storage) UploadFile(path string, name string, data []byte) error {
 	sess := session.Must(
 		session.NewSession(
 			&aws.Config{
@@ -62,7 +62,7 @@ func (s AWSS3Storage) UploadFile(path string, round string, name string, data []
 
 	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
-		Key:           aws.String(makeFullPath(path, round, name)),
+		Key:           aws.String(makeFullPath(path, name)),
 		Body:          bytes.NewReader(data),
 		ContentLength: aws.Int64(int64(len(data))),
 	})
@@ -76,8 +76,8 @@ func (s AWSS3Storage) UploadFile(path string, round string, name string, data []
 
 // MakeDownloadURL path is directory, name is the file name.
 // It is downloaded in the 'data-market' bucket
-func (s AWSS3Storage) MakeDownloadURL(path string, round string, name string) string {
-	return fmt.Sprintf("https://%v.s3.%v.amazonaws.com/%v", s.bucket, s.region, makeFullPath(path, round, name))
+func (s AWSS3Storage) MakeDownloadURL(path string, name string) string {
+	return fmt.Sprintf("https://%v.s3.%v.amazonaws.com/%v", s.bucket, s.region, makeFullPath(path, name))
 }
 
 // MakeRandomFilename Create filename with UUID
