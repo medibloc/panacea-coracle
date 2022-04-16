@@ -53,6 +53,7 @@ panacead tx datadeal create-deal \
   --yes
 
 # TODO: It will be changed, when Get Module Address is merged in panacea-core
+# MODULE_ADDR=$(panacead q datapool module-addr -o json | jq -r '.address')
 MODULE_ADDR="panacea1xacc5pqnn00vf4mf8qvhe3y7k0xj4ky2hxgzvz"
 
 panacead tx gov submit-proposal wasm-store ${SCRIPT_DIR}/cw721_base.wasm \
