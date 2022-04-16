@@ -12,11 +12,11 @@ panacead init node1 --chain-id ${CHAIN_ID}
 
 # Init accounts
 panacead keys add validator
-panacead add-genesis-account $(panacead keys show validator -a) 100000000000umed
+panacead add-genesis-account $(panacead keys show validator -a) 1000000000000umed
 panacead gentx validator 1000000umed --commission-rate 0.1 --commission-max-rate 0.2 --commission-max-change-rate 0.01 --min-self-delegation 1 --chain-id ${CHAIN_ID}
 
-echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add buyer -i
-panacead add-genesis-account $(panacead keys show buyer -a) 100000000000umed
+echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add curator -i
+panacead add-genesis-account $(panacead keys show curator -a) 100000000000umed
 
 echo -e "${E2E_DATAVAL_MNEMONIC}\n\n" | panacead keys add dataval -i
 panacead add-genesis-account $(panacead keys show dataval -a) 100000000000umed
@@ -47,13 +47,51 @@ panacead tx datapool register-data-validator "https://my-endpoint.com" \
 
 panacead tx datadeal create-deal \
   --deal-file /tmp/create_deal.json \
-  --from buyer \
+  --from curator \
   --chain-id ${CHAIN_ID} \
   -b block \
   --yes
 
+# TODO: It will be changed, when Get Module Address is merged in panacea-core
+MODULE_ADDR="panacea1xacc5pqnn00vf4mf8qvhe3y7k0xj4ky2hxgzvz"
+
+panacead tx gov submit-proposal wasm-store ${SCRIPT_DIR}/cw721_base.wasm \
+  --title "store NFT contract wasm code" \
+  --description "store wasm code for x/datapool module" \
+  --instantiate-only-address $MODULE_ADDR \
+  --run-as $MODULE_ADDR \
+  --deposit "10000000000umed" \
+  --from validator \
+  --gas auto --gas-adjustment 1.3 \
+  --chain-id ${CHAIN_ID} \
+  -b block \
+  --yes
+
+panacead tx gov vote {store proposal id} yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID}  -b block --yes
+
+INST_MSG=$(jq -n --arg name "curator" --arg symbol "CUR" --arg minter $MODULE_ADDR '{"name": $name, "symbol": $symbol, "minter": $minter}')
+
+panacead tx gov submit-proposal instantiate-contract {code id} "$INST_MSG" \
+  --label "curator NFT" \
+  --title "instantiate NFT contract" \
+  --description "instantiate NFT contract for x/datapool module" \
+  --run-as MODULE_ADDR \
+  --admin MODULE_ADDR \
+  --deposit "100000000umed" \
+  --from validator \
+  --gas auto --gas-adjustment 1.3 \
+  --chain-id ${CHAIN_ID} \
+  -b block \
+  --yes
+
+panacead tx gov vote {instantiation proposal id} yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+
+panacead tx gov submit-proposal param-change ${SCRIPT_DIR}/param_change_sample.json --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+
+panacead tx gov vote {param-change proposal id} yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+
 panacead tx datapool create-pool /tmp/create_pool.json \
-  --from buyer \
+  --from curator \
   --chain-id ${CHAIN_ID} \
   -b block \
   --yes
