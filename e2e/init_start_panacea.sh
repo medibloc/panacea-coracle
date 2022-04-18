@@ -46,13 +46,14 @@ panacead tx datadeal create-deal \
   -b block \
   --yes
 
+
+panacead tx datapool register-data-validator "https://my-endpoint.com" \
+  --from dataval \
+  --chain-id ${CHAIN_ID} \
+  -b block \
+  --yes
+
 # TODO: When the data pool module is done, the e2e-test will be added.
-#panacead tx datapool register-data-validator "https://my-endpoint.com" \
-#  --from dataval \
-#  --chain-id ${CHAIN_ID} \
-#  -b block \
-#  --yes
-#
 #MODULE_ADDR=$(panacead q datapool module-addr -o json | jq -r '.address')
 #
 #panacead tx gov submit-proposal wasm-store ${SCRIPT_DIR}/cw721_base.wasm \
