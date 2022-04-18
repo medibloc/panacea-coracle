@@ -3,6 +3,7 @@ package store_test
 import (
 	"crypto/rand"
 	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -28,7 +29,7 @@ func TestStorageUpload(t *testing.T) {
 	path := "temp_path"
 	name := "name"
 
-	data, err := randomBytes(100000)
+	data, err := crypto.GenerateRandomKey(100000)
 	require.NoError(t, err)
 
 	err = s3Store.UploadFile(path, name, data)

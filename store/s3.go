@@ -13,6 +13,8 @@ import (
 	"github.com/google/uuid"
 )
 
+var _ Storage = (*AWSS3Storage)(nil)
+
 type AWSS3Storage struct {
 	bucket          string
 	region          string
