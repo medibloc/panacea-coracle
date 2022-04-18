@@ -39,12 +39,6 @@ DATAVAL_ADDR=$(panacead keys show dataval -a)
 sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
 sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
 
-panacead tx datapool register-data-validator "https://my-endpoint.com" \
-  --from dataval \
-  --chain-id ${CHAIN_ID} \
-  -b block \
-  --yes
-
 panacead tx datadeal create-deal \
   --deal-file /tmp/create_deal.json \
   --from curator \
@@ -52,8 +46,15 @@ panacead tx datadeal create-deal \
   -b block \
   --yes
 
+panacead tx datapool register-data-validator "https://my-endpoint.com" \
+  --from dataval \
+  --chain-id ${CHAIN_ID} \
+  -b block \
+  --yes
+
 # TODO: It will be changed, when Get Module Address is merged in panacea-core
 MODULE_ADDR=$(panacead q datapool module-addr -o json | jq -r '.address')
+#MODULE_ADDR="panacea1xacc5pqnn00vf4mf8qvhe3y7k0xj4ky2hxgzvz"
 
 panacead tx gov submit-proposal wasm-store ${SCRIPT_DIR}/cw721_base.wasm \
   --title "store NFT contract wasm code" \
@@ -67,16 +68,16 @@ panacead tx gov submit-proposal wasm-store ${SCRIPT_DIR}/cw721_base.wasm \
   -b block \
   --yes
 
-panacead tx gov vote {store proposal id} yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID}  -b block --yes
+panacead tx gov vote 1 yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID}  -b block --yes
 
 INST_MSG=$(jq -n --arg name "curator" --arg symbol "CUR" --arg minter $MODULE_ADDR '{"name": $name, "symbol": $symbol, "minter": $minter}')
 
-panacead tx gov submit-proposal instantiate-contract {code id} "$INST_MSG" \
+panacead tx gov submit-proposal instantiate-contract 1 "$INST_MSG" \
   --label "curator NFT" \
   --title "instantiate NFT contract" \
   --description "instantiate NFT contract for x/datapool module" \
-  --run-as MODULE_ADDR \
-  --admin MODULE_ADDR \
+  --run-as $MODULE_ADDR \
+  --admin $MODULE_ADDR \
   --deposit "100000000umed" \
   --from validator \
   --gas auto --gas-adjustment 1.3 \
@@ -84,11 +85,11 @@ panacead tx gov submit-proposal instantiate-contract {code id} "$INST_MSG" \
   -b block \
   --yes
 
-panacead tx gov vote {instantiation proposal id} yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+panacead tx gov vote 2 yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
 
 panacead tx gov submit-proposal param-change ${SCRIPT_DIR}/param_change_sample.json --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
 
-panacead tx gov vote {param-change proposal id} yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+panacead tx gov vote 3 yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
 
 panacead tx datapool create-pool /tmp/create_pool.json \
   --from curator \
