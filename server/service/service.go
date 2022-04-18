@@ -101,7 +101,13 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 
-		err = tos.WriteFile(file, sealed, 0755)
+		// sealedSavedDir = $HOME/.dataval/config/data_encryption_file.sealed
+		sealedSavedDir.WriteString("/")
+		sealedSavedDir.WriteString(file)
+
+		fmt.Println(file)
+
+		err = tos.WriteFile(sealedSavedDir.String(), sealed, 0755)
 		if err != nil {
 			return nil, err
 		}
