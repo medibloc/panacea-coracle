@@ -11,6 +11,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
 	tos "github.com/tendermint/tendermint/libs/os"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -80,15 +81,27 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 
-		// ex) $HOME/config/data_encryption_file.sealed
-		// dir = $HOME/config/, file = data_encryption_file.sealed
-		dir, _ := filepath.Split(conf.DataEncryptionKeyFile)
-		err = tos.EnsureDir(dir, 0755)
+		var sealedSavedDir strings.Builder
+
+		userHomeDir, err := os.UserHomeDir()
 		if err != nil {
 			return nil, err
 		}
 
-		err = tos.WriteFile(conf.DataEncryptionKeyFile, sealed, 0755)
+		dir, file := filepath.Split(conf.DataEncryptionKeyFile)
+
+		// ex) .dataval/config/data_encryption_file.sealed
+		// sealedSavedDir = $HOME/.dataval/config/, file = data_encryption_file.sealed
+		sealedSavedDir.WriteString(userHomeDir)
+		sealedSavedDir.WriteString("/")
+		sealedSavedDir.WriteString(dir)
+
+		err = tos.EnsureDir(sealedSavedDir.String(), 0755)
+		if err != nil {
+			return nil, err
+		}
+
+		err = tos.WriteFile(file, sealed, 0755)
 		if err != nil {
 			return nil, err
 		}
