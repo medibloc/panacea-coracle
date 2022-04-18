@@ -1,11 +1,7 @@
 FROM golang:alpine AS build-env
 
 # Install minimum necessary dependencies,
-RUN apk add --no-cache ca-certificates build-base git wget
-
-RUN wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
-    mv jq-linux64 /usr/local/bin/jq && \
-    chmod +x /usr/local/bin/jq
+RUN apk add --no-cache ca-certificates build-base git
 
 WORKDIR /src
 
