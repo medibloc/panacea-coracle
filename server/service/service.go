@@ -122,8 +122,6 @@ func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]b
 		sealedSavedDir.WriteString("/")
 		sealedSavedDir.WriteString(file)
 
-		fmt.Println(file)
-
 		err = tos.WriteFile(sealedSavedDir.String(), sealed, 0755)
 		if err != nil {
 			return nil, err
