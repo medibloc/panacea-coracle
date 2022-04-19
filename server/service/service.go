@@ -59,9 +59,26 @@ func New(conf *config.Config) (*Service, error) {
 		}
 	}
 
+	key, err := generateDataEncryptionKeyFile(conf.DataEncryptionKeyFile, err)
+	if err != nil {
+		panaceaClient.Close()
+		return nil, err
+	}
+
+	return &Service{
+		Conf:             conf,
+		ValidatorAccount: validatorAccount,
+		Store:            s3Store,
+		PanaceaClient:    panaceaClient,
+		TLSCert:          tlsCert,
+		DataEncKey:       key,
+	}, nil
+}
+
+func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]byte, error) {
 	var key []byte
-	if tos.FileExists(conf.DataEncryptionKeyFile) {
-		file, err := tos.ReadFile(conf.DataEncryptionKeyFile)
+	if tos.FileExists(dataEncryptionKeyFile) {
+		file, err := tos.ReadFile(dataEncryptionKeyFile)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +105,7 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 
-		dir, file := filepath.Split(conf.DataEncryptionKeyFile)
+		dir, file := filepath.Split(dataEncryptionKeyFile)
 
 		// ex) .dataval/config/data_encryption_file.sealed
 		// sealedSavedDir = $HOME/.dataval/config/, file = data_encryption_file.sealed
@@ -112,15 +129,7 @@ func New(conf *config.Config) (*Service, error) {
 			return nil, err
 		}
 	}
-
-	return &Service{
-		Conf:             conf,
-		ValidatorAccount: validatorAccount,
-		Store:            s3Store,
-		PanaceaClient:    panaceaClient,
-		TLSCert:          tlsCert,
-		DataEncKey:       key,
-	}, nil
+	return key, nil
 }
 
 func (svc *Service) Close() {
