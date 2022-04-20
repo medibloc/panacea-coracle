@@ -3,20 +3,26 @@ package service
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/edgelesssys/ego/ecrypto"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/panacea"
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
+	tos "github.com/tendermint/tendermint/libs/os"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
 type Service struct {
 	Conf             *config.Config
 	ValidatorAccount *panacea.ValidatorAccount
-	Store            store.S3Store
+	Store            store.Storage
 	PanaceaClient    *panacea.GrpcClient
 	TLSCert          *tls.Certificate
+	DataEncKey       []byte
 }
 
 func New(conf *config.Config) (*Service, error) {
@@ -25,9 +31,9 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to load validator account: %w", err)
 	}
 
-	s3Store, err := store.NewS3Store(conf.AWSS3.Bucket, conf.AWSS3.Region, conf.AWSS3.AccessKeyID, conf.AWSS3.SecretAccessKey)
+	s3Store, err := store.NewS3Store(conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create S3Store: %w", err)
+		return nil, fmt.Errorf("failed to create AWSS3Storage: %w", err)
 	}
 
 	panaceaClient, err := panacea.NewGrpcClient(conf)
@@ -53,13 +59,75 @@ func New(conf *config.Config) (*Service, error) {
 		}
 	}
 
+	key, err := generateDataEncryptionKeyFile(conf.DataEncryptionKeyFile, err)
+	if err != nil {
+		panaceaClient.Close()
+		return nil, err
+	}
+
 	return &Service{
 		Conf:             conf,
 		ValidatorAccount: validatorAccount,
 		Store:            s3Store,
 		PanaceaClient:    panaceaClient,
 		TLSCert:          tlsCert,
+		DataEncKey:       key,
 	}, nil
+}
+
+func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]byte, error) {
+	var key []byte
+	if tos.FileExists(dataEncryptionKeyFile) {
+		file, err := tos.ReadFile(dataEncryptionKeyFile)
+		if err != nil {
+			return nil, err
+		}
+
+		key, err = ecrypto.Unseal(file, nil)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		key, err = crypto.GenerateRandomKey(32)
+		if err != nil {
+			return nil, err
+		}
+
+		sealed, err := ecrypto.SealWithProductKey(key, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		var sealedSavedDir strings.Builder
+
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+
+		dir, file := filepath.Split(dataEncryptionKeyFile)
+
+		// ex) .dataval/config/data_encryption_file.sealed
+		// sealedSavedDir = $HOME/.dataval/config/, file = data_encryption_file.sealed
+		sealedSavedDir.WriteString(userHomeDir)
+		sealedSavedDir.WriteString("/")
+		sealedSavedDir.WriteString(dir)
+
+		err = tos.EnsureDir(sealedSavedDir.String(), 0755)
+		if err != nil {
+			return nil, err
+		}
+
+		// sealedSavedDir = $HOME/.dataval/config/data_encryption_file.sealed
+		sealedSavedDir.WriteString("/")
+		sealedSavedDir.WriteString(file)
+
+		err = tos.WriteFile(sealedSavedDir.String(), sealed, 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return key, nil
 }
 
 func (svc *Service) Close() {

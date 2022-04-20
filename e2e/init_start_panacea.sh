@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-SCRIPT_DIR=$(cd `dirname $0` && pwd)
+SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 
 CHAIN_ID="testing"
 
@@ -12,11 +12,11 @@ panacead init node1 --chain-id ${CHAIN_ID}
 
 # Init accounts
 panacead keys add validator
-panacead add-genesis-account $(panacead keys show validator -a) 100000000000umed
-panacead gentx validator 1000000umed --commission-rate 0.1 --commission-max-rate 0.2 --commission-max-change-rate 0.01  --min-self-delegation 1 --chain-id ${CHAIN_ID}
+panacead add-genesis-account $(panacead keys show validator -a) 1000000000000umed
+panacead gentx validator 1000000umed --commission-rate 0.1 --commission-max-rate 0.2 --commission-max-change-rate 0.01 --min-self-delegation 1 --chain-id ${CHAIN_ID}
 
-echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add buyer -i
-panacead add-genesis-account $(panacead keys show buyer -a) 100000000000umed
+echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add curator -i
+panacead add-genesis-account $(panacead keys show curator -a) 100000000000umed
 
 echo -e "${E2E_DATAVAL_MNEMONIC}\n\n" | panacead keys add dataval -i
 panacead add-genesis-account $(panacead keys show dataval -a) 100000000000umed
@@ -34,21 +34,15 @@ PID_PANACEAD=$!
 sleep 10
 
 panacead tx bank send $(panacead keys show dataval -a) $(panacead keys show validator -a) 100umed --chain-id ${CHAIN_ID} -b block --yes
-panacead tx datapool register-data-validator https://my-validator.org --from dataval --chain-id ${CHAIN_ID} -b block --yes
 
 DATAVAL_ADDR=$(panacead keys show dataval -a)
-sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json > /tmp/create_deal.json
-sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json > /tmp/create_pool.json
+sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
+sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
 
-cat /tmp/create_deal.json
-cat /tmp/create_pool.json
-
-ls ${SCRIPT_DIR}
-
-panacead tx datapool register-nft-contract ${SCRIPT_DIR}/cw721_base.wasm \
-  --from validator \
+panacead tx datadeal create-deal \
+  --deal-file /tmp/create_deal.json \
+  --from curator \
   --chain-id ${CHAIN_ID} \
-  --gas 10000000 \
   -b block \
   --yes
 
@@ -58,18 +52,49 @@ panacead tx datapool register-data-validator "https://my-endpoint.com" \
   -b block \
   --yes
 
-panacead tx datadeal create-deal \
-  --deal-file /tmp/create_deal.json \
-  --from buyer \
-  --chain-id ${CHAIN_ID} \
-  -b block \
-  --yes
-
-panacead tx datapool create-pool /tmp/create_pool.json \
-  --from buyer \
-  --chain-id ${CHAIN_ID} \
-  -b block \
-  --yes
+# TODO: When the data pool module is done, the remain e2e-tests will be added.
+#MODULE_ADDR=$(panacead q datapool module-addr -o json | jq -r '.address')
+#
+#panacead tx gov submit-proposal wasm-store ${SCRIPT_DIR}/cw721_base.wasm \
+#  --title "store NFT contract wasm code" \
+#  --description "store wasm code for x/datapool module" \
+#  --instantiate-only-address $MODULE_ADDR \
+#  --run-as $MODULE_ADDR \
+#  --deposit "10000000000umed" \
+#  --from validator \
+#  --gas auto --gas-adjustment 1.3 \
+#  --chain-id ${CHAIN_ID} \
+#  -b block \
+#  --yes
+#
+#panacead tx gov vote 1 yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID}  -b block --yes
+#
+#INST_MSG=$(jq -n --arg name "curator" --arg symbol "CUR" --arg minter $MODULE_ADDR '{"name": $name, "symbol": $symbol, "minter": $minter}')
+#
+#panacead tx gov submit-proposal instantiate-contract 1 "$INST_MSG" \
+#  --label "curator NFT" \
+#  --title "instantiate NFT contract" \
+#  --description "instantiate NFT contract for x/datapool module" \
+#  --run-as $MODULE_ADDR \
+#  --admin $MODULE_ADDR \
+#  --deposit "100000000umed" \
+#  --from validator \
+#  --gas auto --gas-adjustment 1.3 \
+#  --chain-id ${CHAIN_ID} \
+#  -b block \
+#  --yes
+#
+#panacead tx gov vote 2 yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+#
+#panacead tx gov submit-proposal param-change ${SCRIPT_DIR}/param_change_sample.json --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+#
+#panacead tx gov vote 3 yes --from validator --gas auto --gas-adjustment 1.3 --chain-id ${CHAIN_ID} -b block --yes
+#
+#panacead tx datapool create-pool /tmp/create_pool.json \
+#  --from curator \
+#  --chain-id ${CHAIN_ID} \
+#  -b block \
+#  --yes
 
 # Kill the background panacead and wait for the process to exit.
 kill ${PID_PANACEAD} && wait ${PID_PANACEAD}
