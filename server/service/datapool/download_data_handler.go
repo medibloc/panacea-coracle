@@ -29,9 +29,9 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	flusher, _ := w.(http.Flusher)
 
 	poolID := uint64(1)
-	redeemedRound := uint64(3)
+	redeemedRound := uint64(1)
 	// get dataValidationCert from panacea
-	for round := uint64(1); round < redeemedRound; round++ {
+	for round := uint64(1); round <= redeemedRound; round++ {
 		certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
 		if err != nil {
 			log.Error(err)
