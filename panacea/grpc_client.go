@@ -149,15 +149,15 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 }
 
 func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
-	certs, err := makeTestDataCerts(poolID, round)
+	certs, err := MakeTestDataCerts(poolID, round)
 	if err != nil {
 		return nil, err
 	}
 	return certs, nil
 }
 
-// makeTestDataCerts returns list of 3 data certs
-func makeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
+// MakeTestDataCerts returns list of 3 data certs
+func MakeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
 	var res []datapooltypes.DataValidationCertificate
 
 	for i := int64(0); i < 3; i++ {

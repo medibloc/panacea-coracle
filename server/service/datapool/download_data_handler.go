@@ -29,7 +29,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	flusher, _ := w.(http.Flusher)
 
 	poolID := uint64(1)
-	redeemedRound := uint64(1)
+	redeemedRound := uint64(3)
 	// get dataValidationCert from panacea
 	for round := uint64(1); round <= redeemedRound; round++ {
 		certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
@@ -61,8 +61,6 @@ func (svc *dataPoolService) encryptDataCert(redeemer string, cert datapooltypes.
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
 	path.WriteString("/")
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.Round, 10))
-	path.WriteString("/")
-	path.WriteString(string(cert.UnsignedCert.DataHash))
 
 	filename := base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
 
@@ -73,10 +71,10 @@ func (svc *dataPoolService) encryptDataCert(redeemer string, cert datapooltypes.
 	}
 
 	// decrypt data
-	plainData, err := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
-	if err != nil {
-		return nil, err
-	}
+//	plainData, err := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
+//	if err != nil {
+//		return nil, err
+//	}
 
 	// get pubkey of redeemer
 	pubKey, err := svc.PanaceaClient.GetPubKey(redeemer)
@@ -85,7 +83,7 @@ func (svc *dataPoolService) encryptDataCert(redeemer string, cert datapooltypes.
 	}
 
 	// re-encrypt data
-	reEncryptedData, err := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), plainData)
+	reEncryptedData, err := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
 
 	return reEncryptedData, nil
 }

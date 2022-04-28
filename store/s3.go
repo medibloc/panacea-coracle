@@ -64,7 +64,8 @@ func (s AWSS3Storage) UploadFile(path, name string, data []byte) error {
 		),
 	)
 	svc := s3.New(sess)
-
+	
+	fmt.Print("key : ", aws.String(makeFullPath(path, name)), "\n")
 	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(makeFullPath(path, name)),
@@ -112,7 +113,8 @@ func (s AWSS3Storage) DownloadFile(path, name string) ([]byte, error) {
 	downloader := s3manager.NewDownloader(sess)
 
 	buf := aws.NewWriteAtBuffer([]byte{})
-
+	fmt.Print("path : ", path, " / name : ", name, "\n")
+	fmt.Print("key : ", makeFullPath(path, name), "\n")
 	_, err := downloader.Download(buf, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(makeFullPath(path, name)),
