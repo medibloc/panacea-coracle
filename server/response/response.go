@@ -1,8 +1,9 @@
 package response
 
 import (
-	log "github.com/sirupsen/logrus"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func WriteJSONResponse(w http.ResponseWriter, statusCode int, jsonBody []byte) {
