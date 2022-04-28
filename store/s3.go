@@ -19,10 +19,9 @@ import (
 var _ Storage = (*AWSS3Storage)(nil)
 
 type AWSS3Storage struct {
-	bucket          string
-	region          string
-	accessKeyID     string
-	secretAccessKey string
+	bucket string
+	region string
+	sess   *session.Session
 }
 
 // NewS3Store Create AWSS3Storage with bucket and region.
@@ -40,32 +39,31 @@ func NewS3Store(conf *config.Config) (Storage, error) {
 		return nil, fmt.Errorf("'secretAccessKey' should not be empty")
 	}
 
+	sess := session.Must(
+		session.NewSession(
+			&aws.Config{
+				Region: aws.String(conf.AWSS3.Region),
+				// There are several ways to set credit.
+				// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
+				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
+				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
+				Credentials: credentials.NewStaticCredentials(conf.AWSS3.AccessKeyID, conf.AWSS3.SecretAccessKey, ""),
+			},
+		),
+	)
+
 	return AWSS3Storage{
-		bucket:          conf.AWSS3.Bucket,
-		region:          conf.AWSS3.Region,
-		accessKeyID:     conf.AWSS3.AccessKeyID,
-		secretAccessKey: conf.AWSS3.SecretAccessKey,
+		bucket: conf.AWSS3.Bucket,
+		region: conf.AWSS3.Region,
+		sess:   sess,
 	}, nil
 }
 
 // UploadFile path is directory, name is the file name.
 // It is stored in the 'data-market' bucket
 func (s AWSS3Storage) UploadFile(path, name string, data []byte) error {
-	sess := session.Must(
-		session.NewSession(
-			&aws.Config{
-				Region: aws.String(s.region),
-				// There are several ways to set credit.
-				// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
-				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
-				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-				Credentials: credentials.NewStaticCredentials(s.accessKeyID, s.secretAccessKey, ""),
-			},
-		),
-	)
-	svc := s3.New(sess)
-	
-	fmt.Print("key : ", aws.String(makeFullPath(path, name)), "\n")
+	svc := s3.New(s.sess)
+
 	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(makeFullPath(path, name)),
@@ -97,24 +95,10 @@ func makeFullPath(str ...string) string {
 }
 
 func (s AWSS3Storage) DownloadFile(path, name string) ([]byte, error) {
-	sess := session.Must(
-		session.NewSession(
-			&aws.Config{
-				Region: aws.String(s.region),
-				// There are several ways to set credit.
-				// By default, the SDK detects AWS credentials set in your environment and uses them to sign requests to AWS
-				// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN(optionals)
-				// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-				Credentials: credentials.NewStaticCredentials(s.accessKeyID, s.secretAccessKey, ""),
-			},
-		),
-	)
-
-	downloader := s3manager.NewDownloader(sess)
+	downloader := s3manager.NewDownloader(s.sess)
 
 	buf := aws.NewWriteAtBuffer([]byte{})
-	fmt.Print("path : ", path, " / name : ", name, "\n")
-	fmt.Print("key : ", makeFullPath(path, name), "\n")
+
 	_, err := downloader.Download(buf, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(makeFullPath(path, name)),
