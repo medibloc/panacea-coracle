@@ -143,6 +143,7 @@ func (svc *dataPoolService) handleCert(cert <-chan datapooltypes.DataValidationC
 		fmt.Print(n, "\n")
 		// download encrypted data
 		cipherData, _ := svc.Store.DownloadFile(path.String(), filename)
+		fmt.Print("data from aws : ", cipherData, "\n")
 		//if err != nil {
 		//	return nil, err
 		//}
