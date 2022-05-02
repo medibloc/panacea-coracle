@@ -14,9 +14,14 @@ import (
 )
 
 func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Request) {
-	if err, errStatusCode := validateBasic(r); err != nil {
-		log.Error(err)
-		http.Error(w, err.Error(), errStatusCode)
+	//if err, errStatusCode := validateBasic(r); err != nil {
+	//	log.Error(err)
+	//	http.Error(w, err.Error(), errStatusCode)
+	//	return
+	//}
+	if r.FormValue("requester_address") == "" {
+		log.Error("failed to read query parameter")
+		http.Error(w, "failed to read query parameter", http.StatusBadRequest)
 		return
 	}
 
