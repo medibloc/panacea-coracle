@@ -43,31 +43,6 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	for round := uint64(1); round <= redeemedRound; round++ {
 		certChan := svc.handleRound(poolID, round)
 		res = svc.handleCert(certChan, redeemer)
-
-		//certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
-		//if err != nil {
-		//	log.Error(err)
-		//	http.Error(w, "failed to get data certificates", http.StatusInternalServerError)
-		//	return
-		//}
-		//
-		//for _, cert := range certs {
-		//	encryptedCert, err := svc.getAndEncryptDataCert(redeemer, cert)
-		//	if err != nil {
-		//		log.Error(err)
-		//		http.Error(w, "failed to handle data certificates", http.StatusInternalServerError)
-		//		return
-		//	}
-		//
-		//	_, err = w.Write(encryptedCert)
-		//	if err != nil {
-		//		log.Error(err)
-		//		http.Error(w, "failed to write data", http.StatusInternalServerError)
-		//		return
-		//	}
-		//
-		//	flusher.Flush()
-		//}
 	}
 
 	for data := range res {
@@ -77,41 +52,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
-}
-
-func (svc *dataPoolService) getAndEncryptDataCert(redeemer string, cert datapooltypes.DataValidationCertificate) ([]byte, error) {
-	var path strings.Builder
-	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
-	path.WriteString("/")
-	path.WriteString(strconv.FormatUint(cert.UnsignedCert.Round, 10))
-
-	filename := base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
-
-	// download encrypted data
-	cipherData, err := svc.Store.DownloadFile(path.String(), filename)
-	if err != nil {
-		return nil, err
-	}
-
-	// decrypt data
-	plainData, err := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
-	if err != nil {
-		return nil, err
-	}
-
-	// get pubkey of redeemer
-	pubKey, err := svc.PanaceaClient.GetPubKey(redeemer)
-	if err != nil {
-		return nil, err
-	}
-
-	// re-encrypt data
-	reEncryptedData, err := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), plainData)
-	if err != nil {
-		return nil, err
-	}
-
-	return reEncryptedData, nil
+	return
 }
 
 func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan datapooltypes.DataValidationCertificate {
