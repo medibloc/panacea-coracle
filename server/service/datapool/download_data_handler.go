@@ -45,7 +45,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	poolID := uint64(1)
 	redeemedRound := uint64(3)
 
-	res := make(<-chan []byte)
+	res := make(chan []byte)
 
 	// get dataCerts from panacea and re-encrypt all the data
 	for round := uint64(1); round <= redeemedRound; round++ {
@@ -62,10 +62,11 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Connection", "close")
 	flusher.Flush()
+	close(res)
 	return
 }
 
-func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan datapooltypes.DataValidationCertificate {
+func (svc *dataPoolService) handleRound(poolID, round uint64) chan datapooltypes.DataValidationCertificate {
 	certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
 
 	out := make(chan datapooltypes.DataValidationCertificate, len(certs))
@@ -79,7 +80,7 @@ func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan datapooltyp
 	return out
 }
 
-func (svc *dataPoolService) handleCert(cert <-chan datapooltypes.DataValidationCertificate, redeemer string) <-chan []byte {
+func (svc *dataPoolService) handleCert(cert chan datapooltypes.DataValidationCertificate, redeemer string) chan []byte {
 	out := make(chan []byte, len(cert))
 
 	//go func() {
