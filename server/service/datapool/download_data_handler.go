@@ -76,7 +76,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	w.WriteHeader(http.StatusOK)
-	//flusher.Flush()
+	flusher.Flush()
 }
 
 func (svc *dataPoolService) getAndEncryptDataCert(redeemer string, cert datapooltypes.DataValidationCertificate) ([]byte, error) {
@@ -143,13 +143,12 @@ func (svc *dataPoolService) handleCert(cert <-chan datapooltypes.DataValidationC
 		fmt.Print(n, "\n")
 		// download encrypted data
 		cipherData, _ := svc.Store.DownloadFile(path.String(), filename)
-		fmt.Print("data from aws : ", cipherData, "\n")
 		//if err != nil {
 		//	return nil, err
 		//}
 
 		// decrypt data
-		plainData, _ := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
+		//plainData, _ := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
 		//if err != nil {
 		//	return nil, err
 		//}
@@ -161,7 +160,7 @@ func (svc *dataPoolService) handleCert(cert <-chan datapooltypes.DataValidationC
 		//}
 
 		// re-encrypt data
-		reEncryptedData, _ := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), plainData)
+		reEncryptedData, _ := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
 		//if err != nil {
 		//	return nil, err
 		//}
