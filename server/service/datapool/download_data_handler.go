@@ -51,6 +51,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Connection", "close")
 	flusher.Flush()
 	return
