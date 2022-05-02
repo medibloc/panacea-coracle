@@ -26,6 +26,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Transfer-Encoding", "chunked")
+	w.Header().Set("Content-Type", "application/octet-stream")
 
 	redeemer := r.FormValue("requester_address")
 
@@ -58,7 +59,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/octet-stream")
+
 	w.Header().Set("Connection", "close")
 	flusher.Flush()
 	return
