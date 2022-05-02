@@ -129,7 +129,7 @@ func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan datapooltyp
 }
 
 func (svc *dataPoolService) handleCert(cert <-chan datapooltypes.DataValidationCertificate, redeemer string) <-chan []byte {
-	out := make(chan []byte)
+	out := make(chan []byte, len(cert))
 
 	go func() {
 		for n := range cert {
