@@ -113,9 +113,9 @@ func (svc *dataPoolService) getAndEncryptDataCert(redeemer string, cert datapool
 }
 
 func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan datapooltypes.DataValidationCertificate {
-	out := make(chan datapooltypes.DataValidationCertificate)
-
 	certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
+
+	out := make(chan datapooltypes.DataValidationCertificate, len(certs))
 
 	go func() {
 		for _, n := range certs {
