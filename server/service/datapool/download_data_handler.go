@@ -25,6 +25,8 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	w.Header().Set("Transfer-Encoding", "chunked")
+
 	redeemer := r.FormValue("requester_address")
 
 	// TODO: verify redeemer signature (w/ nonce)
