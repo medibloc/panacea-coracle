@@ -137,8 +137,8 @@ func (svc *dataPoolService) handleCert(cert <-chan datapooltypes.DataValidationC
 			path.WriteString(strconv.FormatUint(n.UnsignedCert.Round, 10))
 
 			filename := base64.StdEncoding.EncodeToString(n.UnsignedCert.DataHash)
-			fmt.Print("path : ", path.String(), " | filename : ", filename, "\n")
-
+			//fmt.Print("path : ", path.String(), " | filename : ", filename, "\n")
+			fmt.Print(n, "\n")
 			// download encrypted data
 			cipherData, _ := svc.Store.DownloadFile(path.String(), filename)
 			//if err != nil {
