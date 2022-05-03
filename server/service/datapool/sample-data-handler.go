@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (svc dataPoolService) handleSampleData(w http.ResponseWriter, r *http.Request) {
+func (svc *dataPoolService) handleSampleData(w http.ResponseWriter, r *http.Request) {
 	poolID := mux.Vars(r)["poolId"]
 	round := mux.Vars(r)["round"]
 
