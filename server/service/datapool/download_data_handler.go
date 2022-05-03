@@ -2,6 +2,7 @@ package datapool
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,7 +54,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		flusher.Flush()
 	}
 
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 }
 
 func (svc *dataPoolService) handleRound(poolID, round uint64, redeemer string) <-chan []byte {
@@ -82,6 +83,8 @@ func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertific
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.Round, 10))
 
 	filename := base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
+
+	fmt.Print("round : ", cert.UnsignedCert.Round, " | filename : ", filename, "\n")
 
 	// download encrypted data
 	cipherData, err := svc.Store.DownloadFile(path.String(), filename)
