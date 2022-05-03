@@ -2,6 +2,7 @@ package datapool
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -67,7 +68,7 @@ func (svc *dataPoolService) handleRound(poolID, round uint64, redeemer string) <
 
 	go func() {
 		for _, cert := range certs {
-
+			fmt.Print("--------------\n", cert, "\n")
 			out <- svc.handleCert(cert, redeemer)
 		}
 		close(out)
