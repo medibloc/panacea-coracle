@@ -34,7 +34,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	// TODO: get poolID and round from redeem receipt. For now, temp value
 	poolID := uint64(1)
-	redeemedRound := uint64(3)
+	redeemedRound := uint64(1)
 
 	res := make(<-chan []byte)
 

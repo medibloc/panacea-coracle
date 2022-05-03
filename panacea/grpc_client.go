@@ -160,7 +160,7 @@ func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.D
 func MakeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
 	var res []datapooltypes.DataValidationCertificate
 
-	for i := int64(0); i < 3; i++ {
+	for i := int64(0); i < 1; i++ {
 		dataHash := []byte("dataHash_" + strconv.FormatUint(round, 10) + "_" + strconv.FormatInt(i, 10))
 		unsignedCert := &datapooltypes.UnsignedDataValidationCertificate{
 			PoolId:        poolID,
