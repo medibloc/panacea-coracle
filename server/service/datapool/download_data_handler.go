@@ -65,7 +65,7 @@ func (svc *dataPoolService) handleRound(poolID, round uint64, redeemer string) <
 		for _, cert := range certs {
 			reEncryptedData, err := svc.handleCert(cert, redeemer)
 			if err != nil {
-				log.Error("error in handling certificate")
+				log.Error(err.Error())
 			}
 			out <- reEncryptedData
 		}
