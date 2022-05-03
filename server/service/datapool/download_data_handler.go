@@ -45,6 +45,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	for data := range res {
+		fmt.Print(string(data))
 		_, err := w.Write(data)
 		if err != nil {
 			log.Error(err)
