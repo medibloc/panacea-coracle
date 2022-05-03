@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -99,16 +97,16 @@ func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertific
 	//}
 
 	// get pubkey of redeemer
-	pubKey, err := svc.PanaceaClient.GetPubKey(redeemer)
-	if err != nil {
-		return nil, err
-	}
+	//pubKey, err := svc.PanaceaClient.GetPubKey(redeemer)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	// re-encrypt data
-	reEncryptedData, err := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
-	if err != nil {
-		return nil, err
-	}
+	//reEncryptedData, err := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	return reEncryptedData, nil
+	return cipherData, nil
 }
