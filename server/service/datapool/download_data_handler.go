@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/medibloc/panacea-data-market-validator/crypto"
+
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -18,7 +20,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	redeemer := r.FormValue("requester_address")
+	//redeemer := r.FormValue("requester_address")
 
 	// TODO: verify redeemer signature (w/ nonce)
 
@@ -39,7 +41,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	// get dataCerts from panacea and re-encrypt all the data
 	for round := uint64(1); round <= redeemedRound; round++ {
-		res = svc.handleRound(poolID, round, redeemer)
+		res = svc.handleRound(poolID, round)
 	}
 
 	for data := range res {
@@ -55,18 +57,18 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	//w.WriteHeader(http.StatusOK)
 }
 
-func (svc *dataPoolService) handleRound(poolID, round uint64, redeemer string) <-chan []byte {
+func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan []byte {
 	certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
 
 	out := make(chan []byte, len(certs))
 
 	go func() {
 		for _, cert := range certs {
-			reEncryptedData, err := svc.handleCert(cert, redeemer)
+			data, err := svc.handleCert(cert)
 			if err != nil {
 				log.Error(err.Error())
 			}
-			out <- reEncryptedData
+			out <- data
 		}
 		close(out)
 	}()
@@ -74,7 +76,7 @@ func (svc *dataPoolService) handleRound(poolID, round uint64, redeemer string) <
 	return out
 }
 
-func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertificate, redeemer string) ([]byte, error) {
+func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertificate) ([]byte, error) {
 	var path strings.Builder
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
 	path.WriteString("/")
@@ -91,22 +93,10 @@ func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertific
 	}
 
 	// decrypt data
-	//plainData, _ := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
-	//if err != nil {
-	//	return nil, err
-	//}
+	data, err := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
+	if err != nil {
+		return nil, err
+	}
 
-	// get pubkey of redeemer
-	//pubKey, err := svc.PanaceaClient.GetPubKey(redeemer)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	// re-encrypt data
-	//reEncryptedData, err := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	return cipherData, nil
+	return data, nil
 }
