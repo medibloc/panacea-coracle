@@ -19,6 +19,7 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -161,7 +162,14 @@ func MakeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCert
 	var res []datapooltypes.DataValidationCertificate
 
 	for i := int64(0); i < 1; i++ {
-		dataHash := []byte("dataHash_" + strconv.FormatUint(round, 10) + "_" + strconv.FormatInt(i, 10))
+
+		data := []byte("{ " +
+			"\"name\": \"This is a name\", " +
+			"\"description\": \"pool - " + strconv.FormatUint(poolID, 10) + " | round : " + strconv.FormatUint(round, 10) + "\"" +
+			`"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}`)
+
+		dataHash := crypto.Hash(data)
 		unsignedCert := &datapooltypes.UnsignedDataValidationCertificate{
 			PoolId:        poolID,
 			Round:         round,
