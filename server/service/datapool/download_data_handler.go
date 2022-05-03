@@ -2,7 +2,6 @@ package datapool
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,19 +13,14 @@ import (
 )
 
 func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Request) {
-	//if err, errStatusCode := validateBasic(r); err != nil {
-	//	log.Error(err)
-	//	http.Error(w, err.Error(), errStatusCode)
-	//	return
-	//}
 	if r.FormValue("requester_address") == "" {
-		log.Error("failed to read query parameter")
-		http.Error(w, "failed to read query parameter", http.StatusBadRequest)
+		log.Error("requester address is required")
+		http.Error(w, "requester address is required", http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Transfer-Encoding", "chunked")
-	w.Header().Set("Content-Type", "application/octet-stream")
+	//w.Header().Set("Transfer-Encoding", "chunked")
+	//w.Header().Set("Content-Type", "application/octet-stream")
 
 	redeemer := r.FormValue("requester_address")
 
@@ -45,12 +39,12 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	poolID := uint64(1)
 	redeemedRound := uint64(3)
 
-	res := make(chan []byte)
+	res := make(<-chan []byte)
 
 	// get dataCerts from panacea and re-encrypt all the data
 	for round := uint64(1); round <= redeemedRound; round++ {
-		certChan := svc.handleRound(poolID, round)
-		res = svc.handleCert(certChan, redeemer)
+		res = svc.handleRound(poolID, round, redeemer)
+		//res = svc.handleCert(certChan, redeemer)
 	}
 
 	for data := range res {
@@ -62,65 +56,68 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Connection", "close")
 	flusher.Flush()
-	close(res)
+
 	return
 }
 
-func (svc *dataPoolService) handleRound(poolID, round uint64) chan datapooltypes.DataValidationCertificate {
+func (svc *dataPoolService) handleRound(poolID, round uint64, redeemer string) <-chan []byte {
 	certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
 
-	out := make(chan datapooltypes.DataValidationCertificate, len(certs))
+	out := make(chan []byte, len(certs))
 
-	//go func() {
-	for _, n := range certs {
-		out <- n
-	}
-	close(out)
-	//}()
+	go func() {
+		for _, cert := range certs {
+
+			out <- svc.handleCert(cert, redeemer)
+		}
+		close(out)
+	}()
+
 	return out
 }
 
-func (svc *dataPoolService) handleCert(cert chan datapooltypes.DataValidationCertificate, redeemer string) chan []byte {
-	out := make(chan []byte, len(cert))
+func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertificate, redeemer string) []byte {
+	//out := make(chan []byte, len(cert))
 
 	//go func() {
-	for n := range cert {
-		var path strings.Builder
-		path.WriteString(strconv.FormatUint(n.UnsignedCert.PoolId, 10))
-		path.WriteString("/")
-		path.WriteString(strconv.FormatUint(n.UnsignedCert.Round, 10))
+	//	for n := range cert {
+	var path strings.Builder
+	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
+	path.WriteString("/")
+	path.WriteString(strconv.FormatUint(cert.UnsignedCert.Round, 10))
 
-		filename := base64.StdEncoding.EncodeToString(n.UnsignedCert.DataHash)
-		//fmt.Print("path : ", path.String(), " | filename : ", filename, "\n")
-		fmt.Print(n, "\n")
-		// download encrypted data
-		cipherData, _ := svc.Store.DownloadFile(path.String(), filename)
-		//if err != nil {
-		//	return nil, err
-		//}
+	filename := base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
 
-		// decrypt data
-		//plainData, _ := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
-		//if err != nil {
-		//	return nil, err
-		//}
+	// download encrypted data
+	cipherData, _ := svc.Store.DownloadFile(path.String(), filename)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-		// get pubkey of redeemer
-		pubKey, _ := svc.PanaceaClient.GetPubKey(redeemer)
-		//if err != nil {
-		//	return nil, err
-		//}
+	// decrypt data
+	//plainData, _ := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-		// re-encrypt data
-		reEncryptedData, _ := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
-		//if err != nil {
-		//	return nil, err
-		//}
+	// get pubkey of redeemer
+	pubKey, _ := svc.PanaceaClient.GetPubKey(redeemer)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-		//return reEncryptedData, nil
-		out <- reEncryptedData
-	}
+	// re-encrypt data
+	reEncryptedData, _ := crypto.EncryptDataWithSecp256k1(pubKey.Bytes(), cipherData)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//return reEncryptedData, nil
+	return reEncryptedData
+	//}
+
+	//close(out)
 	//}()
 
-	return out
+	//return out
 }
