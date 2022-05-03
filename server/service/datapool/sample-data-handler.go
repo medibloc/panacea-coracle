@@ -2,6 +2,7 @@ package datapool
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -21,6 +22,8 @@ func (svc *dataPoolService) handleSampleData(w http.ResponseWriter, r *http.Requ
 	}`)
 
 	//dataHash := crypto.Hash(data)
+
+	fmt.Print("stored data : ", data, "\n")
 
 	dataWithAES256, err := crypto.EncryptDataWithAES256(svc.DataEncKey, nil, data)
 	if err != nil {
