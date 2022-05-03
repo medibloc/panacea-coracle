@@ -20,7 +20,7 @@ func (svc *dataPoolService) handleSampleData(w http.ResponseWriter, r *http.Requ
 		`"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
 	}`)
 
-	dataHash := crypto.Hash(data)
+	//dataHash := crypto.Hash(data)
 
 	dataWithAES256, err := crypto.EncryptDataWithAES256(svc.DataEncKey, nil, data)
 	if err != nil {
@@ -29,7 +29,7 @@ func (svc *dataPoolService) handleSampleData(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	filename := base64.StdEncoding.EncodeToString(dataHash)
+	filename := base64.StdEncoding.EncodeToString([]byte("data-" + poolID + "-" + round))
 
 	var path strings.Builder
 

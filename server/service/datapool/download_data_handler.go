@@ -83,7 +83,7 @@ func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertific
 	path.WriteString("/")
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.Round, 10))
 
-	filename := base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
+	filename := base64.StdEncoding.EncodeToString([]byte("data-" + strconv.FormatUint(cert.UnsignedCert.PoolId, 10) + "-" + strconv.FormatUint(cert.UnsignedCert.Round, 10)))
 
 	fmt.Print("round : ", cert.UnsignedCert.Round, " | filename : ", filename, "\n")
 
