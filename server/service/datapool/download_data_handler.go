@@ -77,6 +77,7 @@ func (svc *dataPoolService) handleRound(poolID, round uint64) <-chan []byte {
 }
 
 func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertificate) ([]byte, error) {
+	fmt.Print(cert)
 	var path strings.Builder
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
 	path.WriteString("/")
