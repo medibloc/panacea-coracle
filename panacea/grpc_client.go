@@ -153,6 +153,11 @@ func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.D
 	if err != nil {
 		return nil, err
 	}
+
+	//if round == uint64(2) {
+	//	return nil, errors.New("failed to get data certs")
+	//}
+
 	return certs, nil
 }
 
@@ -160,19 +165,13 @@ func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.D
 func MakeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
 	var res []datapooltypes.DataValidationCertificate
 
-	for i := int64(0); i < 1; i++ {
-
-		//data := []byte("{ " +
-		//	"\"name\": \"This is a name\", " +
-		//	"\"description\": \"pool - " + strconv.FormatUint(poolID, 10) + " | round : " + strconv.FormatUint(round, 10) + "\"" +
-		//	`"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
-		//}`)
+	for i := uint64(1); i < 10; i++ {
 
 		//dataHash := crypto.Hash(data)
 		unsignedCert := &datapooltypes.UnsignedDataValidationCertificate{
 			PoolId:        poolID,
 			Round:         round,
-			DataHash:      []byte("data-" + strconv.FormatUint(poolID, 10) + "-" + strconv.FormatUint(round, 10)),
+			DataHash:      []byte("data-" + strconv.FormatUint(poolID, 10) + "-" + strconv.FormatUint(round, 10) + "-" + strconv.FormatUint(i, 10)),
 			DataValidator: dataVal1.String(),
 			Requester:     requesterAddr.String(),
 		}
