@@ -18,5 +18,7 @@ func RegisterHandlers(svc *service.Service, router *mux.Router) {
 
 	router.HandleFunc("/v0/data-pool/pools/{poolId}/rounds/{round}/data", s.handleValidateData).Methods(http.MethodPost)
 	router.HandleFunc("/v0/data-pool/pools/{poolId}/data", s.handleDownloadData).Methods(http.MethodGet)
+
+	// this is a temp handler to make and store sample data
 	router.HandleFunc("/v0/sample-data/pool/{poolId}/round/{round}", s.handleSampleData).Methods(http.MethodGet)
 }

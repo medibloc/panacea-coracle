@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// handleSampleData is a temporary handler to make sample data
 func (svc *dataPoolService) handleSampleData(w http.ResponseWriter, r *http.Request) {
 	poolID := mux.Vars(r)["poolId"]
 	round := mux.Vars(r)["round"]

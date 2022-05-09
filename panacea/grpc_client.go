@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// temp var
 var (
 	dataValPrivKey = secp256k1.GenPrivKey()
 	dataValPubKey  = dataValPrivKey.PubKey()
@@ -149,25 +150,20 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 }
 
 func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
+	// get temp certs
 	certs, err := MakeTestDataCerts(poolID, round)
 	if err != nil {
 		return nil, err
 	}
 
-	//if round == uint64(2) {
-	//	return nil, errors.New("failed to get data certs")
-	//}
-
 	return certs, nil
 }
 
-// MakeTestDataCerts returns list of 3 data certs
+// MakeTestDataCerts returns list of data certs. temp function
 func MakeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
 	var res []datapooltypes.DataValidationCertificate
 
 	for i := uint64(1); i < 10; i++ {
-
-		//dataHash := crypto.Hash(data)
 		unsignedCert := &datapooltypes.UnsignedDataValidationCertificate{
 			PoolId:        poolID,
 			Round:         round,
