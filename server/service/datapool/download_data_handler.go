@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/medibloc/panacea-data-market-validator/types"
+
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 	"github.com/medibloc/panacea-data-market-validator/types/datapool"
 
@@ -22,7 +24,9 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	//redeemer := r.FormValue("requester_address")
+	downloadMode := r.FormValue(types.Mode)
+
+	//redeemer := r.FormValue(types.RequesterAddr)
 
 	// TODO: verify redeemer signature (w/ nonce)
 
@@ -41,31 +45,65 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		log.Fatal(err)
 	}
 
-	merger := datapool.NewMerger()
-	errPipeline := make(chan error, 1)
-	defer close(errPipeline)
+	switch downloadMode {
+	// sequential mode
+	case types.Sequential:
+		for round := uint64(1); round <= redeemedRoundTemp; round++ {
+			certs, err := svc.PanaceaClient.GetDataCertsByRound(poolIDTemp, round)
+			if err != nil {
+				log.Errorf("failed to get data certificates from panacea: %v", err)
+				http.Error(w, "internal error in data download", http.StatusInternalServerError)
+				return
+			}
 
-	// get data certificates from panacea and return it
-	for round := uint64(1); round <= redeemedRoundTemp; round++ {
-		// add output channel to merger
-		merger.Add(svc.setDataPipeline(w, errPipeline, poolIDTemp, round))
+			for _, cert := range certs {
+				data, err := svc.handleCert(cert)
+				if err != nil {
+					log.Errorf("error in handling certificate: %v", err)
+					http.Error(w, "internal error in data download", http.StatusInternalServerError)
+					return
+				}
+
+				_, err = zipWriter.Write(data)
+				if err != nil {
+					log.Errorf("failed to write data: %v", err)
+					http.Error(w, "internal error in data download", http.StatusInternalServerError)
+					return
+				}
+			}
+		}
+	// concurrent mode
+	case types.Concurrent:
+		merger := datapool.NewMerger()
+		errPipeline := make(chan error, 1)
+		defer close(errPipeline)
+
+		// get data certificates from panacea and return it
+		for round := uint64(1); round <= redeemedRoundTemp; round++ {
+			// add output channel to merger
+			merger.Add(svc.setDataPipeline(w, errPipeline, poolIDTemp, round))
+		}
+
+		for data := range merger.Merge(errPipeline) {
+			if _, err = zipWriter.Write(data); err != nil {
+				log.Errorf("failed to write data: %v", err)
+				http.Error(w, "internal error in data download", http.StatusInternalServerError)
+				return
+			}
+		}
+	default:
+		log.Error("invalid download mode")
+		http.Error(w, "invalid download mode", http.StatusBadRequest)
+		return
 	}
 
-	for data := range merger.Merge(errPipeline) {
-		if _, err = zipWriter.Write(data); err != nil {
-			log.Error(err)
-			http.Error(w, "internal error in data download", http.StatusInternalServerError)
-			return
-		}
+	if err := zw.Close(); err != nil {
+		log.Errorf("error occurred while closing zip writer: %v", err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
-
-	if err := zw.Close(); err != nil {
-		log.Error("error occurred while closing zip writer", err)
-		return
-	}
 
 	return
 }
@@ -74,7 +112,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 func (svc *dataPoolService) setDataPipeline(w http.ResponseWriter, errPipeline chan error, poolID, round uint64) <-chan []byte {
 	certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
 	if err != nil {
-		log.Error("failed to get data certificates from panacea", err)
+		log.Errorf("failed to get data certificates from panacea: %v", err)
 		http.Error(w, "internal error in data download", http.StatusInternalServerError)
 		errPipeline <- err
 	}
@@ -91,7 +129,7 @@ func (svc *dataPoolService) setDataPipeline(w http.ResponseWriter, errPipeline c
 			default:
 				data, err := svc.handleCert(cert)
 				if err != nil {
-					log.Error("error in handling certificate", err)
+					log.Errorf("error in handling certificate: %v", err)
 					http.Error(w, "internal error in data download", http.StatusInternalServerError)
 					errPipeline <- err
 					return
