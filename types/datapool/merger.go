@@ -1,6 +1,7 @@
 package datapool
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -16,18 +17,23 @@ func (m *Merger) Add(newChan <-chan []byte) {
 	m.channels = append(m.channels, newChan)
 }
 
-func (m *Merger) Merge(errPipeline <-chan error) <-chan []byte {
+func (m *Merger) Merge(errPipeline chan error) <-chan []byte {
 	var wg sync.WaitGroup
 	out := make(chan []byte, len(m.channels))
 
 	output := func(c <-chan []byte) {
-		defer wg.Done()
+		defer func() {
+			wg.Done()
+		}()
 
-		for n := range c {
-			select {
-			case out <- n:
-			case <-errPipeline:
-				return
+		select {
+		case err := <-errPipeline:
+			fmt.Println("error3")
+			errPipeline <- err
+			return
+		default:
+			for n := range c {
+				out <- n
 			}
 		}
 	}

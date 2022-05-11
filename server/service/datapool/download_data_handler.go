@@ -42,7 +42,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	merger := datapool.NewMerger()
-	errPipeline := make(chan error, 1)
+	errPipeline := make(chan error, 3)
 	defer close(errPipeline)
 
 	// get data certificates from panacea and return it
@@ -59,12 +59,19 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
-
-	if err := zw.Close(); err != nil {
-		log.Error("error occurred while closing zip writer", err)
+	select {
+	case err := <-errPipeline:
+		log.Error("failed to get data certificates from panacea", err)
+		http.Error(w, "internal error in data download", http.StatusInternalServerError)
 		return
+	default:
+		w.Header().Set("Content-Type", "application/zip")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
+
+		if err := zw.Close(); err != nil {
+			log.Error("error occurred while closing zip writer", err)
+			return
+		}
 	}
 
 	return
@@ -73,36 +80,34 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 // setDataPipeline sets pipeline for data
 func (svc *dataPoolService) setDataPipeline(w http.ResponseWriter, errPipeline chan error, poolID, round uint64) <-chan []byte {
 	certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
+	outChan := make(chan []byte, len(certs))
 	if err != nil {
-		log.Error("failed to get data certificates from panacea", err)
-		http.Error(w, "internal error in data download", http.StatusInternalServerError)
+		fmt.Println("error4")
 		errPipeline <- err
 	}
 
-	out := make(chan []byte, len(certs))
-
 	go func() {
-		defer close(out)
+		defer func() {
+			close(outChan)
+		}()
 
 		for _, cert := range certs {
 			select {
-			case <-errPipeline:
+			case err := <-errPipeline:
+				errPipeline <- err
 				return
 			default:
 				data, err := svc.handleCert(cert)
 				if err != nil {
-					log.Error("error in handling certificate", err)
-					http.Error(w, "internal error in data download", http.StatusInternalServerError)
 					errPipeline <- err
 					return
 				}
-				out <- data
+				outChan <- data
 			}
-
 		}
 	}()
 
-	return out
+	return outChan
 }
 
 // handleCert handles data certificate by downloading data and decrypt it.
