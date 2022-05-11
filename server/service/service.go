@@ -3,6 +3,10 @@ package service
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/edgelesssys/ego/ecrypto"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
@@ -11,9 +15,6 @@ import (
 	"github.com/medibloc/panacea-data-market-validator/store"
 	"github.com/medibloc/panacea-data-market-validator/tee"
 	tos "github.com/tendermint/tendermint/libs/os"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type Service struct {
@@ -77,8 +78,14 @@ func New(conf *config.Config) (*Service, error) {
 
 func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]byte, error) {
 	var key []byte
-	if tos.FileExists(dataEncryptionKeyFile) {
-		file, err := tos.ReadFile(dataEncryptionKeyFile)
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	if tos.FileExists(filepath.Join(userHomeDir, dataEncryptionKeyFile)) {
+		file, err := tos.ReadFile(filepath.Join(userHomeDir, dataEncryptionKeyFile))
 		if err != nil {
 			return nil, err
 		}
@@ -99,11 +106,6 @@ func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]b
 		}
 
 		var sealedSavedDir strings.Builder
-
-		userHomeDir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
 
 		dir, file := filepath.Split(dataEncryptionKeyFile)
 
