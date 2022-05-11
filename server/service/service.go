@@ -84,8 +84,10 @@ func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]b
 		return nil, err
 	}
 
-	if tos.FileExists(filepath.Join(userHomeDir, dataEncryptionKeyFile)) {
-		file, err := tos.ReadFile(filepath.Join(userHomeDir, dataEncryptionKeyFile))
+	fileFullPath := filepath.Join(userHomeDir, dataEncryptionKeyFile)
+
+	if tos.FileExists(fileFullPath) {
+		file, err := tos.ReadFile(fileFullPath)
 		if err != nil {
 			return nil, err
 		}
