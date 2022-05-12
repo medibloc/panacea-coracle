@@ -16,8 +16,8 @@ import (
 )
 
 func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Request) {
-	if err, errStatusCode := validateStreamRequest(r); err != nil {
-		log.Error(err)
+	if err, errStatusCode := validateDownloadRequest(r); err != nil {
+		log.Errorf("invalid download request: %v", err)
 		http.Error(w, err.Error(), errStatusCode)
 		return
 	}
@@ -53,7 +53,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	for data := range merger.Merge(errPipeline) {
 		if _, err = zipWriter.Write(data); err != nil {
-			log.Error(err)
+			log.Errorf("failed to write data: %v", err)
 			http.Error(w, "internal error in data download", http.StatusInternalServerError)
 			return
 		}
@@ -63,7 +63,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
 
 	if err := zw.Close(); err != nil {
-		log.Error("error occurred while closing zip writer", err)
+		log.Errorf("error occurred while closing zip writer: %v", err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 func (svc *dataPoolService) setDataPipeline(w http.ResponseWriter, errPipeline chan error, poolID, round uint64) <-chan []byte {
 	certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
 	if err != nil {
-		log.Error("failed to get data certificates from panacea", err)
+		log.Errorf("failed to get data certificates from panacea: %v", err)
 		http.Error(w, "internal error in data download", http.StatusInternalServerError)
 		errPipeline <- err
 	}
@@ -91,7 +91,7 @@ func (svc *dataPoolService) setDataPipeline(w http.ResponseWriter, errPipeline c
 			default:
 				data, err := svc.handleCert(cert)
 				if err != nil {
-					log.Error("error in handling certificate", err)
+					log.Errorf("error in handling certificate: %v", err)
 					http.Error(w, "internal error in data download", http.StatusInternalServerError)
 					errPipeline <- err
 					return
@@ -129,9 +129,9 @@ func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertific
 	return data, nil
 }
 
-func validateStreamRequest(r *http.Request) (error, int) {
-	if r.Header.Get("Content-Type") != "application/octet-stream" {
-		return fmt.Errorf("only application/octet-stream is supported"), http.StatusUnsupportedMediaType
+func validateDownloadRequest(r *http.Request) (error, int) {
+	if r.Header.Get("Content-Type") != "application/zip" {
+		return fmt.Errorf("only application/zip is supported"), http.StatusUnsupportedMediaType
 	} else if r.FormValue("requester_address") == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
