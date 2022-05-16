@@ -2,6 +2,7 @@ package datapool
 
 import (
 	"archive/zip"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -9,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/types/datapool"
+
+	"golang.org/x/sync/errgroup"
 
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	log "github.com/sirupsen/logrus"
@@ -41,22 +43,31 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		log.Fatal(err)
 	}
 
-	merger := datapool.NewMerger()
-	errPipeline := make(chan error, 1)
-	defer close(errPipeline)
+	g, _ := errgroup.WithContext(context.Background())
 
 	// get data certificates from panacea and return it
 	for round := uint64(1); round <= redeemedRoundTemp; round++ {
-		// add output channel to merger
-		merger.Add(svc.setDataPipeline(w, errPipeline, poolIDTemp, round))
+		certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolIDTemp, round)
+		g.Go(func() error {
+			for _, cert := range certs {
+				data, err := svc.downloadAndDecryptData(cert)
+				if err != nil {
+					return err
+				}
+
+				if _, err := zipWriter.Write(data); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
 	}
 
-	for data := range merger.Merge(errPipeline) {
-		if _, err = zipWriter.Write(data); err != nil {
-			log.Errorf("failed to write data: %v", err)
-			http.Error(w, "internal error in data download", http.StatusInternalServerError)
-			return
-		}
+	if err := g.Wait(); err != nil {
+		log.Errorf("failed to download: %v", err)
+		http.Error(w, "failed to download", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/zip")
@@ -70,43 +81,8 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	return
 }
 
-// setDataPipeline sets pipeline for data
-func (svc *dataPoolService) setDataPipeline(w http.ResponseWriter, errPipeline chan error, poolID, round uint64) <-chan []byte {
-	certs, err := svc.PanaceaClient.GetDataCertsByRound(poolID, round)
-	if err != nil {
-		log.Errorf("failed to get data certificates from panacea: %v", err)
-		http.Error(w, "internal error in data download", http.StatusInternalServerError)
-		errPipeline <- err
-	}
-
-	out := make(chan []byte, len(certs))
-
-	go func() {
-		defer close(out)
-
-		for _, cert := range certs {
-			select {
-			case <-errPipeline:
-				return
-			default:
-				data, err := svc.handleCert(cert)
-				if err != nil {
-					log.Errorf("error in handling certificate: %v", err)
-					http.Error(w, "internal error in data download", http.StatusInternalServerError)
-					errPipeline <- err
-					return
-				}
-				out <- data
-			}
-
-		}
-	}()
-
-	return out
-}
-
-// handleCert handles data certificate by downloading data and decrypt it.
-func (svc *dataPoolService) handleCert(cert datapooltypes.DataValidationCertificate) ([]byte, error) {
+// downloadAndDecryptData downloads data by certificate and decrypt it.
+func (svc *dataPoolService) downloadAndDecryptData(cert datapooltypes.DataValidationCertificate) ([]byte, error) {
 	var path strings.Builder
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
 	path.WriteString("/")
