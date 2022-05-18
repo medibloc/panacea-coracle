@@ -80,13 +80,14 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"pool-%d.zip\"", poolIDTemp))
-
 	if err := czw.Close(); err != nil {
 		log.Errorf("error occurred while closing zip writer: %v", err)
+		http.Error(w, "failed to download", http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"pool-%d.zip\"", poolIDTemp))
 
 	return
 }
