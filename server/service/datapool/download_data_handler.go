@@ -1,7 +1,6 @@
 package datapool
 
 import (
-	"archive/zip"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/medibloc/panacea-data-market-validator/crypto"
+
+	"github.com/medibloc/panacea-data-market-validator/types"
 
 	"golang.org/x/sync/errgroup"
 
@@ -34,29 +35,38 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	poolIDTemp := uint64(1)
 	redeemedRoundTemp := uint64(3)
 
-	filename := "pool-" + strconv.FormatUint(poolIDTemp, 10) + "-data"
+	czw := types.NewConcurrentZipWriter(w)
 
-	zw := zip.NewWriter(w)
-
-	zipWriter, err := zw.Create(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	g, _ := errgroup.WithContext(context.Background())
+	g, ctx := errgroup.WithContext(context.Background())
 
 	// get data certificates from panacea and return it
 	for round := uint64(1); round <= redeemedRoundTemp; round++ {
 		certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolIDTemp, round)
 		g.Go(func() error {
 			for _, cert := range certs {
-				data, err := svc.downloadAndDecryptData(cert)
-				if err != nil {
-					return err
-				}
+				select {
+				// when ctx done, return and terminate goroutine
+				case <-ctx.Done():
+					return nil
 
-				if _, err := zipWriter.Write(data); err != nil {
-					return err
+				default:
+					// e.g., pool 1 round 3 data -> 'pool-1-3-{dataHash}'
+					filename :=
+						"pool-" + strconv.FormatUint(cert.UnsignedCert.PoolId, 10) +
+							"-" + strconv.FormatUint(cert.UnsignedCert.Round, 10) +
+							"-" + base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
+
+					// download data from storage and decrypt it
+					data, err := svc.downloadAndDecryptData(cert)
+					if err != nil {
+						return fmt.Errorf("error when downloading pool %d, round %d  :%w", cert.UnsignedCert.PoolId, cert.UnsignedCert.Round, err)
+					}
+
+					// zip write
+					err = czw.ZipWrite(filename, data)
+					if err != nil {
+						return fmt.Errorf("failed to write data to %s: %w", filename, err)
+					}
 				}
 			}
 
@@ -71,9 +81,9 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"pool-%d.zip\"", poolIDTemp))
 
-	if err := zw.Close(); err != nil {
+	if err := czw.Close(); err != nil {
 		log.Errorf("error occurred while closing zip writer: %v", err)
 		return
 	}
@@ -106,10 +116,9 @@ func (svc *dataPoolService) downloadAndDecryptData(cert datapooltypes.DataValida
 }
 
 func validateDownloadRequest(r *http.Request) (error, int) {
-	if r.Header.Get("Content-Type") != "application/zip" {
-		return fmt.Errorf("only application/zip is supported"), http.StatusUnsupportedMediaType
-	} else if r.FormValue("requester_address") == "" {
+	if r.FormValue("requester_address") == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
+
 	return nil, 0
 }
