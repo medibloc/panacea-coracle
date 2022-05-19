@@ -2,15 +2,17 @@ package config
 
 import (
 	"fmt"
+	"time"
 )
 
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
-	HTTP    HTTPConfig    `mapstructure:"http"`
-	Panacea PanaceaConfig `mapstructure:"panacea"`
-	AWSS3   AWSS3Config   `mapstructure:"aws-s3"`
-	Enclave EnclaveConfig `mapstructure:"enclave"`
+	HTTP         HTTPConfig         `mapstructure:"http"`
+	Panacea      PanaceaConfig      `mapstructure:"panacea"`
+	AWSS3        AWSS3Config        `mapstructure:"aws-s3"`
+	Enclave      EnclaveConfig      `mapstructure:"enclave"`
+	Authenticate AuthenticateConfig `mapsutrcture:"authenticate"`
 }
 
 type BaseConfig struct {
@@ -40,6 +42,11 @@ type EnclaveConfig struct {
 	AttestationProviderAddr string `mapstructure:"attestation-provider-addr"`
 }
 
+type AuthenticateConfig struct {
+	Expiration time.Duration `mapstruct:"expiration"`
+	Size       int           `mapstruct:"size"`
+}
+
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
@@ -63,6 +70,10 @@ func DefaultConfig() *Config {
 		Enclave: EnclaveConfig{
 			Enable:                  true,
 			AttestationProviderAddr: "127.0.0.1:9999",
+		},
+		Authenticate: AuthenticateConfig{
+			Expiration: 5 * time.Second,
+			Size:       50000,
 		},
 	}
 }

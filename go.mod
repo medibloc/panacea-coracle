@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/aws/aws-sdk-go v1.42.33
+	github.com/bluele/gcache v0.0.2
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/cosmos/cosmos-sdk v0.42.10
 	github.com/cosmos/go-bip39 v1.0.0
