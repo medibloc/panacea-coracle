@@ -1,22 +1,19 @@
 package codec
 
 import (
-	"bytes"
+	"encoding/json"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"strings"
 )
 
 func ProtoMarshalJSON(msg proto.Message) ([]byte, error) {
-	jm := &jsonpb.Marshaler{}
-
-	buf := new(bytes.Buffer)
-
-	if err := jm.Marshal(buf, msg); err != nil {
+	marshaledResp, err := json.Marshal(msg)
+	if err != nil {
 		return nil, err
 	}
 
-	return buf.Bytes(), nil
+	return marshaledResp, nil
 }
 
 func ProtoUnmarshalJSON(bz []byte, ptr proto.Message) error {
