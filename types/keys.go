@@ -1,6 +1,7 @@
 package types
 
 const (
-	DealIDKey = "dealId"
-	PoolIDKey = "poolId"
+	DealIDKey           = "dealId"
+	PoolIDKey           = "poolId"
+	RequesterAddressKey = "requesterAccount"
 )
