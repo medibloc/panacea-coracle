@@ -3,9 +3,10 @@ package panacea
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"strconv"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -131,4 +132,21 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 
 	return *response.GetPool(), nil
 
+}
+
+func (c GrpcClient) GetDataPassRedeemReceipt(poolID, round, dataPassID uint64) (datapooltypes.DataPassRedeemReceipt, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.DataPassRedeemReceipt(ctx, &datapooltypes.QueryDataPassRedeemReceiptRequest{
+		PoolId: poolID,
+		Round:  round,
+		NftId:  dataPassID,
+	})
+	if err != nil {
+		return datapooltypes.DataPassRedeemReceipt{}, err
+	}
+
+	return response.GetDataPassRedeemReceipt(), nil
 }
