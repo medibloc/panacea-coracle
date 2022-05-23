@@ -67,3 +67,22 @@ func TestAddMoreThanCacheSize(t *testing.T) {
 		require.NotNil(t, c.Get("panacea1xxx", strconv.Itoa(i)))
 	}
 }
+
+func TestAddAndRemove(t *testing.T) {
+	c := makeTestAuthenticationCache()
+
+	authentication := types.SignatureAuthentication{
+		Algorithm: "es256k1-sha256",
+		KeyId:     "panacea1xxx",
+		Nonce:     "123",
+		Signature: "signature",
+	}
+	err := c.Set(&authentication)
+	require.NoError(t, err)
+
+	ok := c.Remove(authentication.KeyId, authentication.Nonce)
+	require.True(t, ok)
+
+	authenticationResult := c.Get(authentication.KeyId, authentication.Nonce)
+	require.Nil(t, authenticationResult)
+}

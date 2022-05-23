@@ -47,6 +47,11 @@ func (m AuthenticationCache) Get(keyId, nonce string) *types.SignatureAuthentica
 	return sig
 }
 
+func (m AuthenticationCache) Remove(keyId, nonce string) bool {
+	key := makeKey(keyId, nonce)
+	return m.Cache.Remove(key)
+}
+
 func makeKey(keyId, nonce string) string {
 	return fmt.Sprintf("%s|%s", keyId, nonce)
 }
