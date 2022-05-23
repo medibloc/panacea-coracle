@@ -3,7 +3,6 @@ package cache_test
 import (
 	"github.com/medibloc/panacea-data-market-validator/cache"
 	"github.com/medibloc/panacea-data-market-validator/config"
-	types "github.com/medibloc/panacea-data-market-validator/types/auth"
 	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
@@ -20,25 +19,24 @@ func makeTestAuthenticationCache() *cache.AuthenticationCache {
 func TestSetAndGetCache(t *testing.T) {
 	c := makeTestAuthenticationCache()
 
-	authentication := types.SignatureAuthentication{
-		Algorithm: "es256k1-sha256",
-		KeyId:     "panacea1xxx",
-		Nonce:     "123",
-		Signature: "signature",
-	}
-	err := c.Set(&authentication)
+	authentication := make(map[string]string)
+	authentication["algorithm"] = "es256k1-sha256"
+	authentication["keyId"] = "panacea1xxx"
+	authentication["nonce"] = "123"
+	authentication["signature"] = "signature"
+	err := c.Set(authentication["keyId"], authentication["nonce"], authentication)
 	require.NoError(t, err)
 
-	authenticationResult := c.Get(authentication.KeyId, authentication.Nonce)
+	authenticationResult := c.Get(authentication["keyId"], authentication["nonce"])
 	require.NotNil(t, authenticationResult)
-	require.Equal(t, authentication.Algorithm, authenticationResult.Algorithm)
-	require.Equal(t, authentication.KeyId, authenticationResult.KeyId)
-	require.Equal(t, authentication.Nonce, authenticationResult.Nonce)
-	require.Equal(t, authentication.Signature, authenticationResult.Signature)
+	require.Equal(t, authentication["algorithm"], authenticationResult["algorithm"])
+	require.Equal(t, authentication["keyId"], authenticationResult["keyId"])
+	require.Equal(t, authentication["nonce"], authenticationResult["nonce"])
+	require.Equal(t, authentication["signature"], authenticationResult["signature"])
 
 	time.Sleep(12 * time.Second)
 
-	authenticationResult = c.Get(authentication.KeyId, authentication.Nonce)
+	authenticationResult = c.Get(authentication["keyId"], authentication["nonce"])
 	// This value must be followed by nil. Because the cache time has expired.
 	require.Nil(t, authenticationResult)
 }
@@ -48,13 +46,12 @@ func TestAddMoreThanCacheSize(t *testing.T) {
 	c := makeTestAuthenticationCache()
 
 	for i := 0; i < 100000; i++ {
-		authentication := types.SignatureAuthentication{
-			Algorithm: "es256k1-sha256",
-			KeyId:     "panacea1xxx",
-			Nonce:     strconv.Itoa(i),
-			Signature: "signature",
-		}
-		err := c.Set(&authentication)
+		authentication := make(map[string]string)
+		authentication["algorithm"] = "es256k1-sha256"
+		authentication["keyId"] = "panacea1xxx"
+		authentication["nonce"] = strconv.Itoa(i)
+		authentication["signature"] = "signature"
+		err := c.Set(authentication["keyId"], authentication["nonce"], authentication)
 		require.NoError(t, err)
 	}
 
@@ -71,18 +68,17 @@ func TestAddMoreThanCacheSize(t *testing.T) {
 func TestAddAndRemove(t *testing.T) {
 	c := makeTestAuthenticationCache()
 
-	authentication := types.SignatureAuthentication{
-		Algorithm: "es256k1-sha256",
-		KeyId:     "panacea1xxx",
-		Nonce:     "123",
-		Signature: "signature",
-	}
-	err := c.Set(&authentication)
+	authentication := make(map[string]string)
+	authentication["algorithm"] = "es256k1-sha256"
+	authentication["keyId"] = "panacea1xxx"
+	authentication["nonce"] = "123"
+	authentication["signature"] = "signature"
+	err := c.Set(authentication["keyId"], authentication["nonce"], authentication)
 	require.NoError(t, err)
 
-	ok := c.Remove(authentication.KeyId, authentication.Nonce)
+	ok := c.Remove(authentication["keyId"], authentication["nonce"])
 	require.True(t, ok)
 
-	authenticationResult := c.Get(authentication.KeyId, authentication.Nonce)
+	authenticationResult := c.Get(authentication["keyId"], authentication["nonce"])
 	require.Nil(t, authenticationResult)
 }

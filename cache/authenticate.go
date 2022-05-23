@@ -1,10 +1,9 @@
 package cache
 
 import (
-	"fmt"
 	"github.com/bluele/gcache"
 	"github.com/medibloc/panacea-data-market-validator/config"
-	types "github.com/medibloc/panacea-data-market-validator/types/auth"
+	"strings"
 )
 
 type AuthenticationCache struct {
@@ -22,23 +21,23 @@ func NewAuthenticationCache(conf *config.Config) *AuthenticationCache {
 	}
 }
 
-func (m AuthenticationCache) Set(auth *types.SignatureAuthentication) error {
-	key := makeKey(auth.KeyId, auth.Nonce)
-	err := m.Cache.Set(key, auth)
+func (m AuthenticationCache) Set(keyId, nonce string, sigAuthParts map[string]string) error {
+	key := makeKey(keyId, nonce)
+	err := m.Cache.Set(key, sigAuthParts)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m AuthenticationCache) Get(keyId, nonce string) *types.SignatureAuthentication {
+func (m AuthenticationCache) Get(keyId, nonce string) map[string]string {
 	key := makeKey(keyId, nonce)
 	value, err := m.Cache.Get(key)
 	if err != nil {
 		return nil
 	}
 
-	sig, ok := value.(*types.SignatureAuthentication)
+	sig, ok := value.(map[string]string)
 
 	if !ok {
 		return nil
@@ -53,5 +52,5 @@ func (m AuthenticationCache) Remove(keyId, nonce string) bool {
 }
 
 func makeKey(keyId, nonce string) string {
-	return fmt.Sprintf("%s|%s", keyId, nonce)
+	return strings.Join([]string{keyId, nonce}, "|")
 }
