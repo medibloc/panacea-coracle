@@ -42,7 +42,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	redeemedRound := findMaxRound(redeemHistory.DataPassRedeemReceipts)
+	redeemedRound := getRedeemedRound(redeemHistory.DataPassRedeemReceipts)
 
 	fmt.Print(poolID, redeemedRound)
 
@@ -57,7 +57,7 @@ func validateDownloadRequest(r *http.Request) (error, int) {
 	return nil, 0
 }
 
-func findMaxRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
+func getRedeemedRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
 	maxRound := receipts[0].Round
 
 	for _, receipt := range receipts {
