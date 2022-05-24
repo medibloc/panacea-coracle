@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type file struct {
+type testFile struct {
 	Name string
 	Body string
 }
 
-var files = []file{
+var files = []testFile{
 	{"file1", "This is file 1"},
 	{"file2", "This is file 2"},
 	{"file3", "This is file 3"},
@@ -36,7 +36,7 @@ func TestConcurrentZipWriter_ZipWrite(t *testing.T) {
 
 	for _, f := range files {
 		wg.Add(1)
-		go func(f file, wg *sync.WaitGroup) {
+		go func(f testFile, wg *sync.WaitGroup) {
 			defer wg.Done()
 
 			err := czw.ZipWrite(f.Name, []byte(f.Body))
@@ -61,7 +61,7 @@ func TestConcurrentZipWriter_ZipWrite(t *testing.T) {
 		bz, err := io.ReadAll(rc)
 		require.NoError(t, err)
 
-		res := file{
+		res := testFile{
 			Name: f.Name,
 			Body: string(bz),
 		}
