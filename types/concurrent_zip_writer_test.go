@@ -51,8 +51,7 @@ func TestConcurrentZipWriter_ZipWrite(t *testing.T) {
 
 	reader, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
 	require.NoError(t, err)
-
-	require.Len(t, reader.File, len(files))
+	require.Len(t, reader.File, len(files)) // length check
 
 	for _, f := range reader.File {
 		rc, err := f.Open()
@@ -66,6 +65,6 @@ func TestConcurrentZipWriter_ZipWrite(t *testing.T) {
 			Body: string(bz),
 		}
 
-		require.Contains(t, files, res)
+		require.Contains(t, files, res) // the file should be contained in files
 	}
 }
