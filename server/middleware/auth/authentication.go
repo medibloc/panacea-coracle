@@ -19,6 +19,8 @@ import (
 const (
 	prefixType = "Signature"
 
+	EsSha256 = "es256k1-sha256"
+
 	Algorithm = "algorithm"
 	KeyId     = "keyId"
 	Nonce     = "nonce"
@@ -27,6 +29,7 @@ const (
 
 var authorizationHeaders = []string{Algorithm, KeyId, Nonce, Signature}
 var authenticateHeaders = []string{Algorithm, KeyId, Nonce}
+var wantedAlgorithms = []string{EsSha256}
 
 type AuthenticationMiddleware struct {
 	service *service.Service
@@ -54,6 +57,7 @@ func (amw *AuthenticationMiddleware) AddURL(path string, methods ...string) {
 	}
 }
 
+// Middleware supports signature authentication and responds to the client by generating information necessary for authentication.
 func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// if it is not an authentication URL, the authentication check is not performed.
@@ -163,7 +167,7 @@ func ParseSignatureAuthorizationParts(auth string) (map[string]string, error) {
 }
 
 func basicValidate(sigAuthParts map[string]string) error {
-	if sigAuthParts[Algorithm] != "es256k1-sha256" {
+	if !validation.Contains(wantedAlgorithms, sigAuthParts[Algorithm]) {
 		return errors.New(fmt.Sprintf("is not supported value. (Algorithm: %s)", sigAuthParts[Algorithm]))
 	} else if sigAuthParts[KeyId] == "" {
 		return errors.New("'KeyId' cannot be empty")
@@ -171,6 +175,7 @@ func basicValidate(sigAuthParts map[string]string) error {
 	return nil
 }
 
+// generateAuthenticationAndSetHeader creates authentication request information and puts it in the header of the response.
 func (amw *AuthenticationMiddleware) generateAuthenticationAndSetHeader(w http.ResponseWriter, sigAuthParts map[string]string) error {
 	err := amw.generateAuthentication(sigAuthParts)
 	if err != nil {
@@ -183,6 +188,7 @@ func (amw *AuthenticationMiddleware) generateAuthenticationAndSetHeader(w http.R
 	return nil
 }
 
+// generateAuthentication creates a nonce and stores it in the cache.
 func (amw *AuthenticationMiddleware) generateAuthentication(sigAuthParts map[string]string) error {
 	err := setNewNonce(sigAuthParts)
 	if err != nil {
