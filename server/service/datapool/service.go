@@ -17,5 +17,5 @@ func RegisterHandlers(svc *service.Service, router *mux.Router) {
 	}
 
 	router.HandleFunc("/v0/data-pool/pools/{poolId}/rounds/{round}/data", s.handleValidateData).Methods(http.MethodPost)
-	router.HandleFunc("/v0/data-pool/pools/{poolId}/rounds/{round}/data-pass-id/{dataPassId}/data", s.handleDownloadData).Methods(http.MethodGet)
+	router.HandleFunc("/v0/data-pool/pools/{poolId}/data", s.handleDownloadData).Methods(http.MethodGet)
 }

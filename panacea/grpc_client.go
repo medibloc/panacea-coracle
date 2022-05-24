@@ -134,19 +134,18 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 
 }
 
-func (c GrpcClient) GetDataPassRedeemReceipt(poolID, round, dataPassID uint64) (datapooltypes.DataPassRedeemReceipt, error) {
+func (c GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	response, err := client.DataPassRedeemReceipt(ctx, &datapooltypes.QueryDataPassRedeemReceiptRequest{
-		PoolId: poolID,
-		Round:  round,
-		NftId:  dataPassID,
+	response, err := client.DataPassRedeemHistory(ctx, &datapooltypes.QueryDataPassRedeemHistoryRequest{
+		Redeemer: redeemer,
+		PoolId:   poolID,
 	})
 	if err != nil {
-		return datapooltypes.DataPassRedeemReceipt{}, err
+		return datapooltypes.DataPassRedeemHistory{}, err
 	}
 
-	return response.GetDataPassRedeemReceipt(), nil
+	return response.GetDataPassRedeemHistories(), nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/types"
 
 	log "github.com/sirupsen/logrus"
@@ -19,6 +20,8 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	redeemer := r.FormValue("requester_address")
+
 	poolID, err := strconv.ParseUint(mux.Vars(r)[types.PoolIDKey], 10, 64)
 	if err != nil {
 		log.Errorf("invalid pool ID: %v", err)
@@ -26,34 +29,22 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	round, err := strconv.ParseUint(mux.Vars(r)[types.RoundKey], 10, 64)
-	if err != nil {
-		log.Errorf("invalid round: %v", err)
-		http.Error(w, "invalid round", http.StatusBadRequest)
-		return
-	}
-
-	dataPassID, err := strconv.ParseUint(mux.Vars(r)[types.DataPassIDKey], 10, 64)
-	if err != nil {
-		log.Errorf("invalid data pass ID: %v", err)
-		http.Error(w, "invalid data pass ID", http.StatusBadRequest)
-		return
-	}
-
-	redeemReceipt, err := svc.PanaceaClient.GetDataPassRedeemReceipt(poolID, round, dataPassID)
+	redeemHistory, err := svc.PanaceaClient.GetDataPassRedeemHistory(redeemer, poolID)
 	if err != nil {
 		log.Errorf("failed to get redeem receipt: %v", err)
 		http.Error(w, "failed to get data pass redeem receipt", http.StatusInternalServerError)
 		return
 	}
 
-	redeemer := r.FormValue("requester_address")
-
-	if redeemReceipt.Redeemer != redeemer {
-		log.Errorf("redeemer is not matched: requested redeemer is \"%s\", but actual redeemer is \"%s\"", redeemer, redeemReceipt.Redeemer)
-		http.Error(w, "redeemer is not matched", http.StatusBadRequest)
+	if len(redeemHistory.DataPassRedeemReceipts) == 0 {
+		log.Errorf("redeem receipt not found under %s", redeemHistory.Redeemer)
+		http.Error(w, "redeem receipt not found", http.StatusNotFound)
 		return
 	}
+
+	redeemedRound := findMaxRound(redeemHistory.DataPassRedeemReceipts)
+
+	fmt.Print(poolID, redeemedRound)
 
 	return
 }
@@ -64,4 +55,16 @@ func validateDownloadRequest(r *http.Request) (error, int) {
 	}
 
 	return nil, 0
+}
+
+func findMaxRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
+	maxRound := receipts[0].Round
+
+	for _, receipt := range receipts {
+		if receipt.Round > maxRound {
+			maxRound = receipt.Round
+		}
+	}
+
+	return maxRound
 }
