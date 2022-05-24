@@ -1,8 +1,6 @@
 package types
 
 const (
-	DealIDKey     = "dealId"
-	PoolIDKey     = "poolId"
-	RoundKey      = "round"
-	DataPassIDKey = "dataPassId"
+	DealIDKey = "dealId"
+	PoolIDKey = "poolId"
 )
