@@ -35,6 +35,9 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	poolIDTemp := uint64(1)
 	redeemedRoundTemp := uint64(3)
 
+	// TODO: add file format to filename
+	fileFormat := ".json"
+
 	czw := types.NewConcurrentZipWriter(w)
 
 	g, ctx := errgroup.WithContext(context.Background())
@@ -54,7 +57,8 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 					filename :=
 						"pool-" + strconv.FormatUint(cert.UnsignedCert.PoolId, 10) +
 							"-" + strconv.FormatUint(cert.UnsignedCert.Round, 10) +
-							"-" + base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
+							"-" + base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash) +
+							fileFormat
 
 					// download data from storage and decrypt it
 					data, err := svc.downloadAndDecryptData(cert)

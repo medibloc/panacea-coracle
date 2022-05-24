@@ -29,8 +29,7 @@ func (czw *ConcurrentZipWriter) ZipWrite(filename string, data []byte) error {
 	czw.Lock()
 	defer czw.Unlock()
 
-	// TODO: add file format to filename
-	zipWriter, err := czw.Zw.Create(filename + ".json")
+	zipWriter, err := czw.Zw.Create(filename)
 	if err != nil {
 		return err
 	}
