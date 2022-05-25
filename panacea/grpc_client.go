@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const pageLimit = 1
+const pageLimit = 30
 
 type GrpcClient struct {
 	conn              *grpc.ClientConn
