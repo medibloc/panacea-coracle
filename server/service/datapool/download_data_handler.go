@@ -44,7 +44,16 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	redeemedRound := getRedeemedRound(redeemHistory.DataPassRedeemReceipts)
 
-	fmt.Print(poolID, redeemedRound)
+	for round := uint64(1); round <= redeemedRound; round++ {
+		certs, err := svc.PanaceaClient.GetDataCerts(poolID, round)
+		if err != nil {
+			log.Errorf("failed to get data certs: %v", err)
+			http.Error(w, "failed to get data certs", http.StatusInternalServerError)
+			return
+		}
+
+		log.Info(certs)
+	}
 
 	return
 }
