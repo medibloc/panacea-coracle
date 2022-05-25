@@ -39,6 +39,12 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	fileFormat := ".json"
 
 	czw := types.NewConcurrentZipWriter(w)
+	defer func() {
+		if err := czw.Close(); err != nil {
+			log.Errorf("error occurred while closing zip writer: %v", err)
+			http.Error(w, "failed to download", http.StatusInternalServerError)
+		}
+	}()
 
 	g, ctx := errgroup.WithContext(context.Background())
 
@@ -80,12 +86,6 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	if err := g.Wait(); err != nil {
 		log.Errorf("failed to download: %v", err)
-		http.Error(w, "failed to download", http.StatusInternalServerError)
-		return
-	}
-
-	if err := czw.Close(); err != nil {
-		log.Errorf("error occurred while closing zip writer: %v", err)
 		http.Error(w, "failed to download", http.StatusInternalServerError)
 		return
 	}
