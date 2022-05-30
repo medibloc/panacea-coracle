@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,6 +20,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+const pageLimit = 30
 
 type GrpcClient struct {
 	conn              *grpc.ClientConn
@@ -148,4 +152,38 @@ func (c GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (da
 	}
 
 	return response.GetDataPassRedeemHistories(), nil
+}
+
+func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	var certs []datapooltypes.DataValidationCertificate
+
+	pageReq := &datapooltypes.QueryDataValidationCertificatesRequest{
+		PoolId: poolID,
+		Round:  round,
+		Pagination: &query.PageRequest{
+			Key:   nil,
+			Limit: pageLimit,
+		},
+	}
+
+	for {
+		response, err := client.DataValidationCertificates(ctx, pageReq)
+		if err != nil {
+			return nil, err
+		}
+
+		certs = append(certs, response.GetDataValidationCertificates()...)
+
+		if response.Pagination.NextKey == nil {
+			break
+		}
+
+		pageReq.Pagination.Key = response.Pagination.NextKey
+	}
+
+	return certs, nil
 }
