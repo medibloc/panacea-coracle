@@ -8,6 +8,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 
+	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -22,6 +26,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+const pageLimit = 30
 
 // temp var
 var (
@@ -147,6 +153,56 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 
 	return *response.GetPool(), nil
 
+}
+
+func (c GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.DataPassRedeemHistory(ctx, &datapooltypes.QueryDataPassRedeemHistoryRequest{
+		Redeemer: redeemer,
+		PoolId:   poolID,
+	})
+	if err != nil {
+		return datapooltypes.DataPassRedeemHistory{}, err
+	}
+
+	return response.GetDataPassRedeemHistories(), nil
+}
+
+func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	var certs []datapooltypes.DataValidationCertificate
+
+	pageReq := &datapooltypes.QueryDataValidationCertificatesRequest{
+		PoolId: poolID,
+		Round:  round,
+		Pagination: &query.PageRequest{
+			Key:   nil,
+			Limit: pageLimit,
+		},
+	}
+
+	for {
+		response, err := client.DataValidationCertificates(ctx, pageReq)
+		if err != nil {
+			return nil, err
+		}
+
+		certs = append(certs, response.GetDataValidationCertificates()...)
+
+		if response.Pagination.NextKey == nil {
+			break
+		}
+
+		pageReq.Pagination.Key = response.Pagination.NextKey
+	}
+
+	return certs, nil
 }
 
 func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
