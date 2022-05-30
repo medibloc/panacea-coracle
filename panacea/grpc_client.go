@@ -10,16 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/std"
-	cosmossdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
-	datavalcodec "github.com/medibloc/panacea-data-market-validator/codec"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
 
@@ -28,17 +23,6 @@ import (
 )
 
 const pageLimit = 30
-
-// temp var
-var (
-	dataValPrivKey = secp256k1.GenPrivKey()
-	dataValPubKey  = dataValPrivKey.PubKey()
-	dataVal1       = cosmossdk.AccAddress(dataValPubKey.Address())
-
-	requesterPrivKey = secp256k1.GenPrivKey()
-	requesterPubKey  = requesterPrivKey.PubKey()
-	requesterAddr    = cosmossdk.AccAddress(requesterPubKey.Address())
-)
 
 type GrpcClient struct {
 	conn              *grpc.ClientConn
@@ -203,48 +187,4 @@ func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataVali
 	}
 
 	return certs, nil
-}
-
-func (c GrpcClient) GetDataCertsByRound(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
-	// get temp certs
-	certs, err := MakeTestDataCerts(poolID, round)
-	if err != nil {
-		return nil, err
-	}
-
-	return certs, nil
-}
-
-// MakeTestDataCerts returns list of data certs. temp function
-func MakeTestDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
-	var res []datapooltypes.DataValidationCertificate
-
-	for i := uint64(1); i < 10; i++ {
-		unsignedCert := &datapooltypes.UnsignedDataValidationCertificate{
-			PoolId:        poolID,
-			Round:         round,
-			DataHash:      []byte("data-" + strconv.FormatUint(poolID, 10) + "-" + strconv.FormatUint(round, 10) + "-" + strconv.FormatUint(i, 10)),
-			DataValidator: dataVal1.String(),
-			Requester:     requesterAddr.String(),
-		}
-
-		json, err := datavalcodec.ProtoMarshalJSON(unsignedCert)
-		if err != nil {
-			return nil, err
-		}
-
-		sign, err := dataValPrivKey.Sign(json)
-		if err != nil {
-			return nil, err
-		}
-
-		cert := datapooltypes.DataValidationCertificate{
-			UnsignedCert: unsignedCert,
-			Signature:    sign,
-		}
-
-		res = append(res, cert)
-	}
-
-	return res, nil
 }

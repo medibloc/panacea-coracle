@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,14 +16,8 @@ import (
 
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	log "github.com/sirupsen/logrus"
-	"strconv"
 
 	"github.com/gorilla/mux"
-
-	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
-	"github.com/medibloc/panacea-data-market-validator/types"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Request) {
@@ -58,56 +51,6 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	redeemedRound := getRedeemedRound(redeemHistory.DataPassRedeemReceipts)
 
-	for round := uint64(1); round <= redeemedRound; round++ {
-		certs, err := svc.PanaceaClient.GetDataCerts(poolID, round)
-		if err != nil {
-			log.Errorf("failed to get data certs: %v", err)
-			http.Error(w, "failed to get data certs", http.StatusInternalServerError)
-			return
-		}
-
-		log.Info(certs)
-	}
-
-	return
-}
-
-func validateDownloadRequest(r *http.Request) (error, int) {
-	if r.FormValue("requester_address") == "" {
-		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
-	}
-
-	return nil, 0
-}
-
-func getRedeemedRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
-	maxRound := receipts[0].Round
-
-	for _, receipt := range receipts {
-		if receipt.Round > maxRound {
-			maxRound = receipt.Round
-		}
-	}
-
-	return maxRound
-func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Request) {
-	if err, errStatusCode := validateDownloadRequest(r); err != nil {
-		log.Errorf("invalid download request: %v", err)
-		http.Error(w, err.Error(), errStatusCode)
-		return
-	}
-
-	//redeemer := r.FormValue("requester_address")
-
-	// TODO: verify redeemer signature (w/ nonce)
-
-	// TODO: get redeem receipt from panacea and verify it
-
-	// TODO: get poolID and round from redeem receipt. For now, temp value
-	poolIDTemp := uint64(1)
-	redeemedRoundTemp := uint64(3)
-
-	// TODO: add file format to filename
 	fileFormat := ".json"
 
 	czw := types.NewConcurrentZipWriter(w)
@@ -121,8 +64,8 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	g, ctx := errgroup.WithContext(context.Background())
 
 	// get data certificates from panacea and return it
-	for round := uint64(1); round <= redeemedRoundTemp; round++ {
-		certs, _ := svc.PanaceaClient.GetDataCertsByRound(poolIDTemp, round)
+	for round := uint64(1); round <= redeemedRound; round++ {
+		certs, _ := svc.PanaceaClient.GetDataCerts(poolID, round)
 		g.Go(func() error {
 			for _, cert := range certs {
 				select {
@@ -163,9 +106,29 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"pool-%d.zip\"", poolIDTemp))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"pool-%d.zip\"", poolID))
 
 	return
+}
+
+func validateDownloadRequest(r *http.Request) (error, int) {
+	if r.FormValue("requester_address") == "" {
+		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
+	}
+
+	return nil, 0
+}
+
+func getRedeemedRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
+	maxRound := receipts[0].Round
+
+	for _, receipt := range receipts {
+		if receipt.Round > maxRound {
+			maxRound = receipt.Round
+		}
+	}
+
+	return maxRound
 }
 
 // downloadAndDecryptData downloads data by certificate and decrypt it.
@@ -190,12 +153,4 @@ func (svc *dataPoolService) downloadAndDecryptData(cert datapooltypes.DataValida
 	}
 
 	return data, nil
-}
-
-func validateDownloadRequest(r *http.Request) (error, int) {
-	if r.FormValue("requester_address") == "" {
-		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
-	}
-
-	return nil, 0
 }
