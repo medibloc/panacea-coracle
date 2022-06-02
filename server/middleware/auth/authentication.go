@@ -20,15 +20,10 @@ const (
 	prefixType = "Signature"
 
 	EsSha256 = "es256k1-sha256"
-
-	Algorithm = "algorithm"
-	KeyId     = "keyId"
-	Nonce     = "nonce"
-	Signature = "signature"
 )
 
-var authorizationHeaders = []string{Algorithm, KeyId, Nonce, Signature}
-var authenticateHeaders = []string{Algorithm, KeyId, Nonce}
+var authorizationHeaders = []string{types.AuthAlgorithmHeaderKey, types.AuthKeyIDHeaderKey, types.AuthNonceHeaderKey, types.AuthSignatureHeaderKey}
+var authenticateHeaders = []string{types.AuthAlgorithmHeaderKey, types.AuthKeyIDHeaderKey, types.AuthNonceHeaderKey}
 var wantedAlgorithms = []string{EsSha256}
 
 type AuthenticationMiddleware struct {
@@ -45,7 +40,7 @@ func NewMiddleware(svc *service.Service) *AuthenticationMiddleware {
 
 func (amw *AuthenticationMiddleware) AddURL(path string, methods ...string) {
 	// Router is only used to convert path to regex.
-	pathRegex, err := mux.NewRouter().Path(path).Methods(http.MethodGet).GetPathRegexp()
+	pathRegex, err := mux.NewRouter().Path(path).GetPathRegexp()
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +76,7 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 			return
 		}
 
-		if sigAuthParts[Nonce] == "" {
+		if sigAuthParts[types.AuthNonceHeaderKey] == "" {
 			err = amw.generateAuthenticationAndSetHeader(w, sigAuthParts)
 			if err != nil {
 				log.Error("failed to generate authentication", err)
@@ -92,7 +87,7 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 		}
 
 		cache := amw.service.Cache
-		auth := cache.Get(sigAuthParts[KeyId], sigAuthParts[Nonce])
+		auth := cache.Get(sigAuthParts[types.AuthKeyIDHeaderKey], sigAuthParts[types.AuthNonceHeaderKey])
 		if auth == nil {
 			// expired
 			err = amw.generateAuthenticationAndSetHeader(w, sigAuthParts)
@@ -104,14 +99,14 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 			return
 		}
 
-		nonce := sigAuthParts[Nonce]
-		signature, err := base64.StdEncoding.DecodeString(sigAuthParts[Signature])
+		nonce := sigAuthParts[types.AuthNonceHeaderKey]
+		signature, err := base64.StdEncoding.DecodeString(sigAuthParts[types.AuthSignatureHeaderKey])
 		if err != nil {
 			http.Error(w, "failed to decode signature", http.StatusBadRequest)
 			return
 		}
 
-		requesterAddress := sigAuthParts[KeyId]
+		requesterAddress := sigAuthParts[types.AuthKeyIDHeaderKey]
 		pubKey, err := amw.service.PanaceaClient.GetPubKey(requesterAddress)
 		if err != nil {
 			log.Error(fmt.Sprintf("failed to get the account's public key account: %s", requesterAddress), err)
@@ -124,6 +119,8 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 			return
 		}
 
+		cache.Remove(sigAuthParts[types.AuthKeyIDHeaderKey], nonce)
+
 		context.Set(r, types.RequesterAddressKey, requesterAddress)
 		next.ServeHTTP(w, r)
 	})
@@ -131,11 +128,9 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 
 func (amw *AuthenticationMiddleware) isAuthenticationURL(r *http.Request) bool {
 	for path, methods := range amw.url {
-		ok, err := regexp.MatchString(path, r.URL.Path)
-		if err == nil && ok {
-			if validation.Contains(methods, r.Method) {
-				return true
-			}
+		ok, _ := regexp.MatchString(path, r.URL.Path)
+		if ok && validation.Contains(methods, r.Method) {
+			return true
 		}
 	}
 	return false
@@ -161,9 +156,9 @@ func ParseSignatureAuthorizationParts(auth string) (map[string]string, error) {
 }
 
 func basicValidate(sigAuthParts map[string]string) error {
-	if !validation.Contains(wantedAlgorithms, sigAuthParts[Algorithm]) {
-		return errors.New(fmt.Sprintf("is not supported value. (Algorithm: %s)", sigAuthParts[Algorithm]))
-	} else if sigAuthParts[KeyId] == "" {
+	if !validation.Contains(wantedAlgorithms, sigAuthParts[types.AuthAlgorithmHeaderKey]) {
+		return errors.New(fmt.Sprintf("is not supported value. (Algorithm: %s)", sigAuthParts[types.AuthAlgorithmHeaderKey]))
+	} else if sigAuthParts[types.AuthKeyIDHeaderKey] == "" {
 		return errors.New("'KeyId' cannot be empty")
 	}
 	return nil
@@ -190,7 +185,7 @@ func (amw *AuthenticationMiddleware) generateAuthentication(sigAuthParts map[str
 	}
 
 	cache := amw.service.Cache
-	err = cache.Set(sigAuthParts[KeyId], sigAuthParts[Nonce], sigAuthParts)
+	err = cache.Set(sigAuthParts[types.AuthKeyIDHeaderKey], sigAuthParts[types.AuthNonceHeaderKey], sigAuthParts)
 	if err != nil {
 		return err
 	}
@@ -205,7 +200,7 @@ func setNewNonce(sigAuthParts map[string]string) error {
 		return err
 	}
 
-	sigAuthParts[Nonce] = base64.StdEncoding.EncodeToString(randomBytes)
+	sigAuthParts[types.AuthNonceHeaderKey] = base64.StdEncoding.EncodeToString(randomBytes)
 
 	return nil
 }

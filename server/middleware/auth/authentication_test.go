@@ -80,10 +80,10 @@ func TestParseSignatureAuthenticationParts(t *testing.T) {
 	parts, err := auth.ParseSignatureAuthorizationParts(req.Header.Get("Authorization"))
 	require.NoError(t, err)
 
-	require.Equal(t, "panacea1xxxx", parts[auth.KeyId])
-	require.Equal(t, "es256k1-sha256", parts[auth.Algorithm])
-	require.Equal(t, "", parts[auth.Nonce])
-	require.Equal(t, "", parts[auth.Signature])
+	require.Equal(t, "panacea1xxxx", parts[types.AuthKeyIDHeaderKey])
+	require.Equal(t, "es256k1-sha256", parts[types.AuthAlgorithmHeaderKey])
+	require.Equal(t, "", parts[types.AuthNonceHeaderKey])
+	require.Equal(t, "", parts[types.AuthSignatureHeaderKey])
 }
 
 func makeNormalHandler() http.HandlerFunc {
@@ -140,7 +140,8 @@ func makeAuthorizationHeader(algorithm, keyId, nonce, signature string) string {
 }
 
 func TestEntireAuthenticationProcess(t *testing.T) {
-	middleware := auth.NewMiddleware(makeMockSvc())
+	svc := makeMockSvc()
+	middleware := auth.NewMiddleware(svc)
 	datapool.RegisterMiddleware(middleware)
 
 	authHeader := makeAuthorizationHeader(auth.EsSha256, requesterAddress, "", "")
@@ -153,14 +154,21 @@ func TestEntireAuthenticationProcess(t *testing.T) {
 	res := recorder.Result()
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 
-	authenticateParts, err := auth.ParseSignatureAuthorizationParts(res.Header.Get("WWW-Authenticate"))
-	require.Equal(t, auth.EsSha256, authenticateParts[auth.Algorithm])
-	require.Equal(t, requesterAddress, authenticateParts[auth.KeyId])
-	require.NotEqual(t, "", authenticateParts[auth.Nonce])
+	authorizationParts, err := auth.ParseSignatureAuthorizationParts(res.Header.Get("WWW-Authenticate"))
+	algorithm := authorizationParts[types.AuthAlgorithmHeaderKey]
+	keyID := authorizationParts[types.AuthKeyIDHeaderKey]
+	nonce := authorizationParts[types.AuthNonceHeaderKey]
+
+	require.Equal(t, auth.EsSha256, algorithm)
+	require.Equal(t, requesterAddress, keyID)
+	require.NotEqual(t, "", nonce)
 	require.NoError(t, err)
-	nonce := authenticateParts[auth.Nonce]
 	signature, err := requesterPrivKey.Sign([]byte(nonce))
 	require.NoError(t, err)
+
+	// Check is exist authentication in cache
+	inCachedAuthentication := svc.Cache.Get(keyID, nonce)
+	require.NotNil(t, inCachedAuthentication)
 
 	authHeader = makeAuthorizationHeader(
 		auth.EsSha256,
@@ -176,6 +184,10 @@ func TestEntireAuthenticationProcess(t *testing.T) {
 	res = recorder.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "", res.Header.Get("WWW-Authenticate"))
+
+	// Check is not exist authentication in cache
+	inCachedAuthentication = svc.Cache.Get(keyID, nonce)
+	require.Nil(t, inCachedAuthentication)
 }
 
 func TestNotIncludeAuthenticationURL(t *testing.T) {

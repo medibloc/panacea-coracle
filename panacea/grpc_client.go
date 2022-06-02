@@ -32,6 +32,8 @@ type GrpcClientI interface {
 	Close() error
 }
 
+var _ GrpcClientI = (*GrpcClient)(nil)
+
 type GrpcClient struct {
 	conn              *grpc.ClientConn
 	interfaceRegistry sdk.InterfaceRegistry
