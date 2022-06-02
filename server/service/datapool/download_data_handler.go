@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/medibloc/panacea-data-market-validator/crypto"
+	"github.com/medibloc/panacea-oracle/crypto"
 
 	"github.com/medibloc/panacea-oracle/types"
 
