@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	authmiddleware "github.com/medibloc/panacea-oracle/server/middleware/auth"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +32,10 @@ func Run(conf *config.Config) error {
 	datadeal.RegisterHandlers(svc, router)
 	datapool.RegisterHandlers(svc, router)
 	tee.RegisterHandlers(svc, router)
+
+	middleware := authmiddleware.NewMiddleware(svc)
+	router.Use(middleware.Middleware)
+	datapool.RegisterMiddleware(middleware)
 
 	server := &http.Server{
 		Handler:      router,

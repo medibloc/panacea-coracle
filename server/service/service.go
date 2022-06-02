@@ -3,27 +3,29 @@ package service
 import (
 	"crypto/tls"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/edgelesssys/ego/ecrypto"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
+
+	"github.com/medibloc/panacea-oracle/cache"
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/store"
 	"github.com/medibloc/panacea-oracle/tee"
 	tos "github.com/tendermint/tendermint/libs/os"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 type Service struct {
 	Conf          *config.Config
 	OracleAccount *panacea.OracleAccount
 	Store         store.Storage
-	PanaceaClient *panacea.GrpcClient
+	PanaceaClient panacea.GrpcClientI
 	TLSCert       *tls.Certificate
 	DataEncKey    []byte
+	Cache         *cache.AuthenticationCache
 }
 
 func New(conf *config.Config) (*Service, error) {
@@ -66,6 +68,8 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, err
 	}
 
+	authenticateCache := cache.NewAuthenticationCache(conf)
+
 	return &Service{
 		Conf:          conf,
 		OracleAccount: oracleAccount,
@@ -73,6 +77,7 @@ func New(conf *config.Config) (*Service, error) {
 		PanaceaClient: panaceaClient,
 		TLSCert:       tlsCert,
 		DataEncKey:    key,
+		Cache:         authenticateCache,
 	}, nil
 }
 

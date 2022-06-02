@@ -60,6 +60,15 @@ secret-access-key = "{{ .AWSS3.SecretAccessKey }}"
 enable = {{ .Enclave.Enable }}
 attestation-provider-addr = "{{ .Enclave.AttestationProviderAddr }}"
 
+###############################################################################
+###                  AuthenticationConfig Configuration                     ###
+###############################################################################
+
+[authentication]
+
+expiration = "{{ .Authentication.Expiration }}"
+size = {{ .Authentication.Size }}
+
 `
 
 const (

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	httpcontext "github.com/gorilla/context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,6 +29,11 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 	}
 
 	redeemer := r.FormValue("requester_address")
+	requesterAddress := httpcontext.Get(r, types.RequesterAddressKey)
+	if requesterAddress != redeemer {
+		http.Error(w, "Do not matched signer and requester", http.StatusBadRequest)
+		return
+	}
 
 	poolID, err := strconv.ParseUint(mux.Vars(r)[types.PoolIDKey], 10, 64)
 	if err != nil {

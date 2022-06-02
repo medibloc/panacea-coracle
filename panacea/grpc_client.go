@@ -22,6 +22,26 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type GrpcClientI interface {
+	Close() error
+
+	GetPubKey(panaceaAddr string) (types.PubKey, error)
+
+	GetAccount(panaceaAddr string) (authtypes.AccountI, error)
+
+	GetDeal(id string) (datadealtypes.Deal, error)
+
+	GetRegisteredOracle(address string) (*datapooltypes.Oracle, error)
+
+	GetPool(id string) (datapooltypes.Pool, error)
+
+	GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error)
+
+	GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error)
+}
+
+var _ GrpcClientI = (*GrpcClient)(nil)
+
 const pageLimit = 30
 
 type GrpcClient struct {
@@ -29,7 +49,7 @@ type GrpcClient struct {
 	interfaceRegistry sdk.InterfaceRegistry
 }
 
-func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
+func NewGrpcClient(conf *config.Config) (GrpcClientI, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.Panacea.GRPCAddr)
 	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -139,7 +159,7 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 
 }
 
-func (c GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error) {
+func (c *GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -155,7 +175,7 @@ func (c GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (da
 	return response.GetDataPassRedeemHistories(), nil
 }
 
-func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error) {
+func (c *GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
