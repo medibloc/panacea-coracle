@@ -45,3 +45,12 @@ secret-access-key = "__AWS_S3_SECRET_ACCESS_KEY__"
 
 enable = false
 attestation-provider-addr = ""
+
+###############################################################################
+###                  AuthenticationConfig Configuration                     ###
+###############################################################################
+
+[authentication]
+
+expiration = "5s"
+size = 50000

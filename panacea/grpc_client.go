@@ -18,12 +18,28 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type GrpcClientI interface {
+	GetPubKey(panaceaAddr string) (types.PubKey, error)
+
+	GetAccount(panaceaAddr string) (authtypes.AccountI, error)
+
+	GetDeal(id string) (datadealtypes.Deal, error)
+
+	GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error)
+
+	GetPool(id string) (datapooltypes.Pool, error)
+
+	Close() error
+}
+
+var _ GrpcClientI = (*GrpcClient)(nil)
+
 type GrpcClient struct {
 	conn              *grpc.ClientConn
 	interfaceRegistry sdk.InterfaceRegistry
 }
 
-func NewGrpcClient(conf *config.Config) (*GrpcClient, error) {
+func NewGrpcClient(conf *config.Config) (GrpcClientI, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.Panacea.GRPCAddr)
 	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
