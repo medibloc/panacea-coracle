@@ -2,8 +2,8 @@ package store_test
 
 import (
 	"crypto/rand"
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
+	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/crypto"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/medibloc/panacea-data-market-validator/store"
+	"github.com/medibloc/panacea-oracle/store"
 )
 
 func TestStorageUpload(t *testing.T) {
@@ -19,8 +19,8 @@ func TestStorageUpload(t *testing.T) {
 		AWSS3: config.AWSS3Config{
 			Region:          "ap-northeast-2",
 			Bucket:          "data-market-test",
-			AccessKeyID:     os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID"),
-			SecretAccessKey: os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")},
+			AccessKeyID:     os.Getenv("EDG_ORACLE_AWS_S3_ACCESS_KEY_ID"),
+			SecretAccessKey: os.Getenv("EDG_ORACLE_AWS_S3_SECRET_ACCESS_KEY")},
 	}
 
 	s3Store, err := store.NewS3Store(conf)
@@ -42,8 +42,8 @@ func TestS3UploadAndDownload(t *testing.T) {
 		AWSS3: config.AWSS3Config{
 			Region:          "ap-northeast-2",
 			Bucket:          "data-market-test",
-			AccessKeyID:     os.Getenv("EDG_DATAVAL_AWS_S3_ACCESS_KEY_ID"),
-			SecretAccessKey: os.Getenv("EDG_DATAVAL_AWS_S3_SECRET_ACCESS_KEY")},
+			AccessKeyID:     os.Getenv("EDG_ORACLE_AWS_S3_ACCESS_KEY_ID"),
+			SecretAccessKey: os.Getenv("EDG_ORACLE_AWS_S3_SECRET_ACCESS_KEY")},
 	}
 
 	s3Store, err := store.NewS3Store(conf)

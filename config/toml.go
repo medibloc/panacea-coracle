@@ -20,7 +20,7 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 ###############################################################################
 
 log-level = "{{ .BaseConfig.LogLevel }}"
-validator-mnemonic = "{{ .BaseConfig.ValidatorMnemonic }}"
+oracle-mnemonic = "{{ .BaseConfig.OracleMnemonic }}"
 data-encryption-key-file = "{{ .BaseConfig.DataEncryptionKeyFile }}"
 
 ###############################################################################

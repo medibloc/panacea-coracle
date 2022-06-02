@@ -1,27 +1,27 @@
 package codec_test
 
 import (
-	datadealtypes "github.com/medibloc/panacea-data-market-validator/types/datadeal"
+	datadealtypes "github.com/medibloc/panacea-oracle/types/datadeal"
 	"testing"
 
 	panaceatypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
-	"github.com/medibloc/panacea-data-market-validator/codec"
+	"github.com/medibloc/panacea-oracle/codec"
 	"github.com/stretchr/testify/require"
 )
 
 func TestJsonMarshalAndUnMarshal(t *testing.T) {
-	unsignedCertificate, err := datadealtypes.NewUnsignedDataValidationCertificate(
+	unsignedCertificate, err := datadealtypes.NewUnsignedDataCert(
 		"1",
 		[]byte("dataHash"),
 		[]byte("encryptedDataURL"),
 		"requester_address",
-		"dataValidatorAddress")
+		"oracleAddress")
 
 	require.NoError(t, err)
 
 	signature := []byte("signature")
 
-	cert := &panaceatypes.DataValidationCertificate{
+	cert := &panaceatypes.DataCert{
 		UnsignedCert: &unsignedCertificate,
 		Signature:    signature,
 	}
@@ -29,7 +29,7 @@ func TestJsonMarshalAndUnMarshal(t *testing.T) {
 	json, err := codec.ProtoMarshalJSON(cert)
 	require.NoError(t, err)
 
-	resCert := &panaceatypes.DataValidationCertificate{}
+	resCert := &panaceatypes.DataCert{}
 
 	err = codec.ProtoUnmarshalJSON(json, resCert)
 	require.NoError(t, err)

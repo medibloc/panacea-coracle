@@ -18,7 +18,7 @@ func TestCreateTLSCertificate(t *testing.T) {
 	rsaPrivKey, ok := tlsCert.PrivateKey.(*rsa.PrivateKey)
 	require.True(t, ok)
 
-	require.Equal(t, "DataValidator", cert.Subject.CommonName)
+	require.Equal(t, "Oracle", cert.Subject.CommonName)
 	require.Equal(t, rsaPrivKey.Public(), cert.PublicKey)
 	require.Equal(t, x509.RSA, cert.PublicKeyAlgorithm)
 }

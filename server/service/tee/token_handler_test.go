@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/edgelesssys/ego/attestation"
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/server/service"
-	"github.com/medibloc/panacea-data-market-validator/tee"
+	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/server/service"
+	"github.com/medibloc/panacea-oracle/tee"
 	"github.com/stretchr/testify/require"
 )
 

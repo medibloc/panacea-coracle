@@ -21,8 +21,8 @@ import (
 func TestDataDealValidateData(t *testing.T) {
 	buyerMnemonic := os.Getenv("E2E_DATA_BUYER_MNEMONIC")
 	require.NotEmpty(t, buyerMnemonic)
-	datavalHTTPAddr := os.Getenv("E2E_DATAVAL_HTTP_ADDR")
-	require.NotEmpty(t, datavalHTTPAddr)
+	oracleHTTPAddr := os.Getenv("E2E_ORACLE_HTTP_ADDR")
+	require.NotEmpty(t, oracleHTTPAddr)
 
 	dealID := 1
 	requesterAddr := "panacea1c7yh0ql0rhvyqm4vuwgaqu0jypafnwqdc6x60e"
@@ -34,7 +34,7 @@ func TestDataDealValidateData(t *testing.T) {
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("http://%s/v0/data-deal/deals/%d/data?requester_address=%s", datavalHTTPAddr, dealID, requesterAddr),
+		fmt.Sprintf("http://%s/v0/data-deal/deals/%d/data?requester_address=%s", oracleHTTPAddr, dealID, requesterAddr),
 		strings.NewReader(data),
 	)
 	require.NoError(t, err)
@@ -45,7 +45,7 @@ func TestDataDealValidateData(t *testing.T) {
 	defer resp.Body.Close()
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-	var cert datadealtypes.DataValidationCertificate
+	var cert datadealtypes.DataCert
 	unmarshaler := &jsonpb.Unmarshaler{}
 	err = unmarshaler.Unmarshal(resp.Body, &cert)
 	require.NoError(t, err)
@@ -64,10 +64,10 @@ func TestDataDealValidateData(t *testing.T) {
 //func TestDataPoolValidateData(t *testing.T) {
 //	buyerMnemonic := os.Getenv("E2E_DATA_BUYER_MNEMONIC")
 //	require.NotEmpty(t, buyerMnemonic)
-//	dataValMnemonic := os.Getenv("E2E_DATAVAL_MNEMONIC")
+//	dataValMnemonic := os.Getenv("E2E_ORACLE_MNEMONIC")
 //	require.NotEmpty(t, dataValMnemonic)
-//	datavalHTTPAddr := os.Getenv("E2E_DATAVAL_HTTP_ADDR")
-//	require.NotEmpty(t, datavalHTTPAddr)
+//	oracleHTTPAddr := os.Getenv("E2E_ORACLE_HTTP_ADDR")
+//	require.NotEmpty(t, oracleHTTPAddr)
 //
 //	poolID := 1
 //	round := 1
@@ -80,7 +80,7 @@ func TestDataDealValidateData(t *testing.T) {
 //
 //	req, err := http.NewRequest(
 //		http.MethodPost,
-//		fmt.Sprintf("http://%s/v0/data-pool/pools/%d/rounds/%d/data?requester_address=%s", datavalHTTPAddr, poolID, round, requesterAddr),
+//		fmt.Sprintf("http://%s/v0/data-pool/pools/%d/rounds/%d/data?requester_address=%s", oracleHTTPAddr, poolID, round, requesterAddr),
 //		strings.NewReader(data),
 //	)
 //	require.NoError(t, err)
@@ -92,7 +92,7 @@ func TestDataDealValidateData(t *testing.T) {
 //	fmt.Println(resp)
 //	require.Equal(t, http.StatusCreated, resp.StatusCode)
 //
-//	var cert datapooltypes.DataValidationCertificate
+//	var cert datapooltypes.DataCert
 //	unmarshaler := &jsonpb.Unmarshaler{}
 //	err = unmarshaler.Unmarshal(resp.Body, &cert)
 //	require.NoError(t, err)

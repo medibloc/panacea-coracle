@@ -2,17 +2,17 @@ package datadeal
 
 import (
 	"fmt"
-	datadealtypes "github.com/medibloc/panacea-data-market-validator/types/datadeal"
+	datadealtypes "github.com/medibloc/panacea-oracle/types/datadeal"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	markettypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
-	"github.com/medibloc/panacea-data-market-validator/codec"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/server/response"
-	"github.com/medibloc/panacea-data-market-validator/types"
-	"github.com/medibloc/panacea-data-market-validator/validation"
+	"github.com/medibloc/panacea-oracle/codec"
+	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/server/response"
+	"github.com/medibloc/panacea-oracle/types"
+	"github.com/medibloc/panacea-oracle/validation"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,10 +42,10 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// trusted validator check
-	if !validation.Contains(deal.TrustedDataValidators, svc.ValidatorAccount.GetAddress()) {
-		log.Error("not a trusted data-validator")
-		http.Error(w, "invalid data validator", http.StatusBadRequest)
+	// trusted oracle check
+	if !validation.Contains(deal.TrustedOracles, svc.OracleAccount.GetAddress()) {
+		log.Error("not a trusted oracle")
+		http.Error(w, "invalid oracle", http.StatusBadRequest)
 		return
 	}
 
@@ -93,33 +93,33 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	unsignedCertificate, err := datadealtypes.NewUnsignedDataValidationCertificate(
+	unsignedCertificate, err := datadealtypes.NewUnsignedDataCert(
 		dealId,
 		dataHash,
 		encryptedDataURL,
 		r.URL.Query().Get("requester_address"),
-		svc.ValidatorAccount.GetAddress())
+		svc.OracleAccount.GetAddress())
 	if err != nil {
-		log.Error("failed to make unsignedDataValidationCertificate: ", err)
-		http.Error(w, "failed to make unsignedDataValidationCertificate", http.StatusInternalServerError)
+		log.Error("failed to make unsignedDataCert: ", err)
+		http.Error(w, "failed to make unsignedDataCert", http.StatusInternalServerError)
 		return
 	}
 
 	serializedCertificate, err := unsignedCertificate.Marshal()
 	if err != nil {
-		log.Error("failed to make marshal unsignedDataValidationCertificate: ", err)
-		http.Error(w, "failed to make marshal unsignedDataValidationCertificate", http.StatusInternalServerError)
+		log.Error("failed to make marshal unsignedDataCert: ", err)
+		http.Error(w, "failed to make marshal unsignedDataCert", http.StatusInternalServerError)
 		return
 	}
 
-	signature, err := svc.ValidatorAccount.GetSecp256k1PrivKey().Sign(serializedCertificate)
+	signature, err := svc.OracleAccount.GetSecp256k1PrivKey().Sign(serializedCertificate)
 	if err != nil {
 		log.Error("failed to make signature: ", err)
 		http.Error(w, "failed to make signature", http.StatusInternalServerError)
 		return
 	}
 
-	resp := &markettypes.DataValidationCertificate{
+	resp := &markettypes.DataCert{
 		UnsignedCert: &unsignedCertificate,
 		Signature:    signature,
 	}

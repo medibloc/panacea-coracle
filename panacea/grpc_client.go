@@ -15,7 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
-	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-oracle/config"
 	log "github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"
@@ -103,19 +103,19 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	return *response.GetDeal(), nil
 }
 
-// GetRegisteredDataValidator gets registered data validator
-func (c *GrpcClient) GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error) {
+// GetRegisteredOracle gets registered oracle
+func (c *GrpcClient) GetRegisteredOracle(address string) (*datapooltypes.Oracle, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := client.DataValidator(ctx, &datapooltypes.QueryDataValidatorRequest{Address: address})
+	res, err := client.Oracle(ctx, &datapooltypes.QueryOracleRequest{Address: address})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get data validator info: %w", err)
+		return nil, fmt.Errorf("failed to get oracle info: %w", err)
 	}
 
-	return res.GetDataValidator(), nil
+	return res.GetOracle(), nil
 }
 
 func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
@@ -155,14 +155,14 @@ func (c GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (da
 	return response.GetDataPassRedeemHistories(), nil
 }
 
-func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataValidationCertificate, error) {
+func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	var certs []datapooltypes.DataValidationCertificate
+	var certs []datapooltypes.DataCert
 
-	pageReq := &datapooltypes.QueryDataValidationCertificatesRequest{
+	pageReq := &datapooltypes.QueryDataCertsRequest{
 		PoolId: poolID,
 		Round:  round,
 		Pagination: &query.PageRequest{
@@ -172,12 +172,12 @@ func (c GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataVali
 	}
 
 	for {
-		response, err := client.DataValidationCertificates(ctx, pageReq)
+		response, err := client.DataCerts(ctx, pageReq)
 		if err != nil {
 			return nil, err
 		}
 
-		certs = append(certs, response.GetDataValidationCertificates()...)
+		certs = append(certs, response.GetDataCerts()...)
 
 		if response.Pagination.NextKey == nil {
 			break

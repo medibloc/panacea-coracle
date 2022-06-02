@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-oracle/config"
 	"github.com/stretchr/testify/require"
 )
 

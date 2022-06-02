@@ -4,12 +4,12 @@ import (
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 )
 
-func NewUnsignedDataValidationCertificate(pool datapooltypes.Pool, dataHash []byte, requesterAddress, dataValidatorAddress string) (datapooltypes.UnsignedDataValidationCertificate, error) {
-	return datapooltypes.UnsignedDataValidationCertificate{
-		PoolId:        pool.PoolId,
-		Round:         pool.Round,
-		DataHash:      dataHash,
-		DataValidator: dataValidatorAddress,
-		Requester:     requesterAddress,
+func NewUnsignedDataCert(pool datapooltypes.Pool, dataHash []byte, requesterAddress, oracleAddress string) (datapooltypes.UnsignedDataCert, error) {
+	return datapooltypes.UnsignedDataCert{
+		PoolId:    pool.PoolId,
+		Round:     pool.Round,
+		DataHash:  dataHash,
+		Oracle:    oracleAddress,
+		Requester: requesterAddress,
 	}, nil
 }

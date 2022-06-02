@@ -18,8 +18,8 @@ panacead gentx validator 1000000umed --commission-rate 0.1 --commission-max-rate
 echo -e "${E2E_DATA_BUYER_MNEMONIC}\n\n" | panacead keys add curator -i
 panacead add-genesis-account $(panacead keys show curator -a) 100000000000umed
 
-echo -e "${E2E_DATAVAL_MNEMONIC}\n\n" | panacead keys add dataval -i
-panacead add-genesis-account $(panacead keys show dataval -a) 100000000000umed
+echo -e "${E2E_ORACLE_MNEMONIC}\n\n" | panacead keys add oracle -i
+panacead add-genesis-account $(panacead keys show oracle -a) 100000000000umed
 
 panacead collect-gentxs
 
@@ -33,21 +33,20 @@ PID_PANACEAD=$!
 # Wait for the 1st block to be created
 sleep 10
 
-panacead tx bank send $(panacead keys show dataval -a) $(panacead keys show validator -a) 100umed --chain-id ${CHAIN_ID} -b block --yes
+panacead tx bank send $(panacead keys show oracle -a) $(panacead keys show validator -a) 100umed --chain-id ${CHAIN_ID} -b block --yes
 
-DATAVAL_ADDR=$(panacead keys show dataval -a)
-sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
-sed 's|"trusted_data_validators": \[\]|"trusted_data_validators": ["'"${DATAVAL_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
+ORACLE_ADDR=$(panacead keys show oracle -a)
+sed 's|"trusted_oracles": \[\]|"trusted_oracles": ["'"${ORACLE_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
+sed 's|"trusted_oracles": \[\]|"trusted_oracles": ["'"${ORACLE_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
 
-panacead tx datadeal create-deal \
-  --deal-file /tmp/create_deal.json \
+panacead tx datadeal create-deal /tmp/create_deal.json \
   --from curator \
   --chain-id ${CHAIN_ID} \
   -b block \
   --yes
 
-panacead tx datapool register-data-validator "https://my-endpoint.com" \
-  --from dataval \
+panacead tx datapool register-node "https://my-endpoint.com" \
+  --from oracle \
   --chain-id ${CHAIN_ID} \
   -b block \
   --yes
