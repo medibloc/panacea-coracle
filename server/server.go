@@ -5,19 +5,19 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	authmiddleware "github.com/medibloc/panacea-data-market-validator/server/middleware/auth"
+	authmiddleware "github.com/medibloc/panacea-oracle/server/middleware/auth"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/medibloc/panacea-data-market-validator/server/service"
-	"github.com/medibloc/panacea-data-market-validator/server/service/datadeal"
-	"github.com/medibloc/panacea-data-market-validator/server/service/datapool"
-	"github.com/medibloc/panacea-data-market-validator/server/service/tee"
+	"github.com/medibloc/panacea-oracle/server/service"
+	"github.com/medibloc/panacea-oracle/server/service/datadeal"
+	"github.com/medibloc/panacea-oracle/server/service/datapool"
+	"github.com/medibloc/panacea-oracle/server/service/tee"
 
 	"github.com/gorilla/mux"
-	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-oracle/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +46,7 @@ func Run(conf *config.Config) error {
 
 	httpServerErrCh := make(chan error, 1)
 	go func() {
-		log.Infof("👻 Data Validator Server Started 🎃: Serving %s", server.Addr)
+		log.Infof("👻 Oracle Server Started 🎃: Serving %s", server.Addr)
 		if err := listenAndServe(server, svc.TLSCert); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				httpServerErrCh <- err

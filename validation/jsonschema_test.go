@@ -1,7 +1,7 @@
 package validation_test
 
 import (
-	"github.com/medibloc/panacea-data-market-validator/validation"
+	"github.com/medibloc/panacea-oracle/validation"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

@@ -3,6 +3,6 @@
     "https://json.schemastore.org/github-issue-forms.json"
   ],
   "budget": "100umed",
-  "trusted_data_validators": [],
+  "trusted_oracles": [],
   "max_num_data": 10
 }

@@ -1,5 +1,5 @@
 {
-  "exe": "datavald",
+  "exe": "oracled",
   "key": "private.pem",
   "debug": true,
   "heapSize": 512,

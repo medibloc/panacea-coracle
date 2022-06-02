@@ -4,16 +4,16 @@ services:
     image: ghcr.io/medibloc/panacea-core:master
     environment:
       E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
-      E2E_DATAVAL_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
+      E2E_ORACLE_MNEMONIC: "${E2E_ORACLE_MNEMONIC}"
     volumes:
       - .:/e2e
     command: >
       /e2e/init_start_panacea.sh
 
-  dataval:
+  oracle:
     build: ..
     environment:
-      E2E_DATAVAL_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
+      E2E_ORACLE_MNEMONIC: "${E2E_ORACLE_MNEMONIC}"
       E2E_AWS_S3_ACCESS_KEY_ID: "${E2E_AWS_S3_ACCESS_KEY_ID}"
       E2E_AWS_S3_SECRET_ACCESS_KEY: "${E2E_AWS_S3_SECRET_ACCESS_KEY}"
     volumes:
@@ -21,19 +21,19 @@ services:
     depends_on:
       - panacea
     command: >
-      /e2e/wait-for panacea:9090 --timeout=600 -- /e2e/init_start_dataval.sh
+      /e2e/wait-for panacea:9090 --timeout=600 -- /e2e/init_start_oracle.sh
 
   e2e-test:
     build:
       context: ..
       target: build-env
     environment:
-      E2E_DATAVAL_HTTP_ADDR: "dataval:8080"
+      E2E_ORACLE_HTTP_ADDR: "oracle:8080"
       E2E_DATA_BUYER_MNEMONIC: "${E2E_DATA_BUYER_MNEMONIC}"
-      E2E_DATAVAL_MNEMONIC: "${E2E_DATAVAL_MNEMONIC}"
+      E2E_ORACLE_MNEMONIC: "${E2E_ORACLE_MNEMONIC}"
     volumes:
       - .:/e2e
     depends_on:
-      - dataval
+      - oracle
     command: >
-      /e2e/wait-for dataval:8080 --timeout=600 -- go test -v -count=1 ./e2e
+      /e2e/wait-for oracle:8080 --timeout=600 -- go test -v -count=1 ./e2e

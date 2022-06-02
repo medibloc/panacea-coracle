@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/edgelesssys/ego/ecrypto"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
-	"github.com/medibloc/panacea-data-market-validator/cache"
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/panacea"
-	"github.com/medibloc/panacea-data-market-validator/store"
-	"github.com/medibloc/panacea-data-market-validator/tee"
+
+	"github.com/medibloc/panacea-oracle/cache"
+	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/panacea"
+	"github.com/medibloc/panacea-oracle/store"
+	"github.com/medibloc/panacea-oracle/tee"
 	tos "github.com/tendermint/tendermint/libs/os"
 	"os"
 	"path/filepath"
@@ -18,19 +19,19 @@ import (
 )
 
 type Service struct {
-	Conf             *config.Config
-	ValidatorAccount *panacea.ValidatorAccount
-	Store            store.Storage
-	PanaceaClient    panacea.GrpcClientI
-	TLSCert          *tls.Certificate
-	DataEncKey       []byte
-	Cache            *cache.AuthenticationCache
+	Conf          *config.Config
+	OracleAccount *panacea.OracleAccount
+	Store         store.Storage
+	PanaceaClient panacea.GrpcClientI
+	TLSCert       *tls.Certificate
+	DataEncKey    []byte
+	Cache         *cache.AuthenticationCache
 }
 
 func New(conf *config.Config) (*Service, error) {
-	validatorAccount, err := panacea.NewValidatorAccount(conf.ValidatorMnemonic)
+	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load validator account: %w", err)
+		return nil, fmt.Errorf("failed to load oracle account: %w", err)
 	}
 
 	s3Store, err := store.NewS3Store(conf)
@@ -44,10 +45,10 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
-	_, err = panaceaClient.GetRegisteredDataValidator(validatorAccount.GetAddress())
+	_, err = panaceaClient.GetRegisteredOracle(oracleAccount.GetAddress())
 	if err != nil {
-		if strings.HasSuffix(err.Error(), datapooltypes.ErrDataValidatorNotFound.Error()) {
-			return nil, fmt.Errorf("this data validator is not registered in Panacea yet")
+		if strings.HasSuffix(err.Error(), datapooltypes.ErrOracleNotFound.Error()) {
+			return nil, fmt.Errorf("this oracle is not registered in Panacea yet")
 		}
 		return nil, err
 	}
@@ -70,13 +71,13 @@ func New(conf *config.Config) (*Service, error) {
 	authenticateCache := cache.NewAuthenticationCache(conf)
 
 	return &Service{
-		Conf:             conf,
-		ValidatorAccount: validatorAccount,
-		Store:            s3Store,
-		PanaceaClient:    panaceaClient,
-		TLSCert:          tlsCert,
-		DataEncKey:       key,
-		Cache:            authenticateCache,
+		Conf:          conf,
+		OracleAccount: oracleAccount,
+		Store:         s3Store,
+		PanaceaClient: panaceaClient,
+		TLSCert:       tlsCert,
+		DataEncKey:    key,
+		Cache:         authenticateCache,
 	}, nil
 }
 
@@ -116,8 +117,8 @@ func generateDataEncryptionKeyFile(conf *config.Config, err error) ([]byte, erro
 
 		dir, file := filepath.Split(dataEncryptionKeyFile)
 
-		// ex) .dataval/config/data_encryption_file.sealed
-		// sealedSavedDir = $HOME/.dataval/config/, file = data_encryption_file.sealed
+		// ex) .oracle/config/data_encryption_file.sealed
+		// sealedSavedDir = $HOME/.oracle/config/, file = data_encryption_file.sealed
 		sealedSavedDir.WriteString(userHomeDir)
 		sealedSavedDir.WriteString("/")
 		sealedSavedDir.WriteString(dir)
@@ -127,7 +128,7 @@ func generateDataEncryptionKeyFile(conf *config.Config, err error) ([]byte, erro
 			return nil, err
 		}
 
-		// sealedSavedDir = $HOME/.dataval/config/data_encryption_file.sealed
+		// sealedSavedDir = $HOME/.oracle/config/data_encryption_file.sealed
 		sealedSavedDir.WriteString("/")
 		sealedSavedDir.WriteString(file)
 

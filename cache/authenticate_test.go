@@ -1,8 +1,8 @@
 package cache_test
 
 import (
-	"github.com/medibloc/panacea-data-market-validator/cache"
-	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-oracle/cache"
+	"github.com/medibloc/panacea-oracle/config"
 	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"

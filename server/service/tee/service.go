@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/medibloc/panacea-data-market-validator/server/service"
+	"github.com/medibloc/panacea-oracle/server/service"
 )
 
 type teeService struct {

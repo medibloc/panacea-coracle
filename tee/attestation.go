@@ -22,7 +22,7 @@ func CreateTLSCertificate() (*tls.Certificate, error) {
 
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
-		Subject:      pkix.Name{CommonName: "DataValidator"},
+		Subject:      pkix.Name{CommonName: "Oracle"},
 		NotAfter:     time.Now().AddDate(1, 0, 0),
 		DNSNames:     []string{"localhost"}, // TODO: Set proper DNS names
 	}

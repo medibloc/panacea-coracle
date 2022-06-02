@@ -1,8 +1,8 @@
 package crypto_test
 
 import (
-	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/panacea"
+	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

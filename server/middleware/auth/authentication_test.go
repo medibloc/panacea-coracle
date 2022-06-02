@@ -6,14 +6,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gorilla/context"
-	"github.com/medibloc/panacea-data-market-validator/cache"
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/panacea"
-	"github.com/medibloc/panacea-data-market-validator/server/middleware/auth"
-	"github.com/medibloc/panacea-data-market-validator/server/service"
-	"github.com/medibloc/panacea-data-market-validator/server/service/datapool"
-	"github.com/medibloc/panacea-data-market-validator/types"
-	"github.com/medibloc/panacea-data-market-validator/types/testutil"
+	"github.com/medibloc/panacea-oracle/cache"
+	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/panacea"
+	"github.com/medibloc/panacea-oracle/server/middleware/auth"
+	"github.com/medibloc/panacea-oracle/server/service"
+	"github.com/medibloc/panacea-oracle/server/service/datapool"
+	"github.com/medibloc/panacea-oracle/types"
+	"github.com/medibloc/panacea-oracle/types/testutil"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -120,6 +120,8 @@ func makeMockGrpcClient() panacea.GrpcClientI {
 
 	return testutil.NewMockGrpcClient(
 		accounts,
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,

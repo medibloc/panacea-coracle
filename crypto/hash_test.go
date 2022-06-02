@@ -2,7 +2,7 @@ package crypto_test
 
 import (
 	"encoding/base64"
-	"github.com/medibloc/panacea-data-market-validator/crypto"
+	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

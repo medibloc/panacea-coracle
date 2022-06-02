@@ -3,36 +3,46 @@ package panacea
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"strconv"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
-	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-oracle/config"
 	log "github.com/sirupsen/logrus"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GrpcClientI interface {
+	Close() error
+
 	GetPubKey(panaceaAddr string) (types.PubKey, error)
 
 	GetAccount(panaceaAddr string) (authtypes.AccountI, error)
 
 	GetDeal(id string) (datadealtypes.Deal, error)
 
-	GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error)
+	GetRegisteredOracle(address string) (*datapooltypes.Oracle, error)
 
 	GetPool(id string) (datapooltypes.Pool, error)
 
-	Close() error
+	GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error)
+
+	GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error)
 }
 
 var _ GrpcClientI = (*GrpcClient)(nil)
+
+const pageLimit = 30
 
 type GrpcClient struct {
 	conn              *grpc.ClientConn
@@ -113,19 +123,19 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	return *response.GetDeal(), nil
 }
 
-// GetRegisteredDataValidator gets registered data validator
-func (c *GrpcClient) GetRegisteredDataValidator(address string) (*datapooltypes.DataValidator, error) {
+// GetRegisteredOracle gets registered oracle
+func (c *GrpcClient) GetRegisteredOracle(address string) (*datapooltypes.Oracle, error) {
 	client := datapooltypes.NewQueryClient(c.conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := client.DataValidator(ctx, &datapooltypes.QueryDataValidatorRequest{Address: address})
+	res, err := client.Oracle(ctx, &datapooltypes.QueryOracleRequest{Address: address})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get data validator info: %w", err)
+		return nil, fmt.Errorf("failed to get oracle info: %w", err)
 	}
 
-	return res.GetDataValidator(), nil
+	return res.GetOracle(), nil
 }
 
 func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
@@ -147,4 +157,54 @@ func (c *GrpcClient) GetPool(id string) (datapooltypes.Pool, error) {
 
 	return *response.GetPool(), nil
 
+}
+
+func (c *GrpcClient) GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.DataPassRedeemHistory(ctx, &datapooltypes.QueryDataPassRedeemHistoryRequest{
+		Redeemer: redeemer,
+		PoolId:   poolID,
+	})
+	if err != nil {
+		return datapooltypes.DataPassRedeemHistory{}, err
+	}
+
+	return response.GetDataPassRedeemHistories(), nil
+}
+
+func (c *GrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error) {
+	client := datapooltypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	var certs []datapooltypes.DataCert
+
+	pageReq := &datapooltypes.QueryDataCertsRequest{
+		PoolId: poolID,
+		Round:  round,
+		Pagination: &query.PageRequest{
+			Key:   nil,
+			Limit: pageLimit,
+		},
+	}
+
+	for {
+		response, err := client.DataCerts(ctx, pageReq)
+		if err != nil {
+			return nil, err
+		}
+
+		certs = append(certs, response.GetDataCerts()...)
+
+		if response.Pagination.NextKey == nil {
+			break
+		}
+
+		pageReq.Pagination.Key = response.Pagination.NextKey
+	}
+
+	return certs, nil
 }

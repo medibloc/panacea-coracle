@@ -2,7 +2,7 @@ package cache
 
 import (
 	"github.com/bluele/gcache"
-	"github.com/medibloc/panacea-data-market-validator/config"
+	"github.com/medibloc/panacea-oracle/config"
 	"strings"
 )
 

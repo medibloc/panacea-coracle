@@ -4,7 +4,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/medibloc/panacea-data-market-validator/panacea"
+	"github.com/medibloc/panacea-oracle/panacea"
 )
 
 func GetAddress(pubKey cryptotypes.PubKey) string {

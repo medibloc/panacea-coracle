@@ -17,7 +17,7 @@ type Config struct {
 
 type BaseConfig struct {
 	LogLevel              string `mapstructure:"log-level"`
-	ValidatorMnemonic     string `mapstructure:"validator-mnemonic"`
+	OracleMnemonic        string `mapstructure:"oracle-mnemonic"`
 	DataEncryptionKeyFile string `mapstructure:"data-encryption-key-file"`
 }
 
@@ -51,8 +51,8 @@ func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
 			LogLevel:              "info",
-			ValidatorMnemonic:     "",
-			DataEncryptionKeyFile: ".dataval/config/data_encryption_key.sealed",
+			OracleMnemonic:        "",
+			DataEncryptionKeyFile: ".oracle/config/data_encryption_key.sealed",
 		},
 		HTTP: HTTPConfig{
 			ListenAddr: "0.0.0.0:8080",

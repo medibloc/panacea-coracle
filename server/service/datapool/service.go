@@ -1,11 +1,12 @@
 package datapool
 
 import (
-	"github.com/medibloc/panacea-data-market-validator/server/service"
+	"github.com/medibloc/panacea-oracle/server/middleware/auth"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	authmiddleware "github.com/medibloc/panacea-data-market-validator/server/middleware/auth"
+
+	"github.com/medibloc/panacea-oracle/server/service"
 )
 
 type dataPoolService struct {
@@ -21,6 +22,6 @@ func RegisterHandlers(svc *service.Service, router *mux.Router) {
 	router.HandleFunc("/v0/data-pool/pools/{poolId}/data", s.handleDownloadData).Methods(http.MethodGet)
 }
 
-func RegisterMiddleware(auth *authmiddleware.AuthenticationMiddleware) {
+func RegisterMiddleware(auth *auth.AuthenticationMiddleware) {
 	auth.AddURL("/v0/data-pool/pools/{poolId}/data", http.MethodGet)
 }

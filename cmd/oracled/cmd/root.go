@@ -10,8 +10,8 @@ import (
 var (
 	homeDir string
 	rootCmd = &cobra.Command{
-		Use:   "datavald",
-		Short: "panacea-data-market-validator",
+		Use:   "oracled",
+		Short: "oracle daemon",
 	}
 )
 
@@ -25,7 +25,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	defaultAppHomeDir := filepath.Join(userHomeDir, ".dataval")
+	defaultAppHomeDir := filepath.Join(userHomeDir, ".oracle")
 
 	rootCmd.PersistentFlags().StringVar(&homeDir, "home", defaultAppHomeDir, "application home directory")
 

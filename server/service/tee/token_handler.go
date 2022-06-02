@@ -3,7 +3,7 @@ package tee
 import (
 	"net/http"
 
-	"github.com/medibloc/panacea-data-market-validator/tee"
+	"github.com/medibloc/panacea-oracle/tee"
 	log "github.com/sirupsen/logrus"
 )
 
