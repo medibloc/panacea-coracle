@@ -12,9 +12,9 @@ type AuthenticationCache struct {
 
 func NewAuthenticationCache(conf *config.Config) *AuthenticationCache {
 	cache := gcache.
-		New(conf.Authenticate.Size).
+		New(conf.Authentication.Size).
 		LRU().
-		Expiration(conf.Authenticate.Expiration).
+		Expiration(conf.Authentication.Expiration).
 		Build()
 	return &AuthenticationCache{
 		Cache: cache,

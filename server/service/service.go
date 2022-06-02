@@ -61,7 +61,7 @@ func New(conf *config.Config) (*Service, error) {
 		}
 	}
 
-	key, err := generateDataEncryptionKeyFile(conf.DataEncryptionKeyFile, err)
+	key, err := generateDataEncryptionKeyFile(conf, err)
 	if err != nil {
 		panaceaClient.Close()
 		return nil, err
@@ -80,9 +80,10 @@ func New(conf *config.Config) (*Service, error) {
 	}, nil
 }
 
-func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]byte, error) {
+func generateDataEncryptionKeyFile(conf *config.Config, err error) ([]byte, error) {
 	var key []byte
-
+	dataEncryptionKeyFile := conf.DataEncryptionKeyFile
+	isEnclave := conf.Enclave.Enable
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -96,7 +97,7 @@ func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]b
 			return nil, err
 		}
 
-		key, err = ecrypto.Unseal(file, nil)
+		key, err = unSeal(isEnclave, file)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +107,7 @@ func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]b
 			return nil, err
 		}
 
-		sealed, err := ecrypto.SealWithProductKey(key, nil)
+		sealed, err := seal(isEnclave, key)
 		if err != nil {
 			return nil, err
 		}
@@ -136,6 +137,22 @@ func generateDataEncryptionKeyFile(dataEncryptionKeyFile string, err error) ([]b
 		}
 	}
 	return key, nil
+}
+
+func unSeal(isEnclave bool, key []byte) ([]byte, error) {
+	if isEnclave {
+		return ecrypto.Unseal(key, nil)
+	} else {
+		return key, nil
+	}
+}
+
+func seal(isEnclave bool, key []byte) ([]byte, error) {
+	if isEnclave {
+		return ecrypto.SealWithProductKey(key, nil)
+	} else {
+		return key, nil
+	}
 }
 
 func (svc *Service) Close() {
