@@ -81,6 +81,7 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 			if err != nil {
 				log.Error("failed to generate authentication", err)
 				http.Error(w, "failed to generate authentication", http.StatusInternalServerError)
+				return
 			}
 			http.Error(w, "", http.StatusUnauthorized)
 			return
@@ -94,6 +95,7 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 			if err != nil {
 				log.Error("failed to generate authentication", err)
 				http.Error(w, "failed to generate authentication", http.StatusInternalServerError)
+				return
 			}
 			http.Error(w, "", http.StatusUnauthorized)
 			return
