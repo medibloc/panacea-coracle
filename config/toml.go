@@ -61,13 +61,13 @@ enable = {{ .Enclave.Enable }}
 attestation-provider-addr = "{{ .Enclave.AttestationProviderAddr }}"
 
 ###############################################################################
-###                         AuthenticateConfig AuthenticateConfig Configuration                           ###
+###                  AuthenticationConfig Configuration                     ###
 ###############################################################################
 
-[authenticate]
+[authentication]
 
-expiration = "{{ .Authenticate.Expiration }}"
-size = {{ .Authenticate.Size }}
+expiration = "{{ .Authentication.Expiration }}"
+size = {{ .Authentication.Size }}
 
 `
 
