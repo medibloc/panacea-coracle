@@ -19,6 +19,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	github.com/tendermint/tendermint v0.34.14
 	github.com/xeipuuv/gojsonschema v1.2.0
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.45.0
 )
 

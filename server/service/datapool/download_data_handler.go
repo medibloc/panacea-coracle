@@ -1,16 +1,23 @@
 package datapool
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-data-market-validator/crypto"
 
-	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/types"
 
+	"golang.org/x/sync/errgroup"
+
+	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/gorilla/mux"
 )
 
 func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Request) {
@@ -44,16 +51,62 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 
 	redeemedRound := getRedeemedRound(redeemHistory.DataPassRedeemReceipts)
 
-	for round := uint64(1); round <= redeemedRound; round++ {
-		certs, err := svc.PanaceaClient.GetDataCerts(poolID, round)
-		if err != nil {
-			log.Errorf("failed to get data certs: %v", err)
-			http.Error(w, "failed to get data certs", http.StatusInternalServerError)
-			return
-		}
+	fileFormat := ".json"
 
-		log.Info(certs)
+	czw := types.NewConcurrentZipWriter(w)
+	defer func() {
+		if err := czw.Close(); err != nil {
+			log.Errorf("error occurred while closing zip writer: %v", err)
+			http.Error(w, "failed to download", http.StatusInternalServerError)
+		}
+	}()
+
+	g, ctx := errgroup.WithContext(context.Background())
+
+	// get data certificates from panacea and return it
+	for round := uint64(1); round <= redeemedRound; round++ {
+		certs, _ := svc.PanaceaClient.GetDataCerts(poolID, round)
+		g.Go(func() error {
+			for _, cert := range certs {
+				select {
+				// when ctx done, return and terminate goroutine
+				case <-ctx.Done():
+					return nil
+
+				default:
+					// e.g., pool 1 round 3 data -> 'pool-1-3-{dataHash}'
+					filename :=
+						"pool-" + strconv.FormatUint(cert.UnsignedCert.PoolId, 10) +
+							"-" + strconv.FormatUint(cert.UnsignedCert.Round, 10) +
+							"-" + base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash) +
+							fileFormat
+
+					// download data from storage and decrypt it
+					data, err := svc.downloadAndDecryptData(cert)
+					if err != nil {
+						return fmt.Errorf("error when downloading pool %d, round %d  :%w", cert.UnsignedCert.PoolId, cert.UnsignedCert.Round, err)
+					}
+
+					// zip write
+					err = czw.ZipWrite(filename, data)
+					if err != nil {
+						return fmt.Errorf("failed to write data to %s: %w", filename, err)
+					}
+				}
+			}
+
+			return nil
+		})
 	}
+
+	if err := g.Wait(); err != nil {
+		log.Errorf("failed to download: %v", err)
+		http.Error(w, "failed to download", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"pool-%d.zip\"", poolID))
 
 	return
 }
@@ -76,4 +129,28 @@ func getRedeemedRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
 	}
 
 	return maxRound
+}
+
+// downloadAndDecryptData downloads data by certificate and decrypt it.
+func (svc *dataPoolService) downloadAndDecryptData(cert datapooltypes.DataValidationCertificate) ([]byte, error) {
+	var path strings.Builder
+	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
+	path.WriteString("/")
+	path.WriteString(strconv.FormatUint(cert.UnsignedCert.Round, 10))
+
+	filename := base64.StdEncoding.EncodeToString(cert.UnsignedCert.DataHash)
+
+	// download encrypted data
+	cipherData, err := svc.Store.DownloadFile(path.String(), filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// decrypt data
+	data, err := crypto.DecryptDataWithAES256(svc.DataEncKey, nil, cipherData)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

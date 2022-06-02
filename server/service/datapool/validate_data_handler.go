@@ -1,7 +1,13 @@
 package datapool
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gorilla/mux"
 	panaceadatapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/codec"
@@ -11,10 +17,6 @@ import (
 	datapooltypes "github.com/medibloc/panacea-data-market-validator/types/datapool"
 	"github.com/medibloc/panacea-data-market-validator/validation"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +69,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	filename := svc.Store.MakeRandomFilename()
+	filename := base64.StdEncoding.EncodeToString(dataHash)
 
 	round := pool.Round
 

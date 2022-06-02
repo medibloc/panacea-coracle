@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	sdk "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -17,6 +17,7 @@ import (
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	"github.com/medibloc/panacea-data-market-validator/config"
 	log "github.com/sirupsen/logrus"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

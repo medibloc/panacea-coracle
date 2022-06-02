@@ -1,7 +1,8 @@
 package store
 
 type Storage interface {
-	UploadFile(path string, name string, data []byte) error
-	MakeDownloadURL(path string, name string) string
+	UploadFile(path, name string, data []byte) error
+	MakeDownloadURL(path, name string) string
 	MakeRandomFilename() string
+	DownloadFile(path, name string) ([]byte, error)
 }
