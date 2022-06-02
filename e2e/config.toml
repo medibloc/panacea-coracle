@@ -47,10 +47,10 @@ enable = false
 attestation-provider-addr = ""
 
 ###############################################################################
-###                         AuthenticateConfig AuthenticateConfig Configuration                           ###
+###                  AuthenticationConfig Configuration                     ###
 ###############################################################################
 
-[authenticate]
+[authentication]
 
 expiration = "5s"
 size = 50000
