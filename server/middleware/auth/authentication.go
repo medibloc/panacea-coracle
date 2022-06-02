@@ -126,12 +126,6 @@ func (amw *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler 
 
 		context.Set(r, types.RequesterAddressKey, requesterAddress)
 		next.ServeHTTP(w, r)
-
-		err = amw.generateAuthenticationAndSetHeader(w, sigAuthParts)
-		if err != nil {
-			log.Error("failed to generate authentication", err)
-			http.Error(w, "failed to generate authentication", http.StatusInternalServerError)
-		}
 	})
 }
 

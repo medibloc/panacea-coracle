@@ -33,7 +33,7 @@ func TestParseSignatureAuthorizationNotSupportType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v0/data-pool/pools/1/data", nil)
 	recorder := httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeCheckRequesterHandler()).ServeHTTP(recorder, req)
 
 	require.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode)
 	require.Equal(t, "not supported auth type\n", recorder.Body.String())
@@ -48,7 +48,7 @@ func TestBasicValidateAlgorithmWrong(t *testing.T) {
 	req.Header.Add("Authorization", authHeader)
 	recorder := httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeCheckRequesterHandler()).ServeHTTP(recorder, req)
 
 	res := recorder.Result()
 
@@ -60,12 +60,12 @@ func TestBasicValidateKeyIdEmpty(t *testing.T) {
 	middleware := auth.NewMiddleware(makeMockSvc())
 	datapool.RegisterMiddleware(middleware)
 
-	authHeader := makeAuthorizationHeader("es256k1-sha256", "", "", "")
+	authHeader := makeAuthorizationHeader(auth.EsSha256, "", "", "")
 	req := httptest.NewRequest(http.MethodGet, "/v0/data-pool/pools/1/data", nil)
 	req.Header.Add("Authorization", authHeader)
 	recorder := httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeCheckRequesterHandler()).ServeHTTP(recorder, req)
 
 	res := recorder.Result()
 
@@ -86,10 +86,19 @@ func TestParseSignatureAuthenticationParts(t *testing.T) {
 	require.Equal(t, "", parts[auth.Signature])
 }
 
-func mockHandler() http.HandlerFunc {
+func makeNormalHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Info("Success execute handler")
+		log.Info("Success execute normalHandler")
+	}
+}
+
+func makeCheckRequesterHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Info("Success execute checkRequestHandler")
 		requester := context.Get(r, types.RequesterAddressKey)
+		if requesterAddress != requester {
+			panic(fmt.Sprintf("Do not matched requester(%s) and requesterAddress(%s)", requester, requesterAddress))
+		}
 		log.Info("requesterAddress: ", requester)
 	}
 }
@@ -134,19 +143,18 @@ func TestEntireAuthenticationProcess(t *testing.T) {
 	middleware := auth.NewMiddleware(makeMockSvc())
 	datapool.RegisterMiddleware(middleware)
 
-	algorithm := "es256k1-sha256"
-	authHeader := makeAuthorizationHeader(algorithm, requesterAddress, "", "")
+	authHeader := makeAuthorizationHeader(auth.EsSha256, requesterAddress, "", "")
 	req := httptest.NewRequest(http.MethodGet, "/v0/data-pool/pools/1/data", nil)
 	req.Header.Add("Authorization", authHeader)
 	recorder := httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeCheckRequesterHandler()).ServeHTTP(recorder, req)
 
 	res := recorder.Result()
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 
 	authenticateParts, err := auth.ParseSignatureAuthorizationParts(res.Header.Get("WWW-Authenticate"))
-	require.Equal(t, algorithm, authenticateParts[auth.Algorithm])
+	require.Equal(t, auth.EsSha256, authenticateParts[auth.Algorithm])
 	require.Equal(t, requesterAddress, authenticateParts[auth.KeyId])
 	require.NotEqual(t, "", authenticateParts[auth.Nonce])
 	require.NoError(t, err)
@@ -155,7 +163,7 @@ func TestEntireAuthenticationProcess(t *testing.T) {
 	require.NoError(t, err)
 
 	authHeader = makeAuthorizationHeader(
-		algorithm,
+		auth.EsSha256,
 		requesterAddress,
 		nonce,
 		base64.StdEncoding.EncodeToString(signature),
@@ -163,29 +171,23 @@ func TestEntireAuthenticationProcess(t *testing.T) {
 	req.Header.Set("Authorization", authHeader)
 	recorder = httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeCheckRequesterHandler()).ServeHTTP(recorder, req)
 
 	res = recorder.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	secondAuthenticateParts, err := auth.ParseSignatureAuthorizationParts(res.Header.Get("WWW-Authenticate"))
-	require.NoError(t, err)
-	require.Equal(t, algorithm, secondAuthenticateParts[auth.Algorithm])
-	require.Equal(t, requesterAddress, secondAuthenticateParts[auth.KeyId])
-	require.Equal(t, authenticateParts[auth.KeyId], secondAuthenticateParts[auth.KeyId])
-	require.NotEqual(t, authenticateParts[auth.Nonce], secondAuthenticateParts[auth.Nonce])
+	require.Equal(t, "", res.Header.Get("WWW-Authenticate"))
 }
 
 func TestNotIncludeAuthenticationURL(t *testing.T) {
 	middleware := auth.NewMiddleware(makeMockSvc())
 	datapool.RegisterMiddleware(middleware)
 
-	algorithm := "es256k1-sha256"
-	authHeader := makeAuthorizationHeader(algorithm, requesterAddress, "", "")
+	authHeader := makeAuthorizationHeader(auth.EsSha256, requesterAddress, "", "")
 	req := httptest.NewRequest(http.MethodPost, "/v0/data-pool/pools/1/rounds/{round}/data", nil)
 	req.Header.Add("Authorization", authHeader)
 	recorder := httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeNormalHandler()).ServeHTTP(recorder, req)
 
 	res := recorder.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -196,13 +198,12 @@ func TestSameURLDifferentMethod(t *testing.T) {
 	middleware := auth.NewMiddleware(makeMockSvc())
 	datapool.RegisterMiddleware(middleware)
 
-	algorithm := "es256k1-sha256"
-	authHeader := makeAuthorizationHeader(algorithm, requesterAddress, "", "")
+	authHeader := makeAuthorizationHeader(auth.EsSha256, requesterAddress, "", "")
 	req := httptest.NewRequest(http.MethodPost, "/v0/data-pool/pools/1/data", nil)
 	req.Header.Add("Authorization", authHeader)
 	recorder := httptest.NewRecorder()
 
-	middleware.Middleware(mockHandler()).ServeHTTP(recorder, req)
+	middleware.Middleware(makeNormalHandler()).ServeHTTP(recorder, req)
 
 	res := recorder.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
