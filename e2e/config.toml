@@ -6,8 +6,8 @@
 ###############################################################################
 
 log-level = "info"
-validator-mnemonic = "__VALIDATOR_MNEMONIC__"
-data-encryption-key-file = ".dataval/config/data_encryption_key.sealed"
+oracle-mnemonic = "__ORACLE_MNEMONIC__"
+data-encryption-key-file = ".oracle/config/data_encryption_key.sealed"
 
 ###############################################################################
 ###                         HTTP Configuration                              ###
@@ -16,7 +16,7 @@ data-encryption-key-file = ".dataval/config/data_encryption_key.sealed"
 [http]
 
 laddr = "0.0.0.0:8080"
-endpoint = "https://my-validator.org"
+endpoint = "https://my-oracle.org"
 
 ###############################################################################
 ###                         Panacea Configuration                           ###

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/medibloc/panacea-data-market-validator/config"
-	"github.com/medibloc/panacea-data-market-validator/server"
+	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/server"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

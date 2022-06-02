@@ -1,4 +1,4 @@
-module github.com/medibloc/panacea-data-market-validator
+module github.com/medibloc/panacea-oracle
 
 go 1.17
 
@@ -12,7 +12,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220525093211-b59c628919e6
+	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220602062221-824b9bc0a69a
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1

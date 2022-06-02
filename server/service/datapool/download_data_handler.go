@@ -10,7 +10,7 @@ import (
 
 	"github.com/medibloc/panacea-data-market-validator/crypto"
 
-	"github.com/medibloc/panacea-data-market-validator/types"
+	"github.com/medibloc/panacea-oracle/types"
 
 	"golang.org/x/sync/errgroup"
 
@@ -132,7 +132,7 @@ func getRedeemedRound(receipts []datapooltypes.DataPassRedeemReceipt) uint64 {
 }
 
 // downloadAndDecryptData downloads data by certificate and decrypt it.
-func (svc *dataPoolService) downloadAndDecryptData(cert datapooltypes.DataValidationCertificate) ([]byte, error) {
+func (svc *dataPoolService) downloadAndDecryptData(cert datapooltypes.DataCert) ([]byte, error) {
 	var path strings.Builder
 	path.WriteString(strconv.FormatUint(cert.UnsignedCert.PoolId, 10))
 	path.WriteString("/")

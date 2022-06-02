@@ -1,8 +1,8 @@
 package panacea_test
 
 import (
-	"github.com/medibloc/panacea-data-market-validator/crypto"
-	"github.com/medibloc/panacea-data-market-validator/panacea"
+	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
@@ -12,7 +12,7 @@ import (
 func TestAccount(t *testing.T) {
 	mnemonic, err := crypto.GenerateMnemonic()
 
-	acc, err := panacea.NewValidatorAccount(mnemonic)
+	acc, err := panacea.NewOracleAccount(mnemonic)
 	require.NoError(t, err)
 	require.Equal(t, 46, len(acc.GetAddress()))
 	require.True(t, strings.HasPrefix(acc.GetAddress(), "panacea1"))
