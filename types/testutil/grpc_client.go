@@ -8,7 +8,6 @@ import (
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
 	log "github.com/sirupsen/logrus"
 	"strconv"
-	"strings"
 )
 
 type MockGrpcClient struct {
@@ -139,8 +138,4 @@ func (m MockGrpcClient) GetDataCerts(poolID, round uint64) ([]datapooltypes.Data
 		return []datapooltypes.DataCert{}, errors.New("not found")
 	}
 	return dataCerts, nil
-}
-
-func combinesKey(key ...string) string {
-	return strings.Join(key, "|")
 }

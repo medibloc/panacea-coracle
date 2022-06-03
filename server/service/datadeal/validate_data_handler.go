@@ -26,7 +26,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	// TODO: use r.Body itself (without ReadAll), if possible
 	jsonInput, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	if err != nil || len(jsonInput) == 0 {
 		log.Error(err)
 		http.Error(w, "failed to read HTTP request body", http.StatusBadRequest)
 		return
@@ -140,7 +140,7 @@ func validateBasic(r *http.Request) (error, int) {
 		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
 	}
 
-	if r.FormValue("requester_address") == "" {
+	if r.URL.Query().Get("requester_address") == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
 	return nil, 0
