@@ -131,7 +131,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 func validateBasic(r *http.Request) (error, int) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
-	} else if r.FormValue("requester_address") == "" {
+	} else if r.URL.Query().Get("requester_address") == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
 	return nil, 0
