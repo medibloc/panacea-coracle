@@ -90,7 +90,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	unsignedCertificate, err := datapooltypes.NewUnsignedDataCert(
 		pool,
 		dataHash,
-		r.URL.Query().Get("requester_address"),
+		r.URL.Query().Get(types.RequesterAddressParamKey),
 		svc.OracleAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataCert: ", err)
@@ -131,7 +131,7 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 func validateBasic(r *http.Request) (error, int) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
-	} else if r.URL.Query().Get("requester_address") == "" {
+	} else if r.URL.Query().Get(types.RequesterAddressParamKey) == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
 	return nil, 0

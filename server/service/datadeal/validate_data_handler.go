@@ -97,7 +97,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		dealId,
 		dataHash,
 		encryptedDataURL,
-		r.URL.Query().Get("requester_address"),
+		r.URL.Query().Get(types.RequesterAddressParamKey),
 		svc.OracleAccount.GetAddress())
 	if err != nil {
 		log.Error("failed to make unsignedDataCert: ", err)
@@ -140,7 +140,7 @@ func validateBasic(r *http.Request) (error, int) {
 		return fmt.Errorf("only application/json is supported"), http.StatusUnsupportedMediaType
 	}
 
-	if r.URL.Query().Get("requester_address") == "" {
+	if r.URL.Query().Get(types.RequesterAddressParamKey) == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
 	return nil, 0
