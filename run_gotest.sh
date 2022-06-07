@@ -26,7 +26,7 @@ ${GO} test -v ${NON_ENCLAVE_TEST_PKGS}
 #####################################################################
 echo "[Step 2] Running enclave tests..."
 
-if [ ${GO_BIN} != "ego-go" ]; then
+if [ ${GO} != "ego-go" ]; then
     echo "Skipping: EGo disabled"
     exit 0
 fi
@@ -40,7 +40,7 @@ for pkg in ${ENCLAVE_TEST_PKGS}; do
     ENCLAVE_JSON_PATH="${SCRIPT_DIR}/${PKG_DIR}/testdata/enclave.json"
     TEST_BIN_PATH="./$(jq -c '.exe' -r ${ENCLAVE_JSON_PATH})"
 
-    ${GO_BIN} test -c -o ${TEST_BIN_PATH} ${pkg}   # Compile the test binary but do not run it
+    ${GO} test -c -o ${TEST_BIN_PATH} ${pkg}   # Compile the test binary but do not run it
     ego sign ${ENCLAVE_JSON_PATH}                 # Sign the test binary for EGo
 
     # Run the test binary with env vars
