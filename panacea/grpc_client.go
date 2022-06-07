@@ -15,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
 	log "github.com/sirupsen/logrus"
 
@@ -31,13 +32,13 @@ type GrpcClientI interface {
 
 	GetDeal(id string) (datadealtypes.Deal, error)
 
-	GetRegisteredOracle(address string) (*datapooltypes.Oracle, error)
-
 	GetPool(id string) (datapooltypes.Pool, error)
 
 	GetDataPassRedeemHistory(redeemer string, poolID uint64) (datapooltypes.DataPassRedeemHistory, error)
 
 	GetDataCerts(poolID, round uint64) ([]datapooltypes.DataCert, error)
+
+	GetRegisteredOracle(address string) (*oracletypes.Oracle, error)
 }
 
 var _ GrpcClientI = (*GrpcClient)(nil)
@@ -69,6 +70,7 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	authtypes.RegisterInterfaces(interfaceRegistry)
 	datadealtypes.RegisterInterfaces(interfaceRegistry)
 	datapooltypes.RegisterInterfaces(interfaceRegistry)
+	oracletypes.RegisterInterfaces(interfaceRegistry)
 	return interfaceRegistry
 }
 
@@ -124,13 +126,13 @@ func (c *GrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 }
 
 // GetRegisteredOracle gets registered oracle
-func (c *GrpcClient) GetRegisteredOracle(address string) (*datapooltypes.Oracle, error) {
-	client := datapooltypes.NewQueryClient(c.conn)
+func (c *GrpcClient) GetRegisteredOracle(address string) (*oracletypes.Oracle, error) {
+	client := oracletypes.NewQueryClient(c.conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := client.Oracle(ctx, &datapooltypes.QueryOracleRequest{Address: address})
+	res, err := client.Oracle(ctx, &oracletypes.QueryOracleRequest{Address: address})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oracle info: %w", err)
 	}
