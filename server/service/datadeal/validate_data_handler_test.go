@@ -111,7 +111,7 @@ func setDefaultURLVars(req *http.Request) *http.Request {
 }
 
 func TestHandlerValidateData(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(defaultData))
+	req := httptest.NewRequest(http.MethodPost, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(defaultData))
 	req = setDefaultURLVars(req)
 
 	req.Header.Set("Content-Type", "application/json")
@@ -147,7 +147,7 @@ func TestHandlerValidateData(t *testing.T) {
 }
 
 func TestHandlerValidateDataInvalidContentType(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(defaultData))
+	req := httptest.NewRequest(http.MethodPost, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(defaultData))
 	req = setDefaultURLVars(req)
 
 	req.Header.Set("Content-Type", "application/text")
@@ -163,7 +163,7 @@ func TestHandlerValidateDataInvalidContentType(t *testing.T) {
 }
 
 func TestHandlerValidateDataInvalidParameter(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/v0/data-deal/deals/1/data", bytes.NewReader(defaultData))
+	req := httptest.NewRequest(http.MethodPost, "/v0/data-deal/deals/1/data", bytes.NewReader(defaultData))
 	req = setDefaultURLVars(req)
 
 	req.Header.Set("Content-Type", "application/json")
@@ -179,12 +179,10 @@ func TestHandlerValidateDataInvalidParameter(t *testing.T) {
 }
 
 func TestHandlerValidateDataEmptyBody(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, nil)
+	req := httptest.NewRequest(http.MethodPost, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, nil)
 	req = setDefaultURLVars(req)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Form = make(map[string][]string)
-	req.Form.Set("requester_address", requesterAddress)
 
 	recorder := httptest.NewRecorder()
 
@@ -197,41 +195,16 @@ func TestHandlerValidateDataEmptyBody(t *testing.T) {
 	require.Equal(t, "failed to read HTTP request body\n", recorder.Body.String())
 }
 
-func TestHandlerValidateDataInvalidJsonType(t *testing.T) {
-	invalidData := []byte(`{
-		"name": "This is a name",
-		"description": "This is a description, man",
-	}`)
-	req := httptest.NewRequest(http.MethodGet, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(invalidData))
-	req = setDefaultURLVars(req)
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Form = make(map[string][]string)
-	req.Form.Set("requester_address", requesterAddress)
-
-	recorder := httptest.NewRecorder()
-
-	dealService := makeDataDealService()
-
-	dealService.handleValidateData(recorder, req)
-
-	res := recorder.Result()
-	require.Equal(t, http.StatusForbidden, res.StatusCode)
-	require.Equal(t, "JSON schema validation failed\n", recorder.Body.String())
-}
-
 func TestHandlerValidateDataInvalidBodySchema(t *testing.T) {
 	data := []byte(`{
 		"name": "This is a name",
 		"description": "This is a description, man"
 	}`)
 
-	req := httptest.NewRequest(http.MethodGet, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(data))
+	req := httptest.NewRequest(http.MethodPost, "/v0/data-deal/deals/1/data?requester_address="+requesterAddress, bytes.NewReader(data))
 	req = setDefaultURLVars(req)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Form = make(map[string][]string)
-	req.Form.Set("requester_address", requesterAddress)
 
 	recorder := httptest.NewRecorder()
 
