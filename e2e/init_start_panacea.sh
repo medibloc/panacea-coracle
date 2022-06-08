@@ -39,7 +39,7 @@ ORACLE_ADDR=$(panacead keys show oracle -a)
 sed 's|"trusted_oracles": \[\]|"trusted_oracles": ["'"${ORACLE_ADDR}"'"]|g' ${SCRIPT_DIR}/create_deal.json >/tmp/create_deal.json
 sed 's|"trusted_oracles": \[\]|"trusted_oracles": ["'"${ORACLE_ADDR}"'"]|g' ${SCRIPT_DIR}/create_pool.json >/tmp/create_pool.json
 
-panacead tx oracle register-node "https://my-endpoint.com" \
+panacead tx oracle register-node "https://my-oracle.org" \
   --from oracle \
   --chain-id ${CHAIN_ID} \
   -b block \

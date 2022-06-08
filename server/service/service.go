@@ -45,12 +45,16 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
-	_, err = panaceaClient.GetRegisteredOracle(oracleAccount.GetAddress())
+	registeredOracle, err := panaceaClient.GetRegisteredOracle(oracleAccount.GetAddress())
 	if err != nil {
 		if strings.HasSuffix(err.Error(), oracletypes.ErrOracleNotFound.Error()) {
 			return nil, fmt.Errorf("this oracle is not registered in Panacea yet")
 		}
 		return nil, err
+	}
+
+	if registeredOracle.Endpoint != conf.HTTP.Endpoint {
+		return nil, fmt.Errorf("the oracle endpoint URL is invalid")
 	}
 
 	var tlsCert *tls.Certificate
