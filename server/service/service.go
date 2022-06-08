@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/edgelesssys/ego/ecrypto"
-	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 
 	"github.com/medibloc/panacea-oracle/cache"
 	"github.com/medibloc/panacea-oracle/config"
@@ -47,7 +47,7 @@ func New(conf *config.Config) (*Service, error) {
 
 	_, err = panaceaClient.GetRegisteredOracle(oracleAccount.GetAddress())
 	if err != nil {
-		if strings.HasSuffix(err.Error(), datapooltypes.ErrOracleNotFound.Error()) {
+		if strings.HasSuffix(err.Error(), oracletypes.ErrOracleNotFound.Error()) {
 			return nil, fmt.Errorf("this oracle is not registered in Panacea yet")
 		}
 		return nil, err

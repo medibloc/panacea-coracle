@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.8.0
-	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220602062221-824b9bc0a69a
+	github.com/medibloc/panacea-core/v2 v2.0.3-0.20220603091009-a3eb5fc37b07
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1

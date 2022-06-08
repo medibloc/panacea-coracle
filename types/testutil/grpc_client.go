@@ -6,6 +6,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	datapooltypes "github.com/medibloc/panacea-core/v2/x/datapool/types"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 )
@@ -14,7 +15,7 @@ type MockGrpcClient struct {
 	accountMap         map[string]authtypes.AccountI
 	dealMap            map[string]datadealtypes.Deal
 	poolMap            map[string]datapooltypes.Pool
-	regOracleMap       map[string]datapooltypes.Oracle
+	regOracleMap       map[string]oracletypes.Oracle
 	dpRedeemHistoryMap map[string]datapooltypes.DataPassRedeemHistory
 	dataCertsMap       map[string][]datapooltypes.DataCert
 }
@@ -23,7 +24,7 @@ func NewMockGrpcClient(
 	accounts []authtypes.AccountI,
 	deals []datadealtypes.Deal,
 	pools []datapooltypes.Pool,
-	regOracles []datapooltypes.Oracle,
+	regOracles []oracletypes.Oracle,
 	dpRedeemHistories []datapooltypes.DataPassRedeemHistory,
 	dataCerts []datapooltypes.DataCert,
 ) MockGrpcClient {
@@ -31,7 +32,7 @@ func NewMockGrpcClient(
 		accountMap:         make(map[string]authtypes.AccountI),
 		dealMap:            make(map[string]datadealtypes.Deal),
 		poolMap:            make(map[string]datapooltypes.Pool),
-		regOracleMap:       make(map[string]datapooltypes.Oracle),
+		regOracleMap:       make(map[string]oracletypes.Oracle),
 		dpRedeemHistoryMap: make(map[string]datapooltypes.DataPassRedeemHistory),
 		dataCertsMap:       make(map[string][]datapooltypes.DataCert),
 	}
@@ -108,7 +109,7 @@ func (m MockGrpcClient) GetDeal(id string) (datadealtypes.Deal, error) {
 	return deal, nil
 }
 
-func (m MockGrpcClient) GetRegisteredOracle(address string) (*datapooltypes.Oracle, error) {
+func (m MockGrpcClient) GetRegisteredOracle(address string) (*oracletypes.Oracle, error) {
 	regVal, ok := m.regOracleMap[address]
 	if !ok {
 		return nil, errors.New("not found")

@@ -21,12 +21,12 @@ make test
 EXE="./build/oracled" make ego-sign
 ```
 
-If you build the `oracled` without using EGo, please run make commands with the explicit `GOBIN` environment variable.
+If you build the `oracled` without using EGo, please run make commands with the explicit `GO` environment variable.
 Then, enclave-related features will not work.
 
 ```bash
-GOBIN=go make build
-GOBIN=go make test
+GO=go make build
+GO=go make test
 ```
 
 ## Running
