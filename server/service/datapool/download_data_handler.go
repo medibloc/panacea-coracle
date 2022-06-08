@@ -28,7 +28,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	redeemer := r.FormValue("requester_address")
+	redeemer := r.URL.Query().Get(types.RequesterAddressParamKey)
 	requesterAddress := httpcontext.Get(r, types.RequesterAddressKey)
 	if requesterAddress != redeemer {
 		http.Error(w, "Do not matched signer and requester", http.StatusBadRequest)
@@ -118,7 +118,7 @@ func (svc *dataPoolService) handleDownloadData(w http.ResponseWriter, r *http.Re
 }
 
 func validateDownloadRequest(r *http.Request) (error, int) {
-	if r.FormValue("requester_address") == "" {
+	if r.URL.Query().Get(types.RequesterAddressParamKey) == "" {
 		return fmt.Errorf("failed to read query parameter"), http.StatusBadRequest
 	}
 

@@ -9,4 +9,6 @@ const (
 	AuthKeyIDHeaderKey     = "keyId"
 	AuthNonceHeaderKey     = "nonce"
 	AuthSignatureHeaderKey = "signature"
+
+	RequesterAddressParamKey = "requester_address"
 )
