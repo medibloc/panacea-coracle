@@ -45,7 +45,7 @@ panacead tx datadeal create-deal /tmp/create_deal.json \
   -b block \
   --yes
 
-panacead tx oracle register-node "https://my-endpoint.com" \
+panacead tx oracle register-node "https://my-oracle.org" \
   --from oracle \
   --chain-id ${CHAIN_ID} \
   -b block \
