@@ -134,7 +134,6 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	log.Infof("data validation completed for deal %s: %s", dealID, base64.StdEncoding.EncodeToString(dataHash))
-
 	response.WriteJSONResponse(w, http.StatusCreated, marshaledResp)
 }
 

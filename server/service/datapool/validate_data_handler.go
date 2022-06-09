@@ -126,7 +126,6 @@ func (svc *dataPoolService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	log.Infof("data validation completed for pool %s: %s", poolID, base64.StdEncoding.EncodeToString(dataHash))
-
 	response.WriteJSONResponse(w, http.StatusCreated, marshaledResp)
 }
 
