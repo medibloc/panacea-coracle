@@ -26,7 +26,7 @@ func (svc *teeService) handleToken(writer http.ResponseWriter, request *http.Req
 		http.Error(writer, "failed to create attestation token", http.StatusInternalServerError)
 		return
 	}
-	log.Debugf("Azure attestation token created: %v", jwt)
+	log.Infof("Azure attestation token created: %v", jwt)
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "application/jwt")

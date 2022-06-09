@@ -1,6 +1,7 @@
 package datadeal
 
 import (
+	"encoding/base64"
 	"fmt"
 	datadealtypes "github.com/medibloc/panacea-oracle/types/datadeal"
 	"io/ioutil"
@@ -32,10 +33,10 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	dealId := mux.Vars(r)[types.DealIDKey]
+	dealID := mux.Vars(r)[types.DealIDKey]
 
 	// get deal info by ID from blockchain
-	deal, err := svc.PanaceaClient.GetDeal(dealId)
+	deal, err := svc.PanaceaClient.GetDeal(dealID)
 	if err != nil {
 		log.Error("failed to get deal information: ", err)
 		http.Error(w, "failed to get deal information", http.StatusInternalServerError)
@@ -77,7 +78,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 
 	fileName := svc.Store.MakeRandomFilename()
 
-	err = svc.Store.UploadFile(dealId, fileName, encryptedData)
+	err = svc.Store.UploadFile(dealID, fileName, encryptedData)
 	if err != nil {
 		log.Error("failed to store data: ", err)
 		http.Error(w, "failed upload to S3", http.StatusInternalServerError)
@@ -85,7 +86,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	// make downloadURL
-	dataURL := svc.Store.MakeDownloadURL(dealId, fileName)
+	dataURL := svc.Store.MakeDownloadURL(dealID, fileName)
 	encryptedDataURL, err := crypto.EncryptDataWithSecp256k1(ownerPubKey.Bytes(), []byte(dataURL))
 	if err != nil {
 		log.Error("failed to make encryptedDataURL: ", err)
@@ -94,7 +95,7 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 	}
 
 	unsignedCertificate, err := datadealtypes.NewUnsignedDataCert(
-		dealId,
+		dealID,
 		dataHash,
 		encryptedDataURL,
 		r.URL.Query().Get(types.RequesterAddressParamKey),
@@ -131,6 +132,8 @@ func (svc *dataDealService) handleValidateData(w http.ResponseWriter, r *http.Re
 		http.Error(w, "failed to marshal HTTP JSON response", http.StatusInternalServerError)
 		return
 	}
+
+	log.Infof("data validation completed for deal %s: %s", dealID, base64.StdEncoding.EncodeToString(dataHash))
 
 	response.WriteJSONResponse(w, http.StatusCreated, marshaledResp)
 }
