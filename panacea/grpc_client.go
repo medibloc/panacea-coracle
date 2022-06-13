@@ -3,6 +3,7 @@ package panacea
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	"strconv"
 	"time"
 
@@ -20,7 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GrpcClientI interface {
@@ -52,7 +52,9 @@ type GrpcClient struct {
 
 func NewGrpcClient(conf *config.Config) (GrpcClientI, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.Panacea.GRPCAddr)
-	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cert := credentials.NewClientTLSFromCert(nil, "")
+	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(cert))
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
 	}
