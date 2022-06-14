@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"strconv"
 	"time"
 
@@ -52,8 +53,19 @@ type GrpcClient struct {
 
 func NewGrpcClient(conf *config.Config) (GrpcClientI, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.Panacea.GRPCAddr)
-	cert := credentials.NewClientTLSFromCert(nil, "")
-	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(cert))
+
+	var conn *grpc.ClientConn
+	var err error
+
+	if conf.Panacea.GRPCAddr[0:3] == "tcp" {
+		conn, err = grpc.Dial(conf.Panacea.GRPCAddr[6:], grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else if conf.Panacea.GRPCAddr[0:4] == "http" {
+		conn, err = grpc.Dial(conf.Panacea.GRPCAddr[7:], grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else if conf.Panacea.GRPCAddr[0:5] == "https" {
+		conn, err = grpc.Dial(conf.Panacea.GRPCAddr[8:], grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+	} else {
+		return nil, fmt.Errorf("invalid panacea grpc addr: %s", conf.Panacea.GRPCAddr)
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
