@@ -73,6 +73,8 @@ func NewGrpcClient(conf *config.Config) (GrpcClientI, error) {
 		creds = insecure.NewCredentials()
 	} else if u.Scheme == "https" {
 		creds = credentials.NewClientTLSFromCert(nil, "")
+	} else if u.Scheme == "" {
+		return nil, fmt.Errorf("empty panacea grpc address")
 	} else {
 		return nil, fmt.Errorf("invalid panacea grpc addr: %s", conf.Panacea.GRPCAddr)
 	}
