@@ -24,7 +24,7 @@ endpoint = "https://my-oracle.org"
 
 [panacea]
 
-grpc-addr = "panacea:9090"
+grpc-addr = "http://panacea:9090"
 
 ###############################################################################
 ###                         AWS S3 Configuration                            ###

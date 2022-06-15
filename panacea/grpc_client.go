@@ -3,8 +3,12 @@ package panacea
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
+
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 
@@ -20,7 +24,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GrpcClientI interface {
@@ -52,7 +55,31 @@ type GrpcClient struct {
 
 func NewGrpcClient(conf *config.Config) (GrpcClientI, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", conf.Panacea.GRPCAddr)
-	conn, err := grpc.Dial(conf.Panacea.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	var conn *grpc.ClientConn
+	var err error
+
+	u, err := url.Parse(conf.Panacea.GRPCAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse grpc addr: %w", err)
+	}
+
+	prefixLen := len(u.Scheme + "://")
+	addrBody := conf.Panacea.GRPCAddr[prefixLen:]
+
+	var creds credentials.TransportCredentials
+
+	if u.Scheme == "tcp" || u.Scheme == "http" {
+		creds = insecure.NewCredentials()
+	} else if u.Scheme == "https" {
+		creds = credentials.NewClientTLSFromCert(nil, "")
+	} else if u.Scheme == "" {
+		return nil, fmt.Errorf("empty panacea grpc address")
+	} else {
+		return nil, fmt.Errorf("invalid panacea grpc addr: %s", conf.Panacea.GRPCAddr)
+	}
+
+	conn, err = grpc.Dial(addrBody, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
 	}

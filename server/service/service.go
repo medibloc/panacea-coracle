@@ -41,7 +41,6 @@ func New(conf *config.Config) (*Service, error) {
 
 	panaceaClient, err := panacea.NewGrpcClient(conf)
 	if err != nil {
-
 		return nil, fmt.Errorf("failed to create PanaceaGRPCClient: %w", err)
 	}
 
